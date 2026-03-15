@@ -17,10 +17,10 @@ bases := "achaean-base-node achaean-base-python achaean-base-minimal"
 vessels := "claude codex aider goose cline opencode codebuff ampcode worker"
 
 # Auto-detect container runtime: prefer podman, fall back to docker
-container_cmd := if `which podman 2>/dev/null` != "" { "podman" } else { "docker" }
+container_cmd := `which podman 2>/dev/null && echo podman || echo docker`
 
 # Auto-detect compose command
-compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } else { "docker compose" }
+compose_cmd := `which podman-compose 2>/dev/null && echo podman-compose || echo "docker compose"`
 
 # =============================================================================
 # Build
@@ -29,7 +29,7 @@ compose_cmd := if `which podman-compose 2>/dev/null` != "" { "podman-compose" } 
 # Show which container runtime is active
 runtime:
     @echo "Container runtime: {{container_cmd}}"
-    @{{container_cmd}} --version
+    @{{container_cmd}} version 2>&1 | grep -i "^Version:" | head -1 || true
 
 # Build all 3 base images
 build-bases:
