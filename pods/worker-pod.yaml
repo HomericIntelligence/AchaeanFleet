@@ -1,0 +1,49 @@
+# Podman pod spec for a headless worker agent vessel
+# Usage: podman play kube pods/worker-pod.yaml
+#        just pod-up worker
+#
+# Worker pods are minimal (~100MB RAM) headless agents for API-only workloads.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: achaean-worker-pod
+  labels:
+    app: achaean-worker
+    fleet: homeric-intelligence
+spec:
+  restartPolicy: OnFailure
+  volumes:
+    - name: agent-server
+      hostPath:
+        path: /home/mvillmow/ai-maestro/agent-container/agent-server.js
+        type: File
+    - name: workspace
+      emptyDir: {}
+  containers:
+    - name: worker
+      image: achaean-worker:latest
+      ports:
+        - containerPort: 23080
+          hostPort: 23080
+          protocol: TCP
+      env:
+        - name: AIM_HOST
+          value: "172.20.0.1"
+        - name: AIM_PORT
+          value: "23000"
+        - name: AGENT_MODE
+          value: "headless"
+      volumeMounts:
+        - name: agent-server
+          mountPath: /app/agent-server.js
+          readOnly: true
+        - name: workspace
+          mountPath: /workspace
+      resources:
+        requests:
+          memory: "128Mi"
+          cpu: "0.25"
+        limits:
+          memory: "512Mi"
+          cpu: "1"

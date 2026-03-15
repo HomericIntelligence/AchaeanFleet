@@ -1,0 +1,32 @@
+# Environment / secrets
+compose/.env
+.env
+*.env
+
+# Node.js (Dagger pipeline)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dagger/.dagger/
+.dagger/
+
+# TypeScript build output
+dagger/dist/
+*.js.map
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker build cache artifacts
+.dockerignore.bak
+
+# Local test outputs
+/tmp/

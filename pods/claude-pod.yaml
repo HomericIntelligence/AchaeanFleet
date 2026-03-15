@@ -1,0 +1,55 @@
+# Podman pod spec for a Claude Code agent vessel
+# Usage: podman play kube pods/claude-pod.yaml
+#        just pod-up claude
+#
+# This pod provides a single Claude Code agent container.
+# ai-maestro's docker/create endpoint can also provision these images
+# directly — this YAML is for local Podman pod orchestration.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: achaean-claude-pod
+  labels:
+    app: achaean-claude
+    fleet: homeric-intelligence
+spec:
+  restartPolicy: OnFailure
+  volumes:
+    - name: agent-server
+      hostPath:
+        path: /home/mvillmow/ai-maestro/agent-container/agent-server.js
+        type: File
+    - name: workspace
+      emptyDir: {}
+  containers:
+    - name: claude
+      image: achaean-claude:latest
+      ports:
+        - containerPort: 23001
+          hostPort: 23001
+          protocol: TCP
+      env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: achaean-secrets
+              key: anthropic-api-key
+              optional: true
+        - name: AIM_HOST
+          value: "172.20.0.1"
+        - name: AIM_PORT
+          value: "23000"
+      volumeMounts:
+        - name: agent-server
+          mountPath: /app/agent-server.js
+          readOnly: true
+        - name: workspace
+          mountPath: /workspace
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "0.5"
+        limits:
+          memory: "4Gi"
+          cpu: "2"

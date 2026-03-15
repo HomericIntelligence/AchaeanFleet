@@ -1,0 +1,35 @@
+# .dockerignore — applies to all docker build contexts in this repo
+
+# Never include secrets
+.env
+compose/.env
+*.env
+
+# Git
+.git
+.gitignore
+
+# Node.js dev artifacts
+node_modules
+dagger/node_modules
+npm-debug.log*
+
+# TypeScript build
+dagger/dist
+
+# Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI / docs (not needed in image)
+.github
+README.md
+CLAUDE.md
+nomad
+dagger

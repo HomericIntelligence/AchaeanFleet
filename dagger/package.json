@@ -1,0 +1,22 @@
+{
+  "name": "achaean-fleet-pipeline",
+  "version": "1.0.0",
+  "description": "Dagger CI/CD pipeline for AchaeanFleet container images",
+  "main": "pipeline.ts",
+  "scripts": {
+    "build": "ts-node pipeline.ts build",
+    "push": "ts-node pipeline.ts push",
+    "test": "ts-node pipeline.ts test"
+  },
+  "dependencies": {
+    "@dagger.io/dagger": "^0.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
