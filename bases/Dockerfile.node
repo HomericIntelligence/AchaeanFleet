@@ -10,6 +10,8 @@ LABEL org.opencontainers.image.title="achaean-base-node"
 LABEL org.opencontainers.image.description="AchaeanFleet Node.js base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
 
+USER root
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -23,16 +25,12 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     build-essential \
     python3 \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Yarn globally
-RUN npm install -g yarn
-
-# Create non-root user (matches ai-maestro's agent-container convention)
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-RUN groupadd -g ${GROUP_ID} agent && \
-    useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
+# node:20-slim ships with user 'node' (UID 1000). Rename to 'agent' for convention.
+RUN usermod -l agent -d /home/agent -m node && \
+    groupmod -n agent node && \
     echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Configure tmux
