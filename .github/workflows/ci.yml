@@ -1,0 +1,127 @@
+name: Build All Agent Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bases/**'
+      - 'vessels/**'
+      - 'dagger/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'bases/**'
+      - 'vessels/**'
+      - 'dagger/**'
+
+jobs:
+  build-bases:
+    name: Build Base Images
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        base:
+          - name: achaean-base-node
+            dockerfile: bases/Dockerfile.node
+          - name: achaean-base-python
+            dockerfile: bases/Dockerfile.python
+          - name: achaean-base-minimal
+            dockerfile: bases/Dockerfile.minimal
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build base image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.base.dockerfile }}
+          push: false
+          tags: ${{ matrix.base.name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-vessels:
+    name: Build Vessel Images
+    runs-on: self-hosted
+    needs: build-bases
+    strategy:
+      matrix:
+        vessel:
+          - name: achaean-claude
+            dockerfile: vessels/claude/Dockerfile
+            base: achaean-base-node
+          - name: achaean-codex
+            dockerfile: vessels/codex/Dockerfile
+            base: achaean-base-node
+          - name: achaean-aider
+            dockerfile: vessels/aider/Dockerfile
+            base: achaean-base-python
+          - name: achaean-goose
+            dockerfile: vessels/goose/Dockerfile
+            base: achaean-base-minimal
+          - name: achaean-cline
+            dockerfile: vessels/cline/Dockerfile
+            base: achaean-base-node
+          - name: achaean-opencode
+            dockerfile: vessels/opencode/Dockerfile
+            base: achaean-base-minimal
+          - name: achaean-codebuff
+            dockerfile: vessels/codebuff/Dockerfile
+            base: achaean-base-node
+          - name: achaean-ampcode
+            dockerfile: vessels/ampcode/Dockerfile
+            base: achaean-base-node
+          - name: achaean-worker
+            dockerfile: vessels/worker/Dockerfile
+            base: achaean-base-minimal
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build vessel image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.vessel.dockerfile }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.vessel.base }}:latest
+          push: false
+          tags: ${{ matrix.vessel.name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  push-to-registry:
+    name: Push to GHCR
+    runs-on: self-hosted
+    needs: build-vessels
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      packages: write
+      contents: read
+    env:
+      REGISTRY: ghcr.io/homericintelligence
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Dagger SDK
+        run: npm install @dagger.io/dagger
+
+      - name: Build and push all images via Dagger
+        env:
+          DAGGER_REGISTRY: ghcr.io/homericintelligence
+        run: npx ts-node dagger/pipeline.ts push --registry "$DAGGER_REGISTRY"

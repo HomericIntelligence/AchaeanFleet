@@ -1,0 +1,117 @@
+# AchaeanFleet: Claude-only Compose
+#
+# Mirrors the current local setup (5 Claude agents).
+# This is the Phase 3 verification target: docker compose up starts a Claude
+# container that ai-maestro connects to via WebSocket.
+#
+# Usage:
+#   cp .env.example .env && nano .env
+#   docker compose -f docker-compose.claude-only.yml up -d
+
+version: "3.9"
+
+networks:
+  aimaestro-mesh:
+    name: ${MESH_NETWORK:-aimaestro-mesh}
+    driver: bridge
+    # Internal DNS: containers resolve each other by service name
+
+services:
+  # -------------------------------------------------------------------------
+  # AI Maestro orchestrator (existing, not modified — just connected here)
+  # Uncomment if you want to start ai-maestro from compose too.
+  # -------------------------------------------------------------------------
+  # aim-maestro:
+  #   image: ai-maestro:latest
+  #   ports:
+  #     - "23000:23000"
+  #   networks:
+  #     - aimaestro-mesh
+
+  # -------------------------------------------------------------------------
+  # Claude agent: Aindrea (odyssey-mainline-analysis)
+  # -------------------------------------------------------------------------
+  aim-aindrea:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: aim-aindrea
+    hostname: aim-aindrea
+    networks:
+      - aimaestro-mesh
+    ports:
+      - "23001:23001"
+    environment:
+      - AGENT_ID=aindrea
+      - AGENT_PORT=23001
+      - TMUX_SESSION_NAME=aindrea
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
+      # Mount agent-server.js from ai-maestro (read-only — no modifications)
+      - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  # -------------------------------------------------------------------------
+  # Claude agent: Baird (scylla-repo-monitor)
+  # -------------------------------------------------------------------------
+  aim-baird:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: aim-baird
+    hostname: aim-baird
+    networks:
+      - aimaestro-mesh
+    ports:
+      - "23003:23001"
+    environment:
+      - AGENT_ID=baird
+      - AGENT_PORT=23001
+      - TMUX_SESSION_NAME=baird
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
+      - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  # -------------------------------------------------------------------------
+  # Claude agent: VegAI (villmow-general-agent)
+  # -------------------------------------------------------------------------
+  aim-vegai:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: aim-vegai
+    hostname: aim-vegai
+    networks:
+      - aimaestro-mesh
+    ports:
+      - "23004:23001"
+    environment:
+      - AGENT_ID=vegai
+      - AGENT_PORT=23001
+      - TMUX_SESSION_NAME=vegai
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3

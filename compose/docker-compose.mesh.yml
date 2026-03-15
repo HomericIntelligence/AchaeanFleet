@@ -1,0 +1,251 @@
+# AchaeanFleet: Full Heterogeneous Mesh Compose
+#
+# Starts a mixed fleet of all 9 agent types.
+# This is the Phase 4 verification target.
+#
+# Usage:
+#   cp .env.example .env && nano .env
+#   docker compose -f docker-compose.mesh.yml up -d
+#
+# Check health: docker compose -f docker-compose.mesh.yml ps
+
+version: "3.9"
+
+networks:
+  aimaestro-mesh:
+    name: ${MESH_NETWORK:-aimaestro-mesh}
+    driver: bridge
+
+# Shared agent-server.js mount (read-only from ai-maestro — never modified)
+x-agent-server-mount: &agent-server-mount
+  /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+
+# Shared environment for all agents
+x-common-env: &common-env
+  AIM_HOST: ${AIM_HOST:-http://172.20.0.1:23000}
+
+# Shared healthcheck
+x-healthcheck: &healthcheck
+  test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+  interval: 30s
+  timeout: 5s
+  start_period: 15s
+  retries: 3
+
+services:
+  # -------------------------------------------------------------------------
+  # Claude agents (Node base)
+  # -------------------------------------------------------------------------
+  aim-aindrea:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: aim-aindrea
+    hostname: aim-aindrea
+    networks: [aimaestro-mesh]
+    ports: ["23001:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: aindrea
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: aindrea
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  aim-baird:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: aim-baird
+    hostname: aim-baird
+    networks: [aimaestro-mesh]
+    ports: ["23003:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: baird
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: baird
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # Codex agent (Node base)
+  # -------------------------------------------------------------------------
+  aim-codex-1:
+    image: ${CODEX_IMAGE:-achaean-codex:latest}
+    container_name: aim-codex-1
+    hostname: aim-codex-1
+    networks: [aimaestro-mesh]
+    ports: ["23010:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: codex-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: codex-1
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # Aider agent (Python base)
+  # -------------------------------------------------------------------------
+  aim-aider-1:
+    image: ${AIDER_IMAGE:-achaean-aider:latest}
+    container_name: aim-aider-1
+    hostname: aim-aider-1
+    networks: [aimaestro-mesh]
+    ports: ["23020:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: aider-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: aider-1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      AIDER_MODEL: ${AIDER_MODEL:-claude-3-5-sonnet-20241022}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # Goose agent (minimal/binary base)
+  # -------------------------------------------------------------------------
+  aim-goose-1:
+    image: ${GOOSE_IMAGE:-achaean-goose:latest}
+    container_name: aim-goose-1
+    hostname: aim-goose-1
+    networks: [aimaestro-mesh]
+    ports: ["23030:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: goose-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: goose-1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # Cline agent (Node base)
+  # -------------------------------------------------------------------------
+  aim-cline-1:
+    image: ${CLINE_IMAGE:-achaean-cline:latest}
+    container_name: aim-cline-1
+    hostname: aim-cline-1
+    networks: [aimaestro-mesh]
+    ports: ["23040:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: cline-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: cline-1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # OpenCode agent (minimal/binary base)
+  # -------------------------------------------------------------------------
+  aim-opencode-1:
+    image: ${OPENCODE_IMAGE:-achaean-opencode:latest}
+    container_name: aim-opencode-1
+    hostname: aim-opencode-1
+    networks: [aimaestro-mesh]
+    ports: ["23050:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: opencode-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: opencode-1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # Codebuff agent (Node base)
+  # -------------------------------------------------------------------------
+  aim-codebuff-1:
+    image: ${CODEBUFF_IMAGE:-achaean-codebuff:latest}
+    container_name: aim-codebuff-1
+    hostname: aim-codebuff-1
+    networks: [aimaestro-mesh]
+    ports: ["23060:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: codebuff-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: codebuff-1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # AmpCode agent (Node base)
+  # -------------------------------------------------------------------------
+  aim-ampcode-1:
+    image: ${AMPCODE_IMAGE:-achaean-ampcode:latest}
+    container_name: aim-ampcode-1
+    hostname: aim-ampcode-1
+    networks: [aimaestro-mesh]
+    ports: ["23070:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: ampcode-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: ampcode-1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  # -------------------------------------------------------------------------
+  # Shell Worker (minimal base, no AI tool)
+  # -------------------------------------------------------------------------
+  aim-worker-1:
+    image: ${WORKER_IMAGE:-achaean-worker:latest}
+    container_name: aim-worker-1
+    hostname: aim-worker-1
+    networks: [aimaestro-mesh]
+    ports: ["23080:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: worker-1
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: worker-1
+    volumes:
+      - /tmp/ci-workspace:/workspace
+      - *agent-server-mount
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck

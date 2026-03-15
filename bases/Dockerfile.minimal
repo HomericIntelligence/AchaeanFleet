@@ -1,0 +1,72 @@
+# AchaeanFleet Base Image: Minimal (Debian)
+#
+# Provides: debian:bookworm-slim + Node.js 20 + tmux + zsh + git + node-pty + ws
+# Binary-based agent vessels (Goose, OpenCode, Worker) FROM this.
+# Node.js is included because agent-server.js requires it.
+
+FROM debian:bookworm-slim
+
+LABEL org.opencontainers.image.title="achaean-base-minimal"
+LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
+LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    tmux \
+    zsh \
+    vim \
+    nano \
+    procps \
+    ca-certificates \
+    build-essential \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x (required for agent-server.js)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Yarn
+RUN npm install -g yarn
+
+# Create non-root user
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+RUN groupadd -g ${GROUP_ID} agent && \
+    useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
+    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Configure tmux
+RUN mkdir -p /home/agent && \
+    echo "set -g mouse on" >> /home/agent/.tmux.conf && \
+    echo "set -g history-limit 50000" >> /home/agent/.tmux.conf && \
+    echo "set -g status-bg colour235" >> /home/agent/.tmux.conf && \
+    echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
+    chown -R agent:agent /home/agent
+
+# Install Oh My Zsh
+USER agent
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+USER root
+
+# Install node-pty and ws (required by ai-maestro's agent-server.js)
+RUN npm install -g node-pty ws
+
+# Create workspace and app directories
+RUN mkdir -p /workspace /app && \
+    chown -R agent:agent /workspace /app
+
+WORKDIR /workspace
+
+ENV AGENT_ID=agent-local
+ENV TMUX_SESSION_NAME=agent-session
+ENV WORKSPACE=/workspace
+ENV AGENT_PORT=23001
+ENV GIT_USER_NAME="AI Maestro Agent"
+ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
+
+USER agent
