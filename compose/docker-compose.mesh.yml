@@ -17,8 +17,9 @@ networks:
     driver: bridge
 
 # Shared agent-server.js mount (read-only from ai-maestro — never modified)
+# Set AGENT_SERVER_JS in .env if ai-maestro is installed in a non-default location.
 x-agent-server-mount: &agent-server-mount
-  /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+  ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
 
 # Shared environment for all agents
 x-common-env: &common-env

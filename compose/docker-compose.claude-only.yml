@@ -48,7 +48,7 @@ services:
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
       # Mount agent-server.js from ai-maestro (read-only — no modifications)
-      - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+      - ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
@@ -77,7 +77,7 @@ services:
       - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
-      - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+      - ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
@@ -106,7 +106,7 @@ services:
       - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+      - ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:

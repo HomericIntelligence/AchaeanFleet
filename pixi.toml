@@ -1,0 +1,14 @@
+[project]
+name = "achaean-fleet"
+version = "0.1.0"
+description = "Container infrastructure for the HomericIntelligence agent mesh"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+just = ">=1.13"
+
+[tasks]
+build-all = "just build-all"
+test      = "just test"
+push      = "just push"

@@ -91,12 +91,19 @@ async function buildBases(client: Client): Promise<Map<string, any>> {
 
 async function buildVessels(
   client: Client,
-  bases: Map<string, any>,
+  builtBases: Map<string, any>,
   registry?: string
 ): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
+
+  // Ensure each vessel's base image is fully resolved before starting the vessel build.
+  // builtBases contains Dagger Container objects; sync() forces the build to complete.
+  for (const [baseName, baseContainer] of builtBases.entries()) {
+    console.log(`Syncing base: ${baseName}`);
+    await baseContainer.sync();
+  }
 
   const buildPromises = VESSELS.map(async (vessel) => {
     console.log(`Building vessel: ${vessel.name}`);

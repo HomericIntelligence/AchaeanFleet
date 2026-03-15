@@ -6,6 +6,35 @@
 # Usage:
 #   nomad job plan nomad/mesh.nomad.hcl
 #   nomad job run nomad/mesh.nomad.hcl
+#
+# Override variables at run time:
+#   nomad job run -var="aim_host=http://192.168.1.10:23000" nomad/mesh.nomad.hcl
+
+# =============================================================================
+# Variables (override via -var or .nomadvar files)
+# =============================================================================
+
+variable "aim_host" {
+  description = "URL of the ai-maestro orchestrator"
+  type        = string
+  default     = "http://172.20.0.1:23000"
+}
+
+variable "agent_server_path" {
+  description = "Absolute path to agent-server.js on the Nomad client host"
+  type        = string
+  default     = "/home/mvillmow/ai-maestro/agent-container/agent-server.js"
+}
+
+variable "workspace_root" {
+  description = "Absolute path to the workspace root on the Nomad client host"
+  type        = string
+  default     = "/home/mvillmow"
+}
+
+# =============================================================================
+# Job
+# =============================================================================
 
 job "achaean-mesh" {
   datacenters = ["dc1"]
@@ -41,7 +70,7 @@ job "achaean-mesh" {
         ports = ["agent"]
 
         volumes = [
-          "/home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro",
+          "${var.agent_server_path}:/app/agent-server.js:ro",
         ]
       }
 
@@ -49,7 +78,7 @@ job "achaean-mesh" {
         AGENT_PORT        = "23001"
         TMUX_SESSION_NAME = "claude-${NOMAD_ALLOC_INDEX}"
         AGENT_ID          = "claude-${NOMAD_ALLOC_INDEX}"
-        AIM_HOST          = "http://172.20.0.1:23000"
+        AIM_HOST          = var.aim_host
       }
 
       # Secrets via Nomad Vault integration (Phase 6)
@@ -99,7 +128,7 @@ job "achaean-mesh" {
         image   = "achaean-aider:latest"
         ports   = ["agent"]
         volumes = [
-          "/home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro",
+          "${var.agent_server_path}:/app/agent-server.js:ro",
         ]
       }
 
@@ -107,7 +136,7 @@ job "achaean-mesh" {
         AGENT_PORT        = "23001"
         TMUX_SESSION_NAME = "aider-${NOMAD_ALLOC_INDEX}"
         AGENT_ID          = "aider-${NOMAD_ALLOC_INDEX}"
-        AIM_HOST          = "http://172.20.0.1:23000"
+        AIM_HOST          = var.aim_host
         AIDER_MODEL       = "claude-3-5-sonnet-20241022"
       }
 
@@ -148,7 +177,7 @@ job "achaean-mesh" {
         ports   = ["agent"]
         volumes = [
           "/tmp/ci-workspace:/workspace",
-          "/home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro",
+          "${var.agent_server_path}:/app/agent-server.js:ro",
         ]
       }
 
@@ -156,7 +185,7 @@ job "achaean-mesh" {
         AGENT_PORT        = "23001"
         TMUX_SESSION_NAME = "worker-${NOMAD_ALLOC_INDEX}"
         AGENT_ID          = "worker-${NOMAD_ALLOC_INDEX}"
-        AIM_HOST          = "http://172.20.0.1:23000"
+        AIM_HOST          = var.aim_host
       }
 
       resources {
