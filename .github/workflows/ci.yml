@@ -17,7 +17,7 @@ on:
 jobs:
   build-bases:
     name: Build Base Images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         base:
@@ -45,7 +45,7 @@ jobs:
 
   build-vessels:
     name: Build Vessel Images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build-bases
     strategy:
       matrix:
@@ -97,7 +97,7 @@ jobs:
 
   push-to-registry:
     name: Push to GHCR
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build-vessels
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
