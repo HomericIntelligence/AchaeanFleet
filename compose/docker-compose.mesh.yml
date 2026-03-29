@@ -12,18 +12,13 @@
 version: "3.9"
 
 networks:
-  aimaestro-mesh:
-    name: ${MESH_NETWORK:-aimaestro-mesh}
+  homeric-mesh:
+    name: ${MESH_NETWORK:-homeric-mesh}
     driver: bridge
-
-# Shared agent-server.js mount (read-only from ai-maestro — never modified)
-# Set AGENT_SERVER_JS in .env if ai-maestro is installed in a non-default location.
-x-agent-server-mount: &agent-server-mount
-  ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
 
 # Shared environment for all agents
 x-common-env: &common-env
-  AIM_HOST: ${AIM_HOST:-http://172.20.0.1:23000}
+  AGAMEMNON_URL: ${AGAMEMNON_URL:-http://172.20.0.1:8080}
 
 # Shared healthcheck
 x-healthcheck: &healthcheck
@@ -37,11 +32,11 @@ services:
   # -------------------------------------------------------------------------
   # Claude agents (Node base)
   # -------------------------------------------------------------------------
-  aim-aindrea:
+  hi-aindrea:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
-    container_name: aim-aindrea
-    hostname: aim-aindrea
-    networks: [aimaestro-mesh]
+    container_name: hi-aindrea
+    hostname: hi-aindrea
+    networks: [homeric-mesh]
     ports: ["23001:23001"]
     environment:
       <<: *common-env
@@ -51,16 +46,15 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
 
-  aim-baird:
+  hi-baird:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
-    container_name: aim-baird
-    hostname: aim-baird
-    networks: [aimaestro-mesh]
+    container_name: hi-baird
+    hostname: hi-baird
+    networks: [homeric-mesh]
     ports: ["23003:23001"]
     environment:
       <<: *common-env
@@ -70,7 +64,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -78,11 +71,11 @@ services:
   # -------------------------------------------------------------------------
   # Codex agent (Node base)
   # -------------------------------------------------------------------------
-  aim-codex-1:
+  hi-codex-1:
     image: ${CODEX_IMAGE:-achaean-codex:latest}
-    container_name: aim-codex-1
-    hostname: aim-codex-1
-    networks: [aimaestro-mesh]
+    container_name: hi-codex-1
+    hostname: hi-codex-1
+    networks: [homeric-mesh]
     ports: ["23010:23001"]
     environment:
       <<: *common-env
@@ -92,7 +85,6 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -100,11 +92,11 @@ services:
   # -------------------------------------------------------------------------
   # Aider agent (Python base)
   # -------------------------------------------------------------------------
-  aim-aider-1:
+  hi-aider-1:
     image: ${AIDER_IMAGE:-achaean-aider:latest}
-    container_name: aim-aider-1
-    hostname: aim-aider-1
-    networks: [aimaestro-mesh]
+    container_name: hi-aider-1
+    hostname: hi-aider-1
+    networks: [homeric-mesh]
     ports: ["23020:23001"]
     environment:
       <<: *common-env
@@ -115,7 +107,6 @@ services:
       AIDER_MODEL: ${AIDER_MODEL:-claude-3-5-sonnet-20241022}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -123,11 +114,11 @@ services:
   # -------------------------------------------------------------------------
   # Goose agent (minimal/binary base)
   # -------------------------------------------------------------------------
-  aim-goose-1:
+  hi-goose-1:
     image: ${GOOSE_IMAGE:-achaean-goose:latest}
-    container_name: aim-goose-1
-    hostname: aim-goose-1
-    networks: [aimaestro-mesh]
+    container_name: hi-goose-1
+    hostname: hi-goose-1
+    networks: [homeric-mesh]
     ports: ["23030:23001"]
     environment:
       <<: *common-env
@@ -137,7 +128,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -145,11 +135,11 @@ services:
   # -------------------------------------------------------------------------
   # Cline agent (Node base)
   # -------------------------------------------------------------------------
-  aim-cline-1:
+  hi-cline-1:
     image: ${CLINE_IMAGE:-achaean-cline:latest}
-    container_name: aim-cline-1
-    hostname: aim-cline-1
-    networks: [aimaestro-mesh]
+    container_name: hi-cline-1
+    hostname: hi-cline-1
+    networks: [homeric-mesh]
     ports: ["23040:23001"]
     environment:
       <<: *common-env
@@ -159,7 +149,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -167,11 +156,11 @@ services:
   # -------------------------------------------------------------------------
   # OpenCode agent (minimal/binary base)
   # -------------------------------------------------------------------------
-  aim-opencode-1:
+  hi-opencode-1:
     image: ${OPENCODE_IMAGE:-achaean-opencode:latest}
-    container_name: aim-opencode-1
-    hostname: aim-opencode-1
-    networks: [aimaestro-mesh]
+    container_name: hi-opencode-1
+    hostname: hi-opencode-1
+    networks: [homeric-mesh]
     ports: ["23050:23001"]
     environment:
       <<: *common-env
@@ -181,7 +170,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -189,11 +177,11 @@ services:
   # -------------------------------------------------------------------------
   # Codebuff agent (Node base)
   # -------------------------------------------------------------------------
-  aim-codebuff-1:
+  hi-codebuff-1:
     image: ${CODEBUFF_IMAGE:-achaean-codebuff:latest}
-    container_name: aim-codebuff-1
-    hostname: aim-codebuff-1
-    networks: [aimaestro-mesh]
+    container_name: hi-codebuff-1
+    hostname: hi-codebuff-1
+    networks: [homeric-mesh]
     ports: ["23060:23001"]
     environment:
       <<: *common-env
@@ -203,7 +191,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -211,11 +198,11 @@ services:
   # -------------------------------------------------------------------------
   # AmpCode agent (Node base)
   # -------------------------------------------------------------------------
-  aim-ampcode-1:
+  hi-ampcode-1:
     image: ${AMPCODE_IMAGE:-achaean-ampcode:latest}
-    container_name: aim-ampcode-1
-    hostname: aim-ampcode-1
-    networks: [aimaestro-mesh]
+    container_name: hi-ampcode-1
+    hostname: hi-ampcode-1
+    networks: [homeric-mesh]
     ports: ["23070:23001"]
     environment:
       <<: *common-env
@@ -225,7 +212,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -233,11 +219,11 @@ services:
   # -------------------------------------------------------------------------
   # Shell Worker (minimal base, no AI tool)
   # -------------------------------------------------------------------------
-  aim-worker-1:
+  hi-worker-1:
     image: ${WORKER_IMAGE:-achaean-worker:latest}
-    container_name: aim-worker-1
-    hostname: aim-worker-1
-    networks: [aimaestro-mesh]
+    container_name: hi-worker-1
+    hostname: hi-worker-1
+    networks: [homeric-mesh]
     ports: ["23080:23001"]
     environment:
       <<: *common-env
@@ -246,7 +232,6 @@ services:
       TMUX_SESSION_NAME: worker-1
     volumes:
       - /tmp/ci-workspace:/workspace
-      - *agent-server-mount
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck

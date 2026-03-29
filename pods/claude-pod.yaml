@@ -3,8 +3,7 @@
 #        just pod-up claude
 #
 # This pod provides a single Claude Code agent container.
-# ai-maestro's docker/create endpoint can also provision these images
-# directly — this YAML is for local Podman pod orchestration.
+# This YAML is for local Podman pod orchestration.
 
 apiVersion: v1
 kind: Pod
@@ -16,9 +15,9 @@ metadata:
 spec:
   restartPolicy: OnFailure
   volumes:
-    - name: agent-server
+    - name: agent-sidecar
       hostPath:
-        path: /home/mvillmow/ai-maestro/agent-container/agent-server.js
+        path: /home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar
         type: File
     - name: workspace
       emptyDir: {}
@@ -36,13 +35,11 @@ spec:
               name: achaean-secrets
               key: anthropic-api-key
               optional: true
-        - name: AIM_HOST
-          value: "172.20.0.1"
-        - name: AIM_PORT
-          value: "23000"
+        - name: AGAMEMNON_URL
+          value: "http://172.20.0.1:8080"
       volumeMounts:
-        - name: agent-server
-          mountPath: /app/agent-server.js
+        - name: agent-sidecar
+          mountPath: /app/agent-sidecar
           readOnly: true
         - name: workspace
           mountPath: /workspace
