@@ -22,11 +22,11 @@ Agent provisioning lives in [Myrmidons](../Myrmidons).
   ├─ ...                │  achaean-worker                          │
   └─ worker/            └─────────────────────────────────────────┘
                                           │
-                        agent-server.js mounted :ro at runtime
+                        Agamemnon agent sidecar mounted :ro at runtime
                                           │
                         ┌─────────────────▼────────────────────────┐
-                        │             ai-maestro                    │
-                        │   (orchestrator — manages containers)     │
+                        │           ProjectAgamemnon                │
+                        │   (coordinator — manages containers)      │
                         └──────────────────────────────────────────┘
 ```
 
@@ -37,7 +37,7 @@ Agent provisioning lives in [Myrmidons](../Myrmidons).
 git clone https://github.com/HomericIntelligence/AchaeanFleet
 cd AchaeanFleet
 cp compose/.env.example compose/.env
-nano compose/.env   # set ANTHROPIC_API_KEY, verify AIM_HOST and AGENT_SERVER_JS
+nano compose/.env   # set ANTHROPIC_API_KEY, verify AGAMEMNON_URL
 
 # 2. Build all images
 just build-all
@@ -67,26 +67,26 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 ## Port mapping
 
 ```
-23000     ai-maestro dashboard (not in this repo)
-23001     aim-aindrea (claude)
+8080      ProjectAgamemnon coordinator (not in this repo)
+23001     hi-aindrea (claude)
 23002     (reserved)
-23003     aim-baird (claude)
-23004     aim-vegai (claude)
-23010     aim-codex-1
-23020     aim-aider-1
-23030     aim-goose-1
-23040     aim-cline-1
-23050     aim-opencode-1
-23060     aim-codebuff-1
-23070     aim-ampcode-1
-23080     aim-worker-1
+23003     hi-baird (claude)
+23004     hi-vegai (claude)
+23010     hi-codex-1
+23020     hi-aider-1
+23030     hi-goose-1
+23040     hi-cline-1
+23050     hi-opencode-1
+23060     hi-codebuff-1
+23070     hi-ampcode-1
+23080     hi-worker-1
 ```
 
-## agent-server.js
+## Agamemnon agent sidecar
 
-All containers expect `agent-server.js` mounted at `/app/agent-server.js:ro`.
-The source lives in ai-maestro and is never copied into images at build time.
-Configure its path via `AGENT_SERVER_JS` in `compose/.env`.
+All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.
+The binary lives in ProjectAgamemnon and is never copied into images at build time.
+Configure its path via `AGAMEMNON_URL` in `compose/.env`.
 
 ## Adding a new agent type
 
@@ -104,7 +104,7 @@ nomad job plan nomad/mesh.nomad.hcl
 
 # Deploy (override defaults)
 nomad job run \
-  -var="aim_host=http://hermes.tailnet:23000" \
-  -var="agent_server_path=/opt/ai-maestro/agent-container/agent-server.js" \
+  -var="agamemnon_url=http://hermes.tailnet:8080" \
+  -var="agamemnon_sidecar_path=/opt/ProjectAgamemnon/agent-sidecar/agent-sidecar" \
   nomad/mesh.nomad.hcl
 ```

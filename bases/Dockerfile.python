@@ -1,8 +1,7 @@
 # AchaeanFleet Base Image: Python
 #
-# Provides: python:3.12-slim + Node.js 20 + tmux + zsh + git + node-pty + ws
+# Provides: python:3.12-slim + Node.js 20 + tmux + zsh + git
 # Python-based agent vessels (Aider) FROM this.
-# Node.js is included because agent-server.js requires it.
 
 FROM python:3.12-slim
 
@@ -24,7 +23,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x (required for agent-server.js)
+# Install Node.js 20.x
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
@@ -52,9 +51,6 @@ USER agent
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 USER root
 
-# Install node-pty and ws (required by ai-maestro's agent-server.js)
-RUN npm install -g node-pty ws
-
 # Upgrade pip
 RUN pip install --upgrade pip
 
@@ -68,7 +64,7 @@ ENV AGENT_ID=agent-local
 ENV TMUX_SESSION_NAME=agent-session
 ENV WORKSPACE=/workspace
 ENV AGENT_PORT=23001
-ENV GIT_USER_NAME="AI Maestro Agent"
+ENV GIT_USER_NAME="HomericIntelligence Agent"
 ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
 
 USER agent

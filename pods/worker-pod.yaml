@@ -14,9 +14,9 @@ metadata:
 spec:
   restartPolicy: OnFailure
   volumes:
-    - name: agent-server
+    - name: agent-sidecar
       hostPath:
-        path: /home/mvillmow/ai-maestro/agent-container/agent-server.js
+        path: /home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar
         type: File
     - name: workspace
       emptyDir: {}
@@ -28,15 +28,13 @@ spec:
           hostPort: 23080
           protocol: TCP
       env:
-        - name: AIM_HOST
-          value: "172.20.0.1"
-        - name: AIM_PORT
-          value: "23000"
+        - name: AGAMEMNON_URL
+          value: "http://172.20.0.1:8080"
         - name: AGENT_MODE
           value: "headless"
       volumeMounts:
-        - name: agent-server
-          mountPath: /app/agent-server.js
+        - name: agent-sidecar
+          mountPath: /app/agent-sidecar
           readOnly: true
         - name: workspace
           mountPath: /workspace

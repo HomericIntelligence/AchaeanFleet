@@ -1,7 +1,7 @@
 # AchaeanFleet Base Image: Node.js
 #
-# Provides: node:20-slim + tmux + zsh + git + node-pty + ws
-# Compatible with ai-maestro's agent-server.js environment.
+# Provides: node:20-slim + tmux + zsh + git
+# Compatible with the HomericIntelligence agent mesh.
 # All node-based agent vessels (Claude, Codex, Cline, Codebuff, AmpCode) FROM this.
 
 FROM node:20-slim
@@ -46,21 +46,17 @@ USER agent
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 USER root
 
-# Install node-pty and ws (required by ai-maestro's agent-server.js)
-RUN npm install -g node-pty ws
-
 # Create workspace and app directories
 RUN mkdir -p /workspace /app && \
     chown -R agent:agent /workspace /app
 
 WORKDIR /workspace
 
-# Environment expected by agent-server.js
 ENV AGENT_ID=agent-local
 ENV TMUX_SESSION_NAME=agent-session
 ENV WORKSPACE=/workspace
 ENV AGENT_PORT=23001
-ENV GIT_USER_NAME="AI Maestro Agent"
+ENV GIT_USER_NAME="HomericIntelligence Agent"
 ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
 
 USER agent
