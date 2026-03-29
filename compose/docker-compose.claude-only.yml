@@ -2,7 +2,7 @@
 #
 # Mirrors the current local setup (5 Claude agents).
 # This is the Phase 3 verification target: docker compose up starts a Claude
-# container that ai-maestro connects to via WebSocket.
+# container that ProjectAgamemnon connects to via the agent sidecar.
 #
 # Usage:
 #   cp .env.example .env && nano .env
@@ -11,32 +11,32 @@
 version: "3.9"
 
 networks:
-  aimaestro-mesh:
-    name: ${MESH_NETWORK:-aimaestro-mesh}
+  homeric-mesh:
+    name: ${MESH_NETWORK:-homeric-mesh}
     driver: bridge
     # Internal DNS: containers resolve each other by service name
 
 services:
   # -------------------------------------------------------------------------
-  # AI Maestro orchestrator (existing, not modified — just connected here)
-  # Uncomment if you want to start ai-maestro from compose too.
+  # ProjectAgamemnon coordinator (existing, not modified — just connected here)
+  # Uncomment if you want to start ProjectAgamemnon from compose too.
   # -------------------------------------------------------------------------
-  # aim-maestro:
-  #   image: ai-maestro:latest
+  # hi-agamemnon:
+  #   image: agamemnon:latest
   #   ports:
-  #     - "23000:23000"
+  #     - "8080:8080"
   #   networks:
-  #     - aimaestro-mesh
+  #     - homeric-mesh
 
   # -------------------------------------------------------------------------
   # Claude agent: Aindrea (odyssey-mainline-analysis)
   # -------------------------------------------------------------------------
-  aim-aindrea:
+  hi-aindrea:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
-    container_name: aim-aindrea
-    hostname: aim-aindrea
+    container_name: hi-aindrea
+    hostname: hi-aindrea
     networks:
-      - aimaestro-mesh
+      - homeric-mesh
     ports:
       - "23001:23001"
     environment:
@@ -44,11 +44,9 @@ services:
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=aindrea
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
-      # Mount agent-server.js from ai-maestro (read-only — no modifications)
-      - ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
@@ -61,12 +59,12 @@ services:
   # -------------------------------------------------------------------------
   # Claude agent: Baird (scylla-repo-monitor)
   # -------------------------------------------------------------------------
-  aim-baird:
+  hi-baird:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
-    container_name: aim-baird
-    hostname: aim-baird
+    container_name: hi-baird
+    hostname: hi-baird
     networks:
-      - aimaestro-mesh
+      - homeric-mesh
     ports:
       - "23003:23001"
     environment:
@@ -74,10 +72,9 @@ services:
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=baird
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
-      - ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
@@ -90,12 +87,12 @@ services:
   # -------------------------------------------------------------------------
   # Claude agent: VegAI (villmow-general-agent)
   # -------------------------------------------------------------------------
-  aim-vegai:
+  hi-vegai:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
-    container_name: aim-vegai
-    hostname: aim-vegai
+    container_name: hi-vegai
+    hostname: hi-vegai
     networks:
-      - aimaestro-mesh
+      - homeric-mesh
     ports:
       - "23004:23001"
     environment:
@@ -103,10 +100,9 @@ services:
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=vegai
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AIM_HOST=${AIM_HOST:-http://172.20.0.1:23000}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-      - ${AGENT_SERVER_JS:-/home/mvillmow/ai-maestro/agent-container/agent-server.js}:/app/agent-server.js:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:

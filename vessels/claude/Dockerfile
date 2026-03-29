@@ -1,7 +1,7 @@
 # AchaeanFleet Vessel: Claude Code
 #
 # Installs @anthropic-ai/claude-code on top of the Node base image.
-# Compatible with ai-maestro's agent-server.js.
+# Compatible with the HomericIntelligence agent mesh.
 
 ARG BASE_IMAGE=achaean-base-node:latest
 FROM ${BASE_IMAGE}
@@ -22,4 +22,4 @@ USER agent
 ENV AGENT_PROGRAM=claude-code
 ENV AGENT_HEADLESS_FLAG=-p
 
-# Runtime: agent-server.js starts claude with -p flag in tmux
+# Runtime: Agamemnon agent sidecar starts claude with -p flag in tmux

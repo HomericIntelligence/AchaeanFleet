@@ -4,13 +4,13 @@ Container infrastructure for the HomericIntelligence agent mesh.
 
 ## What this repo is
 
-AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh. It is **infrastructure only** — no agent logic, no ai-maestro modifications.
+AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh. It is **infrastructure only** — no agent logic, no ProjectAgamemnon modifications.
 
 ## What this repo is NOT
 
 - Do not add agent provisioning logic here → that's Myrmidons
-- Do not modify ai-maestro source → it is mounted read-only via volume
-- Do not add authentication, routing, or orchestration → ai-maestro handles that
+- Do not modify ProjectAgamemnon source → it is mounted read-only via volume
+- Do not add authentication, routing, or orchestration → ProjectAgamemnon handles that
 
 ## Structure
 
@@ -44,7 +44,7 @@ npx ts-node dagger/pipeline.ts build
 # Set up environment
 cd compose
 cp .env.example .env
-# Edit .env: add ANTHROPIC_API_KEY and verify AIM_HOST
+# Edit .env: add ANTHROPIC_API_KEY and verify AGAMEMNON_URL
 
 # Claude-only (Phase 3 target)
 docker compose -f docker-compose.claude-only.yml up -d
@@ -53,39 +53,39 @@ docker compose -f docker-compose.claude-only.yml up -d
 docker compose -f docker-compose.mesh.yml up -d
 ```
 
-## Agent-server.js integration
+## Agamemnon agent sidecar integration
 
-The base images are designed to work with ai-maestro's `agent-server.js`. The file is mounted at runtime:
+The base images are designed to work with the Agamemnon agent sidecar. The binary is mounted at runtime:
 
 ```yaml
 volumes:
-  - /home/mvillmow/ai-maestro/agent-container/agent-server.js:/app/agent-server.js:ro
+  - /home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar:/app/agent-sidecar:ro
 ```
 
-**Never copy agent-server.js into the image at build time** — this would lock the image to a specific ai-maestro version.
+**Never copy the Agamemnon agent sidecar into the image at build time** — this would lock the image to a specific ProjectAgamemnon version.
 
 ## Port mapping convention
 
 ```
-23000     ai-maestro dashboard (existing, not in this repo)
-23001     aim-aindrea (claude)
+8080      ProjectAgamemnon coordinator (existing, not in this repo)
+23001     hi-aindrea (claude)
 23002     (reserved)
-23003     aim-baird (claude)
-23004     aim-vegai (claude)
+23003     hi-baird (claude)
+23004     hi-vegai (claude)
 23005     (reserved)
-23010     aim-codex-1
-23020     aim-aider-1
-23030     aim-goose-1
-23040     aim-cline-1
-23050     aim-opencode-1
-23060     aim-codebuff-1
-23070     aim-ampcode-1
-23080     aim-worker-1
+23010     hi-codex-1
+23020     hi-aider-1
+23030     hi-goose-1
+23040     hi-cline-1
+23050     hi-opencode-1
+23060     hi-codebuff-1
+23070     hi-ampcode-1
+23080     hi-worker-1
 ```
 
 ## Network
 
-All containers join the `aimaestro-mesh` bridge network. Containers resolve each other by service name via Docker's internal DNS. ai-maestro on the host connects via `172.20.0.1` (the Docker bridge gateway).
+All containers join the `homeric-mesh` bridge network. Containers resolve each other by service name via Docker's internal DNS. ProjectAgamemnon on the host connects via `172.20.0.1` (the Docker bridge gateway).
 
 ## Adding a new agent type
 
