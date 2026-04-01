@@ -59,6 +59,7 @@ jobs:
     runs-on: self-hosted
     needs: build-bases
     strategy:
+      max-parallel: 4
       matrix:
         vessel:
           - name: achaean-claude

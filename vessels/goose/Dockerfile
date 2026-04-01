@@ -11,13 +11,13 @@ LABEL org.opencontainers.image.description="Goose (Block) AI agent vessel"
 
 USER root
 
-# Install Goose via official install script
-RUN curl -fsSL https://github.com/block/goose/releases/latest/download/install.sh | bash || \
-    curl -fsSL https://github.com/block/goose/releases/latest/download/goose-linux-x86_64.tar.gz \
-        -o /tmp/goose.tar.gz && \
-    tar -xzf /tmp/goose.tar.gz -C /usr/local/bin && \
+# Install Goose via official install script or tarball fallback
+RUN curl -fsSL https://github.com/block/goose/releases/latest/download/download_cli.sh | bash || ( \
+    curl -fsSL https://github.com/block/goose/releases/latest/download/goose-x86_64-unknown-linux-gnu.tar.bz2 \
+        -o /tmp/goose.tar.bz2 && \
+    tar -xjf /tmp/goose.tar.bz2 -C /usr/local/bin && \
     chmod +x /usr/local/bin/goose && \
-    rm -f /tmp/goose.tar.gz
+    rm -f /tmp/goose.tar.bz2 )
 
 # Verify installation
 RUN goose --version || true
