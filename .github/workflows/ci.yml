@@ -30,8 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
 
       - name: Build base image
         uses: docker/build-push-action@v5
@@ -39,10 +41,11 @@ jobs:
           context: .
           file: ${{ matrix.base.dockerfile }}
           push: false
+          load: true
           tags: ${{ matrix.base.name }}:latest
-          outputs: type=docker,dest=/tmp/${{ matrix.base.name }}.tar
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+      - name: Export base image to tarball
+        run: docker save ${{ matrix.base.name }}:latest -o /tmp/${{ matrix.base.name }}.tar
 
       - name: Upload base image artifact
         uses: actions/upload-artifact@v4
@@ -97,8 +100,10 @@ jobs:
       - name: Load base image into Docker daemon
         run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx (docker driver — shares daemon image store)
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
 
       - name: Build vessel image
         uses: docker/build-push-action@v5
@@ -109,8 +114,6 @@ jobs:
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
           push: false
           tags: ${{ matrix.vessel.name }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   push-to-registry:
     name: Push to GHCR
