@@ -40,8 +40,16 @@ jobs:
           file: ${{ matrix.base.dockerfile }}
           push: false
           tags: ${{ matrix.base.name }}:latest
+          outputs: type=docker,dest=/tmp/${{ matrix.base.name }}.tar
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Upload base image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: base-image-${{ matrix.base.name }}
+          path: /tmp/${{ matrix.base.name }}.tar
+          retention-days: 1
 
   build-vessels:
     name: Build Vessel Images
@@ -79,6 +87,15 @@ jobs:
             base: achaean-base-minimal
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download base image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: base-image-${{ matrix.vessel.base }}
+          path: /tmp
+
+      - name: Load base image into Docker daemon
+        run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
