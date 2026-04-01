@@ -26,3 +26,4 @@ USER agent
 
 ENV AGENT_PROGRAM=goose
 ENV AGENT_HEADLESS_FLAG="--mode cli"
+
