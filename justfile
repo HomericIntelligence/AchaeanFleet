@@ -248,3 +248,23 @@ clean:
         | grep '^achaean-' \
         | xargs -r ${container_cmd} rmi || true
     echo "=== Cleaned ==="
+
+# Prune dangling images, stopped containers, and build cache
+clean-dangling:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    container_cmd="$(which podman 2>/dev/null || echo docker)"
+    echo "=== Pruning dangling images (${container_cmd}) ==="
+    ${container_cmd} image prune -f
+    echo "=== Pruning stopped containers ==="
+    ${container_cmd} container prune -f
+    echo "=== Pruning build cache ==="
+    ${container_cmd} builder prune -f || true
+    echo "=== Dangling artifacts removed ==="
+
+# Full cleanup: remove achaean-* images + dangling layers + build cache
+clean-all:
+    @echo "=== Full cleanup ==="
+    just clean
+    just clean-dangling
+    @echo "=== All cleaned ==="
