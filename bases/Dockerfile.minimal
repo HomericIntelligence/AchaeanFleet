@@ -2,15 +2,17 @@
 #
 # Provides: debian:bookworm-slim + Node.js 20 + tmux + zsh + git
 # Binary-based agent vessels (Goose, OpenCode, Worker) FROM this.
+#
+# Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:4724b8cc51e33e398f0e2e15e18d5ec2851ff0c2280647e1310bc1642182655d
 
 LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
@@ -47,9 +49,12 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
 
-# Install Oh My Zsh
+# Install Oh My Zsh from a pinned commit (reproducible, no curl|bash)
+ENV OHMYZSH_COMMIT=7c10d9839f05b8b73e26aa4e0f04cc886fbba6a6
 USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+RUN git clone https://github.com/ohmyzsh/ohmyzsh.git /home/agent/.oh-my-zsh && \
+    git -C /home/agent/.oh-my-zsh checkout "$OHMYZSH_COMMIT" && \
+    cp /home/agent/.oh-my-zsh/templates/zshrc.zsh-template /home/agent/.zshrc
 USER root
 
 # Create workspace and app directories
