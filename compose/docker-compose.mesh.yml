@@ -70,6 +70,8 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-claude
     healthcheck: *healthcheck
     <<: *security
 
@@ -90,6 +92,8 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-claude
     healthcheck: *healthcheck
     <<: *security
 
@@ -112,6 +116,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codex-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-codex
     healthcheck: *healthcheck
     <<: *security
 
@@ -135,6 +141,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aider-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-aider
     healthcheck: *healthcheck
     <<: *security
 
@@ -157,6 +165,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Goose-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-goose
     healthcheck: *healthcheck
     <<: *security
 
@@ -179,6 +189,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Cline-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-cline
     healthcheck: *healthcheck
     <<: *security
 
@@ -201,6 +213,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Opencode-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-opencode
     healthcheck: *healthcheck
     <<: *security
 
@@ -223,6 +237,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codebuff-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-codebuff
     healthcheck: *healthcheck
     <<: *security
 
@@ -245,6 +261,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Ampcode-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-ampcode
     healthcheck: *healthcheck
     <<: *security
 
@@ -267,5 +285,7 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-worker
     healthcheck: *healthcheck
     <<: *security
