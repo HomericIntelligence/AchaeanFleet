@@ -24,7 +24,7 @@ spec:
     - name: worker
       image: achaean-worker:latest
       ports:
-        - containerPort: 23080
+        - containerPort: 23001
           hostPort: 23080
           protocol: TCP
       env:
