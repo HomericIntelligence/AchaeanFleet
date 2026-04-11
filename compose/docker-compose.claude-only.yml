@@ -7,6 +7,10 @@
 # Usage:
 #   cp .env.example .env && nano .env
 #   docker compose -f docker-compose.claude-only.yml up -d
+#
+# API key secrets:
+#   mkdir -p secrets && echo -n "sk-ant-..." > secrets/anthropic_api_key && chmod 600 secrets/anthropic_api_key
+#   (set SECRETS_DIR in .env if your secrets dir lives elsewhere)
 
 version: "3.9"
 
@@ -15,6 +19,10 @@ networks:
     name: ${MESH_NETWORK:-homeric-mesh}
     driver: bridge
     # Internal DNS: containers resolve each other by service name
+
+secrets:
+  anthropic_api_key:
+    file: ${SECRETS_DIR:-./secrets}/anthropic_api_key
 
 services:
   # -------------------------------------------------------------------------
@@ -43,8 +51,11 @@ services:
       - AGENT_ID=aindrea
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=aindrea
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+      # Fallback: set ANTHROPIC_API_KEY in .env for plain env-var mode
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
     working_dir: /workspace
@@ -71,8 +82,10 @@ services:
       - AGENT_ID=baird
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=baird
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
     working_dir: /workspace
@@ -99,8 +112,10 @@ services:
       - AGENT_ID=vegai
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=vegai
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
