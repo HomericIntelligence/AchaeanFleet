@@ -1,0 +1,43 @@
+# hadolint configuration for AchaeanFleet
+#
+# Intentional suppressions — each rule is suppressed because the pattern
+# is reviewed and accepted for this repo. See rationale below.
+
+failure-threshold: warning
+
+ignore:
+  # DL3008: apt packages not pinned to a specific version.
+  # Intentional: base image tag digest acts as the version lock for the
+  # whole layer. Pinning individual apt packages here would couple us to
+  # Debian/Ubuntu package versioning minutiae without adding meaningful
+  # reproducibility beyond what the digest already provides.
+  - DL3008
+
+  # DL3016: npm packages not pinned to a specific version.
+  # Intentional: vessel images install CLI tools (claude-code, codex, etc.)
+  # that are always used at latest. Version pinning is handled at the compose
+  # level via image digest, not inside the Dockerfile.
+  - DL3016
+
+  # DL3013: pip packages not pinned to a specific version.
+  # Same rationale as DL3016 above (aider-chat vessel).
+  - DL3013
+
+  # DL3028: gem packages not pinned (no Ruby gems in this repo, but listed
+  # for completeness should any be added).
+  # - DL3028
+
+  # DL3059: multiple consecutive RUN instructions in a single Dockerfile.
+  # Acceptable here: vessel Dockerfiles intentionally separate install and
+  # verify steps for clarity. Layer caching benefit during development
+  # outweighs the marginal reduction in layer count for these tool-specific
+  # images.
+  - DL3059
+
+  # SC2312: curl-pipe-bash patterns (goose, opencode, worker yq install).
+  # These are official upstream install scripts for tools that only publish
+  # a pipe-to-shell installer (Goose, OpenCode). The fallback download paths
+  # and explicit binary installations are provided as alternatives where
+  # possible, but the primary path is the upstream script. Each usage has
+  # been reviewed individually.
+  - SC2312
