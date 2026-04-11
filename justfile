@@ -119,6 +119,43 @@ test:
     @echo "=== Running image smoke tests ==="
     npx ts-node dagger/pipeline.ts test
 
+# Validate all compose YAML files parse without errors (no images needed)
+test-compose:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Validating compose files ==="
+    for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml compose/docker-compose.smoke.yml; do
+        echo "  Checking $f ..."
+        docker compose -f "$f" config --quiet || { echo "FAIL: $f"; exit 1; }
+        echo "  OK: $f"
+    done
+    echo "=== All compose files valid ==="
+
+# Build worker vessel, start it, probe /health on port 23080, then tear down
+test-smoke:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Smoke test: building worker vessel ==="
+    docker build -f bases/Dockerfile.minimal -t achaean-base-minimal:latest .
+    docker build -f vessels/worker/Dockerfile \
+        --build-arg BASE_IMAGE=achaean-base-minimal:latest \
+        -t achaean-worker:latest .
+    echo "=== Starting smoke container ==="
+    docker compose -f compose/docker-compose.smoke.yml up -d
+    echo "=== Waiting for /health on port 23080 (up to 60s) ==="
+    ok=0
+    for i in $(seq 1 30); do
+        if wget -qO- http://localhost:23080/health 2>/dev/null | grep -q '"status"'; then
+            echo "  Health OK after $((i * 2))s"
+            ok=1
+            break
+        fi
+        sleep 2
+    done
+    docker compose -f compose/docker-compose.smoke.yml down --volumes --remove-orphans || true
+    [ $ok -eq 1 ] || { echo "FAIL: /health did not respond within 60s"; exit 1; }
+    echo "=== Smoke test passed ==="
+
 # =============================================================================
 # Push
 # =============================================================================
