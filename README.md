@@ -96,6 +96,11 @@ Configure its path via `AGAMEMNON_URL` in `compose/.env`.
 4. Add to the build matrix in `.github/workflows/ci.yml`
 5. Run `just build-vessel <name>` to verify
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for Dockerfile conventions, branch strategy, and the PR
+review process. Changes are documented in [CHANGELOG.md](CHANGELOG.md).
+
 ## Nomad (Phase 6)
 
 ```bash
