@@ -10,8 +10,8 @@ LABEL org.opencontainers.image.description="OpenAI Codex agent vessel"
 
 USER root
 
-# Install OpenAI Codex CLI
-RUN npm install -g @openai/codex
+# Install OpenAI Codex CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g @openai/codex@0.120.0
 
 # Verify installation
 RUN codex --version || true

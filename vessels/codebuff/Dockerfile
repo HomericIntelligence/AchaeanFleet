@@ -10,8 +10,8 @@ LABEL org.opencontainers.image.description="Codebuff AI coding agent vessel"
 
 USER root
 
-# Install Codebuff CLI
-RUN npm install -g codebuff
+# Install Codebuff CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g codebuff@1.0.638
 
 # Verify installation
 RUN codebuff --version || true
