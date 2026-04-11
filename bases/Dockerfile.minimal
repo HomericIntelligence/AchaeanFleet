@@ -30,7 +30,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Yarn
-RUN npm install -g yarn
+ENV YARN_VERSION=1.22.22
+RUN npm install -g yarn@${YARN_VERSION}  # pinned for reproducibility — see #57
 
 # Create non-root user
 ARG USER_ID=1000

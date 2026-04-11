@@ -11,7 +11,8 @@ LABEL org.opencontainers.image.description="AmpCode (Sourcegraph Amp) agent vess
 USER root
 
 # Install AmpCode CLI
-RUN npm install -g @sourcegraph/amp
+ENV AMP_VERSION=0.0.1775866026-gd3abf3
+RUN npm install -g @sourcegraph/amp@${AMP_VERSION}  # pinned for reproducibility — see #57
 
 # Verify installation
 RUN amp --version || true
