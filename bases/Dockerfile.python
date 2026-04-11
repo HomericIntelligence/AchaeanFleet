@@ -2,11 +2,10 @@
 #
 # Provides: python:3.12-slim + Node.js 20 + tmux + zsh + git
 # Python-based agent vessels (Aider) FROM this.
+#
+# Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
-FROM python:3.14-slim@sha256:bc389f7dfcb21413e72a28f491985326994795e34d2b86c8ae2f417b4e7818aa
-
-ARG GIT_SHA=unknown
-ARG VERSION=unknown
+FROM python:3.12-slim@sha256:804ddf3251a60bbf9c92e73b7566c40428d54d0e79d3428194edf40da6521286
 
 LABEL org.opencontainers.image.title="achaean-base-python"
 LABEL org.opencontainers.image.description="AchaeanFleet Python base image for AI agent containers"
@@ -66,6 +65,14 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-bg colour235" >> /home/agent/.tmux.conf && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
+
+# Install Oh My Zsh from a pinned commit (reproducible, no curl|bash)
+ENV OHMYZSH_COMMIT=7c10d9839f05b8b73e26aa4e0f04cc886fbba6a6
+USER agent
+RUN git clone https://github.com/ohmyzsh/ohmyzsh.git /home/agent/.oh-my-zsh && \
+    git -C /home/agent/.oh-my-zsh checkout "$OHMYZSH_COMMIT" && \
+    cp /home/agent/.oh-my-zsh/templates/zshrc.zsh-template /home/agent/.zshrc
+USER root
 
 # Upgrade pip
 RUN pip install --upgrade pip
