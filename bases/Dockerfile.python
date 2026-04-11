@@ -3,14 +3,14 @@
 # Provides: python:3.12-slim + Node.js 20 + tmux + zsh + git
 # Python-based agent vessels (Aider) FROM this.
 
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:804ddf3251a60bbf9c92e73b7566c40428d54d0e79d3428194edf40da6521286
 
 LABEL org.opencontainers.image.title="achaean-base-python"
 LABEL org.opencontainers.image.description="AchaeanFleet Python base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
@@ -23,10 +23,17 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
+# Install Node.js 20.x via GPG-signed NodeSource repository (no curl-pipe-bash)
+RUN apt-get update && apt-get install -y gnupg && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+        -o /tmp/nodesource.gpg.key && \
+    gpg --dearmor < /tmp/nodesource.gpg.key > /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" \
+        > /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/* /tmp/nodesource.gpg.key
 
 # Install Yarn
 RUN npm install -g yarn
@@ -45,11 +52,6 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-bg colour235" >> /home/agent/.tmux.conf && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
-
-# Install Oh My Zsh
-USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-USER root
 
 # Upgrade pip
 RUN pip install --upgrade pip
