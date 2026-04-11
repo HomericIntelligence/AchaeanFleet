@@ -19,11 +19,14 @@ RUN apt-get update && apt-get install -y \
     make \
     && rm -rf /var/lib/apt/lists/* || true
 
+# Pinned yq version for reproducibility (issue #2). Update ENV to bump.
+ENV YQ_VERSION=v4.52.5
+
 # Install yq if not available via apt
-RUN which yq || \
-    curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" \
+RUN which yq || ( \
+    curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" \
         -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq
+    chmod +x /usr/local/bin/yq )
 
 USER agent
 

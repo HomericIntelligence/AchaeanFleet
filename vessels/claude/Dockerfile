@@ -11,8 +11,8 @@ LABEL org.opencontainers.image.description="Claude Code agent vessel"
 
 USER root
 
-# Install Claude Code CLI
-RUN npm install -g @anthropic-ai/claude-code
+# Install Claude Code CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g @anthropic-ai/claude-code@2.1.101
 
 # Install GitHub CLI (needed for issue/PR operations)
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \

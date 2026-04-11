@@ -10,8 +10,8 @@ LABEL org.opencontainers.image.description="Cline AI coding agent vessel"
 
 USER root
 
-# Install Cline CLI
-RUN npm install -g cline
+# Install Cline CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g cline@2.14.0
 
 # Verify installation
 RUN cline --version || true
