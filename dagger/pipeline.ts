@@ -92,7 +92,8 @@ async function buildBases(client: Client): Promise<Map<string, any>> {
 async function buildVessels(
   client: Client,
   builtBases: Map<string, any>,
-  registry?: string
+  registry?: string,
+  imageTag?: string
 ): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
@@ -115,9 +116,17 @@ async function buildVessels(
     });
 
     if (registry) {
-      const tag = `${registry}/${vessel.name}:latest`;
-      console.log(`Pushing: ${tag}`);
-      await image.publish(tag);
+      // Always push :latest
+      const latestTag = `${registry}/${vessel.name}:latest`;
+      console.log(`Pushing: ${latestTag}`);
+      await image.publish(latestTag);
+
+      // Also push the pinnable tag (SHA or semver) if provided
+      if (imageTag && imageTag !== "latest") {
+        const pinnableTag = `${registry}/${vessel.name}:${imageTag}`;
+        console.log(`Pushing: ${pinnableTag}`);
+        await image.publish(pinnableTag);
+      }
     }
 
     return image;
@@ -156,6 +165,9 @@ const command = process.argv[2] || "build";
 const registryArg = process.argv.indexOf("--registry");
 const registry =
   registryArg !== -1 ? process.argv[registryArg + 1] : undefined;
+const tagArg = process.argv.indexOf("--tag");
+const imageTag =
+  tagArg !== -1 ? process.argv[tagArg + 1] : undefined;
 
 connect(
   async (client) => {
@@ -172,8 +184,9 @@ connect(
           process.exit(1);
         }
         const basesForPush = await buildBases(client);
-        await buildVessels(client, basesForPush, registry);
-        console.log(`All images pushed to ${registry}`);
+        await buildVessels(client, basesForPush, registry, imageTag);
+        const tagSuffix = imageTag ? ` (tags: ${imageTag}, latest)` : " (tag: latest)";
+        console.log(`All images pushed to ${registry}${tagSuffix}`);
         break;
 
       case "test":
@@ -183,7 +196,7 @@ connect(
 
       default:
         console.error(`Unknown command: ${command}`);
-        console.error("Usage: pipeline.ts [build|push|test] [--registry URL]");
+        console.error("Usage: pipeline.ts [build|push|test] [--registry URL] [--tag TAG]");
         process.exit(1);
     }
   },

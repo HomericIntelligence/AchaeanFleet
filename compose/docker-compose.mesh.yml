@@ -7,6 +7,11 @@
 #   cp .env.example .env && nano .env
 #   docker compose -f docker-compose.mesh.yml up -d
 #
+# To pin all images to a specific version, set IMAGE_TAG in .env:
+#   IMAGE_TAG=v1.0.0    (semver release — reproducible)
+#   IMAGE_TAG=abc1234   (7-char git SHA from CI — traceable)
+#   IMAGE_TAG=latest    (default — always the newest build, not pinned)
+#
 # Check health: docker compose -f docker-compose.mesh.yml ps
 
 version: "3.9"

@@ -17,6 +17,9 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "${REPO_ROOT}"
 
+VERSION=$(cat VERSION 2>/dev/null || echo "unknown")
+GIT_SHA="${GIT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")}"
+
 # Counters
 built=0
 failed=0
@@ -29,7 +32,10 @@ build_image() {
 
     echo ""
     echo "--- Building ${tag} from ${dockerfile} ---"
-    if docker build -f "${dockerfile}" -t "${tag}" "${extra_args[@]}" .; then
+    if docker build -f "${dockerfile}" -t "${tag}" \
+        --build-arg "GIT_SHA=${GIT_SHA}" \
+        --build-arg "VERSION=${VERSION}" \
+        "${extra_args[@]}" .; then
         echo "    OK: ${tag}"
         built=$((built + 1))
     else
