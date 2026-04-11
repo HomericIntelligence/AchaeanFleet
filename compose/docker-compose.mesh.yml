@@ -28,6 +28,79 @@ x-healthcheck: &healthcheck
   start_period: 15s
   retries: 3
 
+# Resource limits for Claude/Codex/Aider/Goose/Cline/OpenCode/Codebuff/AmpCode agents
+x-resources-claude: &resources-claude
+  limits:
+    memory: ${CLAUDE_MEM_LIMIT:-4G}
+    cpus: '${CLAUDE_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${CLAUDE_MEM_RESERVATION:-512M}
+    cpus: '${CLAUDE_CPU_RESERVATION:-0.25}'
+
+x-resources-codex: &resources-codex
+  limits:
+    memory: ${CODEX_MEM_LIMIT:-4G}
+    cpus: '${CODEX_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${CODEX_MEM_RESERVATION:-512M}
+    cpus: '${CODEX_CPU_RESERVATION:-0.25}'
+
+x-resources-aider: &resources-aider
+  limits:
+    memory: ${AIDER_MEM_LIMIT:-4G}
+    cpus: '${AIDER_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${AIDER_MEM_RESERVATION:-512M}
+    cpus: '${AIDER_CPU_RESERVATION:-0.25}'
+
+x-resources-goose: &resources-goose
+  limits:
+    memory: ${GOOSE_MEM_LIMIT:-4G}
+    cpus: '${GOOSE_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${GOOSE_MEM_RESERVATION:-512M}
+    cpus: '${GOOSE_CPU_RESERVATION:-0.25}'
+
+x-resources-cline: &resources-cline
+  limits:
+    memory: ${CLINE_MEM_LIMIT:-4G}
+    cpus: '${CLINE_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${CLINE_MEM_RESERVATION:-512M}
+    cpus: '${CLINE_CPU_RESERVATION:-0.25}'
+
+x-resources-opencode: &resources-opencode
+  limits:
+    memory: ${OPENCODE_MEM_LIMIT:-4G}
+    cpus: '${OPENCODE_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${OPENCODE_MEM_RESERVATION:-512M}
+    cpus: '${OPENCODE_CPU_RESERVATION:-0.25}'
+
+x-resources-codebuff: &resources-codebuff
+  limits:
+    memory: ${CODEBUFF_MEM_LIMIT:-4G}
+    cpus: '${CODEBUFF_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${CODEBUFF_MEM_RESERVATION:-512M}
+    cpus: '${CODEBUFF_CPU_RESERVATION:-0.25}'
+
+x-resources-ampcode: &resources-ampcode
+  limits:
+    memory: ${AMPCODE_MEM_LIMIT:-4G}
+    cpus: '${AMPCODE_CPU_LIMIT:-2.0}'
+  reservations:
+    memory: ${AMPCODE_MEM_RESERVATION:-512M}
+    cpus: '${AMPCODE_CPU_RESERVATION:-0.25}'
+
+x-resources-worker: &resources-worker
+  limits:
+    memory: ${WORKER_MEM_LIMIT:-1G}
+    cpus: '${WORKER_CPU_LIMIT:-1.0}'
+  reservations:
+    memory: ${WORKER_MEM_RESERVATION:-128M}
+    cpus: '${WORKER_CPU_RESERVATION:-0.1}'
+
 services:
   # -------------------------------------------------------------------------
   # Claude agents (Node base)
@@ -48,6 +121,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-claude
     healthcheck: *healthcheck
 
   hi-baird:
@@ -66,6 +141,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-claude
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -87,6 +164,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-codex
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -109,6 +188,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-aider
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -130,6 +211,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-goose
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -151,6 +234,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-cline
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -172,6 +257,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-opencode
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -193,6 +280,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-codebuff
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -214,6 +303,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-ampcode
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -234,4 +325,6 @@ services:
       - /tmp/ci-workspace:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources: *resources-worker
     healthcheck: *healthcheck
