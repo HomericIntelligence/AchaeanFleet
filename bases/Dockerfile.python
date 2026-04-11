@@ -56,10 +56,6 @@ RUN mkdir -p /home/agent && \
 # Upgrade pip
 RUN pip install --upgrade pip
 
-# Create workspace and app directories
-RUN mkdir -p /workspace /app && \
-    chown -R agent:agent /workspace /app
-
 WORKDIR /workspace
 
 ENV AGENT_ID=agent-local
