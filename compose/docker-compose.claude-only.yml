@@ -13,15 +13,6 @@
 #   IMAGE_TAG=abc1234   (7-char git SHA from CI — traceable)
 #   IMAGE_TAG=latest    (default — always the newest build, not pinned)
 
-version: "3.9"
-
-# Shared security hardening applied to all services
-x-security: &security
-  security_opt:
-    - no-new-privileges:true
-  cap_drop:
-    - ALL
-
 networks:
   homeric-mesh:
     name: ${MESH_NETWORK:-homeric-mesh}
