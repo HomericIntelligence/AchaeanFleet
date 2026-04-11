@@ -1,6 +1,6 @@
 # AchaeanFleet: Claude-only Compose
 #
-# Mirrors the current local setup (5 Claude agents).
+# Mirrors the current local setup (3 Claude agents).
 # This is the Phase 3 verification target: docker compose up starts a Claude
 # container that ProjectAgamemnon connects to via the agent sidecar.
 #
