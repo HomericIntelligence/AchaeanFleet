@@ -75,10 +75,17 @@ job "achaean-mesh" {
       }
 
       env {
-        AGENT_PORT        = "23001"
-        TMUX_SESSION_NAME = "claude-${NOMAD_ALLOC_INDEX}"
-        AGENT_ID          = "claude-${NOMAD_ALLOC_INDEX}"
-        AGAMEMNON_URL     = var.agamemnon_url
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      template {
+        data        = <<EOH
+AGENT_ID=claude-{{ env "NOMAD_ALLOC_INDEX" }}
+TMUX_SESSION_NAME=claude-{{ env "NOMAD_ALLOC_INDEX" }}
+EOH
+        destination = "local/agent-env"
+        env         = true
       }
 
       # Secrets via Nomad Vault integration (Phase 6)
@@ -133,11 +140,18 @@ job "achaean-mesh" {
       }
 
       env {
-        AGENT_PORT        = "23001"
-        TMUX_SESSION_NAME = "aider-${NOMAD_ALLOC_INDEX}"
-        AGENT_ID          = "aider-${NOMAD_ALLOC_INDEX}"
-        AGAMEMNON_URL     = var.agamemnon_url
-        AIDER_MODEL       = "claude-3-5-sonnet-20241022"
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+        AIDER_MODEL   = "claude-3-5-sonnet-20241022"
+      }
+
+      template {
+        data        = <<EOH
+AGENT_ID=aider-{{ env "NOMAD_ALLOC_INDEX" }}
+TMUX_SESSION_NAME=aider-{{ env "NOMAD_ALLOC_INDEX" }}
+EOH
+        destination = "local/agent-env"
+        env         = true
       }
 
       resources {
@@ -182,10 +196,17 @@ job "achaean-mesh" {
       }
 
       env {
-        AGENT_PORT        = "23001"
-        TMUX_SESSION_NAME = "worker-${NOMAD_ALLOC_INDEX}"
-        AGENT_ID          = "worker-${NOMAD_ALLOC_INDEX}"
-        AGAMEMNON_URL     = var.agamemnon_url
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      template {
+        data        = <<EOH
+AGENT_ID=worker-{{ env "NOMAD_ALLOC_INDEX" }}
+TMUX_SESSION_NAME=worker-{{ env "NOMAD_ALLOC_INDEX" }}
+EOH
+        destination = "local/agent-env"
+        env         = true
       }
 
       resources {
