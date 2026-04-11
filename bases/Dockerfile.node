@@ -12,8 +12,8 @@ LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/Ac
 
 USER root
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and apply security patches
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
@@ -29,9 +29,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # node:20-slim ships with user 'node' (UID 1000). Rename to 'agent' for convention.
+# Narrow sudo to the specific commands agents actually need instead of ALL.
 RUN usermod -l agent -d /home/agent -m node && \
     groupmod -n agent node && \
-    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "agent ALL=(ALL) NOPASSWD: /usr/bin/tmux, /usr/bin/git" >> /etc/sudoers
 
 # Configure tmux
 RUN mkdir -p /home/agent && \

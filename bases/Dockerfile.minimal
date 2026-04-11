@@ -9,8 +9,8 @@ LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and apply security patches
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
@@ -37,7 +37,7 @@ ARG USER_ID=1000
 ARG GROUP_ID=1000
 RUN groupadd -g ${GROUP_ID} agent && \
     useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
-    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "agent ALL=(ALL) NOPASSWD: /usr/bin/tmux, /usr/bin/git" >> /etc/sudoers
 
 # Configure tmux
 RUN mkdir -p /home/agent && \
