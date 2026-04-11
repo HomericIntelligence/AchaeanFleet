@@ -54,6 +54,7 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
 
+
 # Create workspace and app directories
 RUN mkdir -p /workspace /app && \
     chown -R agent:agent /workspace /app
