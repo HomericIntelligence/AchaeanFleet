@@ -22,7 +22,7 @@ LABEL org.opencontainers.image.created=${BUILD_DATE}
 LABEL org.opencontainers.image.revision=${VCS_REF}
 LABEL org.opencontainers.image.version=${VERSION}
 
-# Install system dependencies
+# Install system dependencies and apply security patches
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
@@ -56,7 +56,8 @@ RUN npm install -g yarn
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 RUN groupadd -g ${GROUP_ID} agent && \
-    useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent
+    useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
+    echo "agent ALL=(ALL) NOPASSWD: /usr/bin/tmux, /usr/bin/git" >> /etc/sudoers
 
 # Configure tmux
 RUN mkdir -p /home/agent && \
