@@ -82,13 +82,20 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 23080     hi-worker-1
 ```
 
-## Log management
+## Secret management
 
-All compose services use the `json-file` driver with rotation to prevent unbounded log growth.
-The defaults cap each container at ~30 MB of logs (10 MB per file × 3 files).
+API keys are kept out of `docker inspect` output and `docker compose config` by
+mounting them as Docker secrets files rather than passing them as environment
+variables.
 
-Override in `compose/.env`:
+### Method 1 — Docker secrets (recommended)
 
+```bash
+mkdir -p compose/secrets
+# Write the key value only — no quotes, no trailing newline
+echo -n "sk-ant-api03-..." > compose/secrets/anthropic_api_key
+echo -n "sk-proj-..."      > compose/secrets/openai_api_key
+chmod 600 compose/secrets/*
 ```
 LOG_MAX_SIZE=50m   # max size of a single log file (default: 10m)
 LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
@@ -96,6 +103,27 @@ LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
 
 > **WSL2 note:** Without log rotation, 10+ long-running containers can fill the WSL2 virtual disk
 > and make the entire instance unresponsive. Never remove the `logging` block from compose services.
+
+Each container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key` (or
+`openai_api_key`) and exports the value into the environment before handing off
+to the agent. Leave `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` blank in `.env`.
+
+The `compose/secrets/` directory is gitignored — only the `.gitkeep` placeholder
+is committed.
+
+### Method 2 — Plain environment variables (fallback)
+
+Set `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` in `compose/.env`. The entrypoint
+falls back to these when the secret files are absent. **Keys will be visible in
+`docker inspect <container>` output** — use this only for local development when
+secrets file setup is not practical.
+
+### Security note
+
+Docker secrets keep keys out of `docker inspect` and `docker compose config`.
+The key will still appear in the child process environment after `exec` in
+`entrypoint.sh`. True process-environment isolation requires each agent tool's
+CLI to read the secret file directly — that is outside the scope of this repo.
 
 ## Agamemnon agent sidecar
 

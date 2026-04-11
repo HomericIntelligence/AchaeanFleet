@@ -18,9 +18,13 @@
 #
 # Check health: docker compose -f docker-compose.mesh.yml ps
 #
-# Network topology:
-#   agamemnon-frontend  — all agents; ProjectAgamemnon reaches agents via 172.20.0.1
-#   agent-backend       — opt-in lateral traffic; hi-worker-1 spans both networks
+# API key secrets:
+#   mkdir -p secrets
+#   echo -n "sk-ant-..." > secrets/anthropic_api_key && chmod 600 secrets/anthropic_api_key
+#   echo -n "sk-..."     > secrets/openai_api_key    && chmod 600 secrets/openai_api_key
+#   (set SECRETS_DIR in .env if your secrets dir lives elsewhere)
+
+version: "3.9"
 
 networks:
   agamemnon-frontend:
@@ -28,12 +32,11 @@ networks:
   agent-backend:
     driver: bridge
 
-# Shared security hardening applied to all services
-x-security: &security
-  security_opt:
-    - no-new-privileges:true
-  cap_drop:
-    - ALL
+secrets:
+  anthropic_api_key:
+    file: ${SECRETS_DIR:-./secrets}/anthropic_api_key
+  openai_api_key:
+    file: ${SECRETS_DIR:-./secrets}/openai_api_key
 
 # Shared environment for all agents
 x-common-env: &common-env
@@ -84,7 +87,9 @@ services:
       AGENT_ID: aindrea
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: aindrea
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
@@ -108,7 +113,9 @@ services:
       AGENT_ID: baird
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: baird
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
@@ -135,7 +142,9 @@ services:
       AGENT_ID: codex-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: codex-1
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # OPENAI_API_KEY injected by entrypoint from /run/secrets/openai_api_key
+    secrets:
+      - openai_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codex-1:/workspace
     working_dir: /workspace
@@ -161,8 +170,10 @@ services:
       AGENT_ID: aider-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: aider-1
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       AIDER_MODEL: ${AIDER_MODEL:-claude-3-5-sonnet-20241022}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aider-1:/workspace
     working_dir: /workspace
@@ -188,7 +199,9 @@ services:
       AGENT_ID: goose-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: goose-1
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Goose-1:/workspace
     working_dir: /workspace
@@ -214,7 +227,9 @@ services:
       AGENT_ID: cline-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: cline-1
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Cline-1:/workspace
     working_dir: /workspace
@@ -240,7 +255,9 @@ services:
       AGENT_ID: opencode-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: opencode-1
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Opencode-1:/workspace
     working_dir: /workspace
@@ -266,7 +283,9 @@ services:
       AGENT_ID: codebuff-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: codebuff-1
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codebuff-1:/workspace
     working_dir: /workspace
@@ -292,7 +311,9 @@ services:
       AGENT_ID: ampcode-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: ampcode-1
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Ampcode-1:/workspace
     working_dir: /workspace

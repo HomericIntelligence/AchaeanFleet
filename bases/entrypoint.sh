@@ -1,43 +1,32 @@
-#!/usr/bin/env bash
-# AchaeanFleet container entrypoint
+#!/bin/sh
+# AchaeanFleet base entrypoint — credential chain loader
 #
-# Startup order:
-#   1. Start a detached tmux session (non-fatal if tmux is unavailable or
-#      a session by that name already exists)
-#   2. If /app/agent-server.js is present (bind-mounted at runtime by the
-#      Agamemnon agent sidecar), exec it with any arguments passed to the
-#      container (compose command: or docker run args).
-#   3. If extra arguments were supplied on the command line, exec them directly.
-#      This lets compose `command:` overrides work without removing ENTRYPOINT.
-#   4. Last resort: drop to an interactive bash shell.
+# Reads API key secrets from /run/secrets/ (Docker secrets mount) and exports
+# them into the environment before exec'ing the container's CMD.
 #
-# Signal handling: every code path uses `exec` so the started process
-# inherits PID 1 and receives SIGTERM/SIGINT from Docker correctly.
+# Credential chain (first match wins):
+#   1. /run/secrets/anthropic_api_key  → ANTHROPIC_API_KEY
+#   2. /run/secrets/openai_api_key     → OPENAI_API_KEY
+#   3. Existing env vars pass through unchanged (fallback for plain env mode)
+#
+# Security note: Docker secrets keep keys out of `docker inspect` output and
+# `docker compose config`. The key will still appear in the child process
+# environment after exec — true process-env isolation requires the agent tool
+# itself to read the secrets file directly.
 
-set -euo pipefail
+set -e
 
-# ---------------------------------------------------------------------------
-# 1. Start tmux session
-# ---------------------------------------------------------------------------
-if command -v tmux &>/dev/null; then
-    tmux new-session -d -s "${TMUX_SESSION_NAME:-agent-session}" 2>/dev/null || true
+# Load Anthropic API key from secret file if present
+if [ -f /run/secrets/anthropic_api_key ]; then
+    ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"
+    export ANTHROPIC_API_KEY
 fi
 
-# ---------------------------------------------------------------------------
-# 2. Launch agent-server.js if bind-mounted at runtime
-# ---------------------------------------------------------------------------
-if [ -f /app/agent-server.js ]; then
-    exec node /app/agent-server.js "$@"
+# Load OpenAI API key from secret file if present
+if [ -f /run/secrets/openai_api_key ]; then
+    OPENAI_API_KEY="$(cat /run/secrets/openai_api_key)"
+    export OPENAI_API_KEY
 fi
 
-# ---------------------------------------------------------------------------
-# 3. Forward any explicit arguments (compose command:, docker run <cmd>)
-# ---------------------------------------------------------------------------
-if [ "$#" -gt 0 ]; then
-    exec "$@"
-fi
-
-# ---------------------------------------------------------------------------
-# 4. Fallback: interactive shell
-# ---------------------------------------------------------------------------
-exec bash
+# Hand off to the container's CMD (or any arguments passed to docker run)
+exec "$@"
