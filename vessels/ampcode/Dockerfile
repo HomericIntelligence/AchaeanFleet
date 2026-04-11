@@ -14,7 +14,7 @@ USER root
 RUN npm install -g @sourcegraph/amp
 
 # Verify installation
-RUN amp --version || true
+RUN amp --version
 
 USER agent
 

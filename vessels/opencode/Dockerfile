@@ -44,7 +44,7 @@ RUN curl -fsSL \
     rm /tmp/opencode.tar.gz
 
 # Verify installation
-RUN opencode --version || true
+RUN opencode --version
 
 USER agent
 

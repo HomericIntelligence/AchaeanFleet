@@ -14,7 +14,7 @@ USER root
 RUN npm install -g codebuff
 
 # Verify installation
-RUN codebuff --version || true
+RUN codebuff --version
 
 USER agent
 
