@@ -15,9 +15,22 @@ on:
       - 'dagger/**'
 
 jobs:
+  lint:
+    name: Lint Dockerfiles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint all Dockerfiles with Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
+          failure-threshold: error
+
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-latest
+    needs: lint
     strategy:
       matrix:
         base:
@@ -129,6 +142,15 @@ jobs:
           tags: |
             ${{ matrix.vessel.name }}:latest
             ${{ matrix.vessel.name }}:${{ steps.sha.outputs.short_sha }}
+
+      - name: Scan vessel image for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ matrix.vessel.name }}:latest
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 0
 
   push-to-registry:
     name: Push to GHCR
