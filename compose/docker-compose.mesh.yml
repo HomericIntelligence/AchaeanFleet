@@ -20,6 +20,13 @@ networks:
 x-common-env: &common-env
   AGAMEMNON_URL: ${AGAMEMNON_URL:-http://172.20.0.1:8080}
 
+# Shared logging
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "${LOG_MAX_SIZE:-10m}"
+    max-file: "${LOG_MAX_FILES:-3}"
+
 # Shared healthcheck
 x-healthcheck: &healthcheck
   test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
@@ -48,6 +55,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   hi-baird:
@@ -66,6 +74,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -87,6 +96,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -109,6 +119,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -130,6 +141,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -151,6 +163,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -172,6 +185,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -193,6 +207,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -214,6 +229,7 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -234,4 +250,5 @@ services:
       - /tmp/ci-workspace:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    logging: *default-logging
     healthcheck: *healthcheck

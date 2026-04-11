@@ -82,6 +82,21 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 23080     hi-worker-1
 ```
 
+## Log management
+
+All compose services use the `json-file` driver with rotation to prevent unbounded log growth.
+The defaults cap each container at ~30 MB of logs (10 MB per file × 3 files).
+
+Override in `compose/.env`:
+
+```
+LOG_MAX_SIZE=50m   # max size of a single log file (default: 10m)
+LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
+```
+
+> **WSL2 note:** Without log rotation, 10+ long-running containers can fill the WSL2 virtual disk
+> and make the entire instance unresponsive. Never remove the `logging` block from compose services.
+
 ## Agamemnon agent sidecar
 
 All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.
