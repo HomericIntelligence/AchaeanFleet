@@ -12,7 +12,8 @@ LABEL org.opencontainers.image.description="Aider AI coding assistant vessel"
 USER root
 
 # Install aider-chat
-RUN pip install --no-cache-dir aider-chat
+ENV AIDER_VERSION=0.82.3
+RUN pip install --no-cache-dir "aider-chat==${AIDER_VERSION}"  # pinned for reproducibility — see #57
 
 # Verify installation
 RUN aider --version || true
