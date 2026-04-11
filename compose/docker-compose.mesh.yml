@@ -28,6 +28,11 @@ x-healthcheck: &healthcheck
   start_period: 15s
   retries: 3
 
+# Shared security hardening (least-privilege defaults)
+x-security: &security
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
 services:
   # -------------------------------------------------------------------------
   # Claude agents (Node base)
@@ -49,6 +54,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   hi-baird:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
@@ -67,6 +73,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Codex agent (Node base)
@@ -84,10 +91,11 @@ services:
       TMUX_SESSION_NAME: codex-1
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${CODEX_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Aider agent (Python base)
@@ -106,10 +114,11 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       AIDER_MODEL: ${AIDER_MODEL:-claude-3-5-sonnet-20241022}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${AIDER_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Goose agent (minimal/binary base)
@@ -127,10 +136,11 @@ services:
       TMUX_SESSION_NAME: goose-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${GOOSE_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Cline agent (Node base)
@@ -148,10 +158,11 @@ services:
       TMUX_SESSION_NAME: cline-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${CLINE_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # OpenCode agent (minimal/binary base)
@@ -169,10 +180,11 @@ services:
       TMUX_SESSION_NAME: opencode-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${OPENCODE_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Codebuff agent (Node base)
@@ -190,10 +202,11 @@ services:
       TMUX_SESSION_NAME: codebuff-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${CODEBUFF_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # AmpCode agent (Node base)
@@ -211,10 +224,11 @@ services:
       TMUX_SESSION_NAME: ampcode-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${AMPCODE_PROJECT}:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Shell Worker (minimal base, no AI tool)
@@ -235,3 +249,4 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
