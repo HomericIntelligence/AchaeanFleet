@@ -48,6 +48,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   hi-baird:
@@ -66,6 +68,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -87,6 +91,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -109,6 +115,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -130,6 +138,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -151,6 +161,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -172,6 +184,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -193,6 +207,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -214,6 +230,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
@@ -234,4 +252,6 @@ services:
       - /tmp/ci-workspace:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
