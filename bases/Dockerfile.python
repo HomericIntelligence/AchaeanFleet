@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     ca-certificates \
     build-essential \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 20.x
