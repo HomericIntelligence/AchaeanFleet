@@ -19,6 +19,9 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "${REPO_ROOT}"
 
+VERSION=$(cat VERSION 2>/dev/null || echo "unknown")
+GIT_SHA="${GIT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")}"
+
 # Counters
 built=0
 failed=0
