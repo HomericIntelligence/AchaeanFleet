@@ -42,6 +42,20 @@ variable "workspace_root" {
   default     = "/home/mvillmow"
 }
 
+variable "anthropic_api_key" {
+  description = "Anthropic API key (for claude, aider, goose, cline, opencode, codebuff, ampcode)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "openai_api_key" {
+  description = "OpenAI API key (for codex)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 # =============================================================================
 # Job
 # =============================================================================
@@ -165,6 +179,360 @@ job "achaean-mesh" {
 
       service {
         name = "achaean-aider-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Codex agents group (OpenAI)
+  # -------------------------------------------------------------------------
+  group "codex-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "codex" {
+      driver = "docker"
+
+      config {
+        image   = "achaean-codex:latest"
+        ports   = ["agent"]
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT        = "23001"
+        TMUX_SESSION_NAME = "codex-${NOMAD_ALLOC_INDEX}"
+        AGENT_ID          = "codex-${NOMAD_ALLOC_INDEX}"
+        AGAMEMNON_URL     = var.agamemnon_url
+        OPENAI_API_KEY    = var.openai_api_key
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
+      # template {
+      #   data = <<EOH
+      #   {{ with secret "secret/achaean/codex" }}
+      #   OPENAI_API_KEY={{ .Data.api_key }}
+      #   {{ end }}
+      #   EOH
+      #   destination = "secrets/env"
+      #   env         = true
+      # }
+
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
+
+      service {
+        name = "achaean-codex-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Goose agents group (Python)
+  # -------------------------------------------------------------------------
+  group "goose-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "goose" {
+      driver = "docker"
+
+      config {
+        image   = "achaean-goose:latest"
+        ports   = ["agent"]
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT        = "23001"
+        TMUX_SESSION_NAME = "goose-${NOMAD_ALLOC_INDEX}"
+        AGENT_ID          = "goose-${NOMAD_ALLOC_INDEX}"
+        AGAMEMNON_URL     = var.agamemnon_url
+        ANTHROPIC_API_KEY = var.anthropic_api_key
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
+      # template {
+      #   data = <<EOH
+      #   {{ with secret "secret/achaean/goose" }}
+      #   ANTHROPIC_API_KEY={{ .Data.api_key }}
+      #   {{ end }}
+      #   EOH
+      #   destination = "secrets/env"
+      #   env         = true
+      # }
+
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
+
+      service {
+        name = "achaean-goose-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Cline agents group (Node)
+  # -------------------------------------------------------------------------
+  group "cline-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "cline" {
+      driver = "docker"
+
+      config {
+        image   = "achaean-cline:latest"
+        ports   = ["agent"]
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT        = "23001"
+        TMUX_SESSION_NAME = "cline-${NOMAD_ALLOC_INDEX}"
+        AGENT_ID          = "cline-${NOMAD_ALLOC_INDEX}"
+        AGAMEMNON_URL     = var.agamemnon_url
+        ANTHROPIC_API_KEY = var.anthropic_api_key
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
+      # template {
+      #   data = <<EOH
+      #   {{ with secret "secret/achaean/cline" }}
+      #   ANTHROPIC_API_KEY={{ .Data.api_key }}
+      #   {{ end }}
+      #   EOH
+      #   destination = "secrets/env"
+      #   env         = true
+      # }
+
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
+
+      service {
+        name = "achaean-cline-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Opencode agents group (Node)
+  # -------------------------------------------------------------------------
+  group "opencode-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "opencode" {
+      driver = "docker"
+
+      config {
+        image   = "achaean-opencode:latest"
+        ports   = ["agent"]
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT        = "23001"
+        TMUX_SESSION_NAME = "opencode-${NOMAD_ALLOC_INDEX}"
+        AGENT_ID          = "opencode-${NOMAD_ALLOC_INDEX}"
+        AGAMEMNON_URL     = var.agamemnon_url
+        ANTHROPIC_API_KEY = var.anthropic_api_key
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
+      # template {
+      #   data = <<EOH
+      #   {{ with secret "secret/achaean/opencode" }}
+      #   ANTHROPIC_API_KEY={{ .Data.api_key }}
+      #   {{ end }}
+      #   EOH
+      #   destination = "secrets/env"
+      #   env         = true
+      # }
+
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
+
+      service {
+        name = "achaean-opencode-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Codebuff agents group (Node)
+  # -------------------------------------------------------------------------
+  group "codebuff-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "codebuff" {
+      driver = "docker"
+
+      config {
+        image   = "achaean-codebuff:latest"
+        ports   = ["agent"]
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT        = "23001"
+        TMUX_SESSION_NAME = "codebuff-${NOMAD_ALLOC_INDEX}"
+        AGENT_ID          = "codebuff-${NOMAD_ALLOC_INDEX}"
+        AGAMEMNON_URL     = var.agamemnon_url
+        ANTHROPIC_API_KEY = var.anthropic_api_key
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
+      # template {
+      #   data = <<EOH
+      #   {{ with secret "secret/achaean/codebuff" }}
+      #   ANTHROPIC_API_KEY={{ .Data.api_key }}
+      #   {{ end }}
+      #   EOH
+      #   destination = "secrets/env"
+      #   env         = true
+      # }
+
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
+
+      service {
+        name = "achaean-codebuff-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Ampcode agents group (Node)
+  # -------------------------------------------------------------------------
+  group "ampcode-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "ampcode" {
+      driver = "docker"
+
+      config {
+        image   = "achaean-ampcode:latest"
+        ports   = ["agent"]
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT        = "23001"
+        TMUX_SESSION_NAME = "ampcode-${NOMAD_ALLOC_INDEX}"
+        AGENT_ID          = "ampcode-${NOMAD_ALLOC_INDEX}"
+        AGAMEMNON_URL     = var.agamemnon_url
+        ANTHROPIC_API_KEY = var.anthropic_api_key
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
+      # template {
+      #   data = <<EOH
+      #   {{ with secret "secret/achaean/ampcode" }}
+      #   ANTHROPIC_API_KEY={{ .Data.api_key }}
+      #   {{ end }}
+      #   EOH
+      #   destination = "secrets/env"
+      #   env         = true
+      # }
+
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
+
+      service {
+        name = "achaean-ampcode-${NOMAD_ALLOC_INDEX}"
         port = "agent"
 
         check {
