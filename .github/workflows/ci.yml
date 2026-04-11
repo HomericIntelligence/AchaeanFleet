@@ -139,9 +139,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Install Dagger SDK
-        run: npm install @dagger.io/dagger
+        run: cd dagger && npm ci
 
       - name: Build and push all images via Dagger
         env:
           DAGGER_REGISTRY: ghcr.io/homericintelligence
-        run: npx ts-node dagger/pipeline.ts push --registry "$DAGGER_REGISTRY"
+        run: cd dagger && npx ts-node pipeline.ts push --registry "$DAGGER_REGISTRY"
