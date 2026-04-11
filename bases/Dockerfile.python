@@ -78,4 +78,9 @@ ENV AGENT_PORT=23001
 ENV GIT_USER_NAME="HomericIntelligence Agent"
 ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 USER agent
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
