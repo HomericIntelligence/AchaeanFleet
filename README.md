@@ -82,40 +82,24 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 23080     hi-worker-1
 ```
 
-## Container startup behavior
+## Network topology
 
-All base images ship with `/usr/local/bin/entrypoint.sh` as the `ENTRYPOINT`. The
-script runs in order:
+Containers are attached to two separate bridge networks for defense-in-depth:
 
-1. **tmux session** — starts a detached tmux session named `$TMUX_SESSION_NAME`
-   (default: `agent-session`). Skipped silently if tmux is unavailable or the
-   session already exists.
-2. **agent-server.js** — if `/app/agent-server.js` is present (bind-mounted at
-   runtime by the Agamemnon agent sidecar), it is exec'd with any extra arguments
-   passed to the container.
-3. **explicit args** — if extra arguments were passed (`docker run <image> <cmd>`
-   or compose `command:`), they are exec'd directly. This means compose overrides
-   work without touching `ENTRYPOINT`.
-4. **fallback shell** — if none of the above apply, `bash` is exec'd. Use
-   `docker run -it <image>` for interactive access.
-
-Every path uses `exec` so the launched process inherits PID 1 and receives
-`SIGTERM`/`SIGINT` from Docker correctly.
-
-### Examples
-
-```bash
-# Default: starts agent-server.js when bind-mounted, otherwise drops to bash
-docker run achaean-claude:latest
-
-# Interactive shell (no agent-server.js mounted)
-docker run -it achaean-claude:latest
-
-# Run an explicit command (overrides fallback but not agent-server.js check)
-docker run achaean-claude:latest node /some/other/script.js
-
-# Compose: no changes required — existing command: directives still work
 ```
+  agamemnon-frontend   — all agent vessels; ProjectAgamemnon (host) reaches
+                         agents via Docker bridge gateway 172.20.0.1
+  agent-backend        — opt-in lateral traffic; only hi-worker-1 spans both
+```
+
+| Network | Who joins |
+|---------|-----------|
+| `agamemnon-frontend` | all agents |
+| `agent-backend` | `hi-worker-1` only (spans both) |
+
+This limits lateral movement: a compromised agent on `agamemnon-frontend` cannot
+directly reach the `agent-backend` subnet. See [docs/network-topology.md](docs/network-topology.md)
+for the full diagram, design rationale, and manual isolation verification steps.
 
 ## Agamemnon agent sidecar
 
