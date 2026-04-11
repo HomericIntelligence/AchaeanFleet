@@ -1,124 +1,103 @@
 version: 2
 updates:
-  # GitHub Actions — update action versions in workflows
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
-    labels:
-      - "dependencies"
-      - "github-actions"
-
-  # Docker base images — bases/ and vessels/
+  # Automated Docker base image version bump PRs
   - package-ecosystem: "docker"
     directory: "/bases"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    groups:
-      base-images:
-        patterns:
-          - "*"
+      interval: "monthly"
     labels:
       - "dependencies"
-      - "docker"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/aider"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    labels:
-      - "dependencies"
-      - "docker"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/ampcode"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    labels:
-      - "dependencies"
-      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
 
   - package-ecosystem: "docker"
     directory: "/vessels/claude"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     labels:
       - "dependencies"
-      - "docker"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/cline"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    labels:
-      - "dependencies"
-      - "docker"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/codebuff"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    labels:
-      - "dependencies"
-      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
 
   - package-ecosystem: "docker"
     directory: "/vessels/codex"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     labels:
       - "dependencies"
-      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/vessels/cline"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/vessels/codebuff"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/vessels/ampcode"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/vessels/aider"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
 
   - package-ecosystem: "docker"
     directory: "/vessels/goose"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     labels:
       - "dependencies"
-      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
 
   - package-ecosystem: "docker"
     directory: "/vessels/opencode"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     labels:
       - "dependencies"
-      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
 
-  - package-ecosystem: "docker"
-    directory: "/vessels/worker"
+  # GitHub Actions version bumps
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     labels:
       - "dependencies"
-      - "docker"
-
-  # npm — dagger/package.json
-  - package-ecosystem: "npm"
-    directory: "/dagger"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    groups:
-      dagger-deps:
-        patterns:
-          - "*"
-    labels:
-      - "dependencies"
-      - "npm"
+      - "automated"
+    commit-message:
+      prefix: "chore(ci)"
