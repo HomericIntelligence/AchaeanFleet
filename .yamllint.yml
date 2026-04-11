@@ -1,0 +1,19 @@
+extends: default
+
+rules:
+  # Allow GitHub Actions ${{ }} template syntax inside braces
+  braces:
+    max-spaces-inside: 1
+
+  # GitHub Actions uses 'true'/'false'/'on'/'off' as booleans in YAML
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off']
+
+  # Allow long lines in CI files (URLs, long commands)
+  line-length:
+    max: 160
+
+ignore: |
+  .git/
+  build/
+  node_modules/
