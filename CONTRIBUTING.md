@@ -54,6 +54,22 @@ just build-bases
 just verify
 ```
 
+### Linting
+
+This project uses [pre-commit](https://pre-commit.com/) for local linting.
+Hooks cover Dockerfile linting (hadolint), YAML validation (yamllint),
+shell script analysis (shellcheck), and standard file hygiene.
+
+```bash
+# Install hooks (run once after cloning)
+just lint-install
+
+# Run all linters manually across all files
+just lint
+```
+
+Hooks run automatically on `git commit` after installation.
+
 ## What You Can Contribute
 
 - **Vessel Dockerfiles** — New agent-specific container images

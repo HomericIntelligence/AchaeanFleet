@@ -1,0 +1,83 @@
+---
+# AchaeanFleet pre-commit configuration
+# Install: pre-commit install  (or: just lint-install)
+# Run manually: pre-commit run --all-files  (or: just lint)
+# Update hook revisions: pre-commit autoupdate
+
+repos:
+  # ---------------------------------------------------------------------------
+  # Standard file hygiene
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # allow YAML anchors (used in Docker Compose)
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  # ---------------------------------------------------------------------------
+  # YAML linting (with project-specific overrides in .yamllint.yaml)
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--config-file, .yamllint.yaml]
+
+  # ---------------------------------------------------------------------------
+  # Dockerfile linting (hadolint)
+  # Waived rules (intentional patterns in this repo):
+  #   DL3008: apt-get without --no-install-recommends — base images include dev tools intentionally
+  #   DL3015: same as DL3008
+  #   DL3013: pip without version pin — agent tool versions track latest by design
+  #   DL3016: npm without version pin — same as DL3013
+  #   DL3042: pip cache dir — handled by --no-cache-dir in vessel Dockerfiles
+  #   DL3046: useradd without -l — UID 1000 is standard, image size impact is acceptable
+  #   DL3059: Multiple consecutive RUN — intentional grouping in base images
+  #   DL4006: SHELL pipefail — piped RUN commands in base/vessel images are intentional
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint
+        args:
+          - --ignore=DL3008
+          - --ignore=DL3013
+          - --ignore=DL3015
+          - --ignore=DL3016
+          - --ignore=DL3042
+          - --ignore=DL3046
+          - --ignore=DL3059
+          - --ignore=DL4006
+
+  # ---------------------------------------------------------------------------
+  # Shell script linting (shellcheck)
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # ---------------------------------------------------------------------------
+  # Local hooks
+  # ---------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      # Catch curl-pipe-bash patterns in Dockerfiles before hadolint runs.
+      # Existing intentional uses:
+      #   bases/Dockerfile.python, bases/Dockerfile.minimal — nodesource setup
+      #   bases/Dockerfile.node, bases/Dockerfile.python, bases/Dockerfile.minimal — Oh My Zsh install
+      #   vessels/goose, vessels/opencode — official binary install scripts
+      # If you add a new curl-pipe-bash, document why with a comment above it.
+      - id: no-new-curl-pipe-bash
+        name: Warn on new curl-pipe-bash patterns
+        language: pygrep
+        entry: 'curl.*\|\s*(bash|sh)'
+        files: 'Dockerfile'
+        types: [file]
+        exclude: 'bases/Dockerfile\.(node|python|minimal)|vessels/(goose|opencode)/Dockerfile'
