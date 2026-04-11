@@ -8,16 +8,26 @@
 #   nomad job run nomad/mesh.nomad.hcl
 #
 # Override variables at run time:
-#   nomad job run -var="agamemnon_url=http://192.168.1.10:8080" nomad/mesh.nomad.hcl
+#   nomad job run -var="agamemnon_url=https://caddy:8443" nomad/mesh.nomad.hcl
+#
+# TLS prerequisites:
+#   Run bash tls/generate-certs.sh and distribute certs to var.tls_cert_dir
+#   on each Nomad client host before running this job.
 
 # =============================================================================
 # Variables (override via -var or .nomadvar files)
 # =============================================================================
 
 variable "agamemnon_url" {
-  description = "URL of the ProjectAgamemnon coordinator"
+  description = "URL of the ProjectAgamemnon coordinator (TLS via Caddy)"
   type        = string
-  default     = "http://172.20.0.1:8080"
+  default     = "https://caddy:8443"
+}
+
+variable "tls_cert_dir" {
+  description = "Absolute path to TLS certs directory on the Nomad client host"
+  type        = string
+  default     = "/etc/achaean/certs"
 }
 
 variable "agamemnon_sidecar_path" {
@@ -71,6 +81,7 @@ job "achaean-mesh" {
 
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
         ]
       }
 
@@ -79,6 +90,7 @@ job "achaean-mesh" {
         TMUX_SESSION_NAME = "claude-${NOMAD_ALLOC_INDEX}"
         AGENT_ID          = "claude-${NOMAD_ALLOC_INDEX}"
         AGAMEMNON_URL     = var.agamemnon_url
+        TLS_CA_CERT       = "/certs/ca.crt"
       }
 
       # Secrets via Nomad Vault integration (Phase 6)
@@ -101,6 +113,10 @@ job "achaean-mesh" {
         name = "achaean-claude-${NOMAD_ALLOC_INDEX}"
         port = "agent"
 
+        # Health check hits the Caddy TLS proxy's plain-HTTP health endpoint.
+        # Caddy exposes :2019/health on its internal port; agents reach it via
+        # the Nomad service name. When Consul Connect is enabled, switch to
+        # type = "grpc" or use sidecar proxy checks.
         check {
           type     = "http"
           path     = "/health"
@@ -129,6 +145,7 @@ job "achaean-mesh" {
         ports   = ["agent"]
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
         ]
       }
 
@@ -137,6 +154,7 @@ job "achaean-mesh" {
         TMUX_SESSION_NAME = "aider-${NOMAD_ALLOC_INDEX}"
         AGENT_ID          = "aider-${NOMAD_ALLOC_INDEX}"
         AGAMEMNON_URL     = var.agamemnon_url
+        TLS_CA_CERT       = "/certs/ca.crt"
         AIDER_MODEL       = "claude-3-5-sonnet-20241022"
       }
 
@@ -178,6 +196,7 @@ job "achaean-mesh" {
         volumes = [
           "/tmp/ci-workspace:/workspace",
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
         ]
       }
 
@@ -186,6 +205,7 @@ job "achaean-mesh" {
         TMUX_SESSION_NAME = "worker-${NOMAD_ALLOC_INDEX}"
         AGENT_ID          = "worker-${NOMAD_ALLOC_INDEX}"
         AGAMEMNON_URL     = var.agamemnon_url
+        TLS_CA_CERT       = "/certs/ca.crt"
       }
 
       resources {
