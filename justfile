@@ -23,6 +23,40 @@ container_cmd := `which podman 2>/dev/null && echo podman || echo docker`
 compose_cmd := `which podman-compose 2>/dev/null && echo podman-compose || echo "docker compose"`
 
 # =============================================================================
+# Bootstrap
+# =============================================================================
+
+# One-command developer setup: install dependencies, build all images, verify
+bootstrap:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== AchaeanFleet bootstrap ==="
+    echo ""
+
+    # 1. Ensure pixi env is installed (provides 'just')
+    if command -v pixi &>/dev/null; then
+        echo "→ Installing pixi environment..."
+        pixi install
+    else
+        echo "  pixi not found — skipping pixi install (install from https://pixi.sh)"
+    fi
+
+    # 2. Install Dagger SDK deps
+    echo "→ Installing Dagger npm dependencies..."
+    npm install --prefix dagger
+
+    # 3. Build all images
+    echo "→ Building all base and vessel images..."
+    just build-all
+
+    # 4. Verify images
+    echo "→ Verifying images..."
+    just verify
+
+    echo ""
+    echo "=== Bootstrap complete. Run 'just compose-up' to start the Claude-only mesh. ==="
+
+# =============================================================================
 # Build
 # =============================================================================
 

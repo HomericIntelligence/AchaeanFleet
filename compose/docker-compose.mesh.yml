@@ -84,7 +84,7 @@ services:
       TMUX_SESSION_NAME: codex-1
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codex-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -106,7 +106,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       AIDER_MODEL: ${AIDER_MODEL:-claude-3-5-sonnet-20241022}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aider-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -127,7 +127,7 @@ services:
       TMUX_SESSION_NAME: goose-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Goose-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -148,7 +148,7 @@ services:
       TMUX_SESSION_NAME: cline-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Cline-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -169,7 +169,7 @@ services:
       TMUX_SESSION_NAME: opencode-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/OpenCode-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -190,7 +190,7 @@ services:
       TMUX_SESSION_NAME: codebuff-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codebuff-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
@@ -211,7 +211,7 @@ services:
       TMUX_SESSION_NAME: ampcode-1
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/AmpCode-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
