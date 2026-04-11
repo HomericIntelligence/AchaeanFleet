@@ -10,6 +10,13 @@ FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.title="achaean-worker"
 LABEL org.opencontainers.image.description="Shell worker vessel — no AI tool, scripting and utility workloads"
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${VCS_REF}
+LABEL org.opencontainers.image.version=${VERSION}
+
 USER root
 
 # Install additional tools useful for shell workers

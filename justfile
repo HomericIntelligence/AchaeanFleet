@@ -75,11 +75,20 @@ runtime:
 
 # Build all 3 base images
 build-bases:
-    @echo "=== Building base images ({{container_cmd}}) ==="
-    {{container_cmd}} build -f bases/Dockerfile.node    -t achaean-base-node:latest    .
-    {{container_cmd}} build -f bases/Dockerfile.python  -t achaean-base-python:latest  .
-    {{container_cmd}} build -f bases/Dockerfile.minimal -t achaean-base-minimal:latest .
-    @echo "=== Bases built ==="
+    #!/usr/bin/env bash
+    set -euo pipefail
+    container_cmd="$(which podman 2>/dev/null || echo docker)"
+    build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    vcs_ref="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    version="latest"
+    echo "=== Building base images (${container_cmd}) ==="
+    ${container_cmd} build -f bases/Dockerfile.node    -t achaean-base-node:latest    \
+        --build-arg BUILD_DATE="${build_date}" --build-arg VCS_REF="${vcs_ref}" --build-arg VERSION="${version}" .
+    ${container_cmd} build -f bases/Dockerfile.python  -t achaean-base-python:latest  \
+        --build-arg BUILD_DATE="${build_date}" --build-arg VCS_REF="${vcs_ref}" --build-arg VERSION="${version}" .
+    ${container_cmd} build -f bases/Dockerfile.minimal -t achaean-base-minimal:latest \
+        --build-arg BUILD_DATE="${build_date}" --build-arg VCS_REF="${vcs_ref}" --build-arg VERSION="${version}" .
+    echo "=== Bases built ==="
 
 # Build a single vessel image (builds its base first)
 # Usage: just build-vessel claude
@@ -97,8 +106,13 @@ build-vessel NAME:
     echo "Building base: ${base}"
     ${container_cmd} build -f "bases/Dockerfile.${base#achaean-base-}" -t "${base}:latest" .
     echo "Building vessel: achaean-{{NAME}}"
+    build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    vcs_ref="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
     ${container_cmd} build -f "vessels/{{NAME}}/Dockerfile" \
         --build-arg BASE_IMAGE="${base}:latest" \
+        --build-arg BUILD_DATE="${build_date}" \
+        --build-arg VCS_REF="${vcs_ref}" \
+        --build-arg VERSION="latest" \
         -t "achaean-{{NAME}}:latest" .
     echo "Done: achaean-{{NAME}}:latest"
 
@@ -125,6 +139,19 @@ verify:
         fi
     done
     [ $failed -eq 0 ] && echo "All images verified." || { echo "${failed} image(s) missing. Run: just build-all"; exit 1; }
+
+# Print OCI labels (build metadata) for a named image
+# Usage: just image-info claude
+image-info NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    container_cmd="$(which podman 2>/dev/null || echo docker)"
+    image="achaean-{{NAME}}:latest"
+    echo "=== OCI labels for ${image} ==="
+    ${container_cmd} inspect "${image}" \
+        | jq -r '.[0].Config.Labels | to_entries[] | "\(.key) = \(.value)"' \
+        | grep -E '^org\.opencontainers\.' \
+        || echo "(no OCI labels found — image may not be built yet)"
 
 # =============================================================================
 # Pods (Podman)

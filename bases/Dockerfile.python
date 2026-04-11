@@ -15,6 +15,13 @@ LABEL org.opencontainers.image.revision=$GIT_SHA
 LABEL org.opencontainers.image.version=$VERSION
 LABEL git-sha=$GIT_SHA
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${VCS_REF}
+LABEL org.opencontainers.image.version=${VERSION}
+
 # Install system dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \

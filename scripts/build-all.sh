@@ -49,9 +49,15 @@ build_image() {
 # =============================================================================
 echo "=== Building base images ==="
 
-build_image "achaean-base-node:${TAG}"    "bases/Dockerfile.node"
-build_image "achaean-base-python:${TAG}"  "bases/Dockerfile.python"
-build_image "achaean-base-minimal:${TAG}" "bases/Dockerfile.minimal"
+OCI_BUILD_ARGS=(
+    --build-arg "BUILD_DATE=${BUILD_DATE}"
+    --build-arg "VCS_REF=${VCS_REF}"
+    --build-arg "VERSION=${VERSION}"
+)
+
+build_image "achaean-base-node:${TAG}"    "bases/Dockerfile.node"    "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-base-python:${TAG}"  "bases/Dockerfile.python"  "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-base-minimal:${TAG}" "bases/Dockerfile.minimal" "${OCI_BUILD_ARGS[@]}"
 
 # =============================================================================
 # Step 2: Vessel images (each FROM a base via ARG BASE_IMAGE)
@@ -60,19 +66,19 @@ echo ""
 echo "=== Building vessel images ==="
 
 # Node-based vessels
-build_image "achaean-claude:${TAG}"   "vessels/claude/Dockerfile"   --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"
-build_image "achaean-codex:${TAG}"    "vessels/codex/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"
-build_image "achaean-cline:${TAG}"    "vessels/cline/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"
-build_image "achaean-codebuff:${TAG}" "vessels/codebuff/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"
-build_image "achaean-ampcode:${TAG}"  "vessels/ampcode/Dockerfile"  --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"
+build_image "achaean-claude:${TAG}"   "vessels/claude/Dockerfile"   --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"   "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-codex:${TAG}"    "vessels/codex/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"   "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-cline:${TAG}"    "vessels/cline/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"   "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-codebuff:${TAG}" "vessels/codebuff/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"   "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-ampcode:${TAG}"  "vessels/ampcode/Dockerfile"  --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"   "${OCI_BUILD_ARGS[@]}"
 
 # Python-based vessels
-build_image "achaean-aider:${TAG}" "vessels/aider/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-python:${TAG}"
+build_image "achaean-aider:${TAG}" "vessels/aider/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-python:${TAG}" "${OCI_BUILD_ARGS[@]}"
 
 # Minimal-based vessels
-build_image "achaean-goose:${TAG}"    "vessels/goose/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}"
-build_image "achaean-opencode:${TAG}" "vessels/opencode/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}"
-build_image "achaean-worker:${TAG}"   "vessels/worker/Dockerfile"   --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}"
+build_image "achaean-goose:${TAG}"    "vessels/goose/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}" "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-opencode:${TAG}" "vessels/opencode/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}" "${OCI_BUILD_ARGS[@]}"
+build_image "achaean-worker:${TAG}"   "vessels/worker/Dockerfile"   --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}" "${OCI_BUILD_ARGS[@]}"
 
 # =============================================================================
 # Summary

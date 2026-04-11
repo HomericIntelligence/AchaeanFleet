@@ -52,11 +52,22 @@ jobs:
         with:
           driver: docker
 
+      - name: Set build metadata
+        id: meta
+        run: |
+          echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          echo "vcs_ref=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Build base image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ matrix.base.dockerfile }}
+          build-args: |
+            BUILD_DATE=${{ steps.meta.outputs.build_date }}
+            VCS_REF=${{ steps.meta.outputs.vcs_ref }}
+            VERSION=${{ steps.meta.outputs.version }}
           push: false
           load: true
           build-args: |
@@ -131,6 +142,13 @@ jobs:
         with:
           driver: docker
 
+      - name: Set build metadata
+        id: meta
+        run: |
+          echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          echo "vcs_ref=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Build vessel image
         uses: docker/build-push-action@v5
         with:
@@ -138,6 +156,9 @@ jobs:
           file: ${{ matrix.vessel.dockerfile }}
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
+            BUILD_DATE=${{ steps.meta.outputs.build_date }}
+            VCS_REF=${{ steps.meta.outputs.vcs_ref }}
+            VERSION=${{ steps.meta.outputs.version }}
           push: false
           tags: |
             ${{ matrix.vessel.name }}:latest
