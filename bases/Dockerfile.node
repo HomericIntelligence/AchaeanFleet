@@ -3,8 +3,10 @@
 # Provides: node:20-slim + tmux + zsh + git
 # Compatible with the HomericIntelligence agent mesh.
 # All node-based agent vessels (Claude, Codex, Cline, Codebuff, AmpCode) FROM this.
+#
+# Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
-FROM node:20-slim
+FROM node:20-slim@sha256:f93745c153377ee2fbbdd6e24efcd03cd2e86d6ab1d8aa9916a3790c40313a55
 
 LABEL org.opencontainers.image.title="achaean-base-node"
 LABEL org.opencontainers.image.description="AchaeanFleet Node.js base image for AI agent containers"
@@ -13,7 +15,7 @@ LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/Ac
 USER root
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
@@ -41,9 +43,12 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
 
-# Install Oh My Zsh
+# Install Oh My Zsh from a pinned commit (reproducible, no curl|bash)
+ENV OHMYZSH_COMMIT=7c10d9839f05b8b73e26aa4e0f04cc886fbba6a6
 USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+RUN git clone https://github.com/ohmyzsh/ohmyzsh.git /home/agent/.oh-my-zsh && \
+    git -C /home/agent/.oh-my-zsh checkout "$OHMYZSH_COMMIT" && \
+    cp /home/agent/.oh-my-zsh/templates/zshrc.zsh-template /home/agent/.zshrc
 USER root
 
 # Create workspace and app directories
