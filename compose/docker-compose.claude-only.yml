@@ -1,12 +1,19 @@
 # AchaeanFleet: Claude-only Compose
 #
-# Mirrors the current local setup (5 Claude agents).
+# Mirrors the current local setup (3 Claude agents).
 # This is the Phase 3 verification target: docker compose up starts a Claude
 # container that ProjectAgamemnon connects to via the agent sidecar.
 #
 # Usage:
-#   cp .env.example .env && nano .env
-#   docker compose -f docker-compose.claude-only.yml up -d
+#   cp .env.example .env && nano .env  (add ANTHROPIC_API_KEY)
+#   bash ../tls/generate-certs.sh      (generate TLS certs, first time only)
+#   docker compose \
+#     -f docker-compose.caddy.yml \
+#     -f docker-compose.claude-only.yml \
+#     up -d
+#
+# Agents connect to Caddy (TLS) instead of ProjectAgamemnon directly.
+# See tls/README.md for the full TLS architecture.
 
 version: "3.9"
 
@@ -44,13 +51,15 @@ services:
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=aindrea
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-https://caddy:8443}
+      - TLS_CA_CERT=${TLS_CA_CERT:-/certs/ca.crt}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
+      - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
       timeout: 5s
       start_period: 15s
@@ -72,13 +81,15 @@ services:
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=baird
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-https://caddy:8443}
+      - TLS_CA_CERT=${TLS_CA_CERT:-/certs/ca.crt}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
+      - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
       timeout: 5s
       start_period: 15s
@@ -100,13 +111,15 @@ services:
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=vegai
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-https://caddy:8443}
+      - TLS_CA_CERT=${TLS_CA_CERT:-/certs/ca.crt}
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
       timeout: 5s
       start_period: 15s
