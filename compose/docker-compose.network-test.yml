@@ -1,0 +1,41 @@
+# AchaeanFleet: Network Isolation Test Compose
+#
+# Starts two netshoot containers — one on each network — to manually verify
+# that agamemnon-frontend and agent-backend are isolated from each other.
+#
+# This file is for manual testing only; it is NOT part of the regular fleet.
+#
+# Usage:
+#   docker compose -f compose/docker-compose.network-test.yml up -d
+#
+# Then verify isolation (see docs/network-topology.md for full test procedure):
+#   docker exec netshoot-frontend ping -c 1 netshoot-backend  # expect: unreachable
+#   docker exec netshoot-backend  ping -c 1 netshoot-frontend # expect: unreachable
+#
+# Cleanup:
+#   docker compose -f compose/docker-compose.network-test.yml down
+
+version: "3.9"
+
+networks:
+  agamemnon-frontend:
+    driver: bridge
+  agent-backend:
+    driver: bridge
+
+services:
+  netshoot-frontend:
+    image: nicolaka/netshoot
+    container_name: netshoot-frontend
+    hostname: netshoot-frontend
+    networks: [agamemnon-frontend]
+    command: ["sleep", "3600"]
+    restart: "no"
+
+  netshoot-backend:
+    image: nicolaka/netshoot
+    container_name: netshoot-backend
+    hostname: netshoot-backend
+    networks: [agent-backend]
+    command: ["sleep", "3600"]
+    restart: "no"
