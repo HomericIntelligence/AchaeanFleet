@@ -31,7 +31,15 @@ RUN which yq || ( \
         -o /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq )
 
+COPY vessels/worker/healthcheck-server.js /app/healthcheck-server.js
+RUN chown agent:agent /app/healthcheck-server.js
+
 USER agent
 
 ENV AGENT_PROGRAM=none
 ENV AGENT_HEADLESS_FLAG=""
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:23001/health 2>/dev/null || exit 1
+
+CMD ["node", "/app/healthcheck-server.js"]
