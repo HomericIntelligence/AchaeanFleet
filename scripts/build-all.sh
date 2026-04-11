@@ -6,11 +6,13 @@
 #
 # Usage:
 #   bash scripts/build-all.sh
-#   TAG=v1.2.3 bash scripts/build-all.sh   # Override image tag
+#   TAG=v1.2.3 bash scripts/build-all.sh         # Override image tag
+#   CONTAINER_CMD=podman bash scripts/build-all.sh  # Use Podman instead of Docker
 
 set -euo pipefail
 
 TAG="${TAG:-latest}"
+CONTAINER_CMD="${CONTAINER_CMD:-docker}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -29,7 +31,7 @@ build_image() {
 
     echo ""
     echo "--- Building ${tag} from ${dockerfile} ---"
-    if docker build -f "${dockerfile}" -t "${tag}" "${extra_args[@]}" .; then
+    if ${CONTAINER_CMD} build -f "${dockerfile}" -t "${tag}" "${extra_args[@]}" .; then
         echo "    OK: ${tag}"
         built=$((built + 1))
     else
