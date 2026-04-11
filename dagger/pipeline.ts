@@ -13,7 +13,8 @@
  *   npm install @dagger.io/dagger
  */
 
-import { connect, Client } from "@dagger.io/dagger";
+import { connect, Client, Container } from "@dagger.io/dagger";
+import { execSync } from "child_process";
 
 // Base image definitions
 const BASES = [
@@ -71,18 +72,31 @@ const VESSELS = [
   },
 ] as const;
 
-async function buildBases(client: Client): Promise<Map<string, any>> {
+async function buildBases(client: Client): Promise<Map<string, Container>> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
 
-  const builtBases = new Map<string, any>();
+  const builtBases = new Map<string, Container>();
 
   for (const base of BASES) {
     console.log(`Building base: ${base.name}`);
     const image = client
       .container()
       .build(src, { dockerfile: base.dockerfile });
+
+    // Export the built image to a local tarball so vessel Dockerfiles can
+    // resolve FROM ${BASE_IMAGE} against the local Docker daemon.  The export
+    // call also forces the Dagger build to complete before we proceed.
+    const tarPath = `/tmp/${base.name}.tar`;
+    console.log(`Exporting base ${base.name} → ${tarPath}`);
+    await image.export(tarPath);
+
+    // Load the tarball into the local Docker daemon and tag it as <name>:latest
+    // so that the vessel build args resolve to the freshly-built image.
+    console.log(`Loading ${base.name}:latest into local daemon`);
+    execSync(`docker load -i ${tarPath} && docker tag ${base.name} ${base.name}:latest 2>/dev/null || docker load -i ${tarPath}`, { stdio: "inherit" });
+
     builtBases.set(base.name, image);
   }
 
@@ -91,20 +105,16 @@ async function buildBases(client: Client): Promise<Map<string, any>> {
 
 async function buildVessels(
   client: Client,
-  builtBases: Map<string, any>,
-  registry?: string,
-  imageTag?: string
+  builtBases: Map<string, Container>,
+  registry?: string
 ): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
 
-  // Ensure each vessel's base image is fully resolved before starting the vessel build.
-  // builtBases contains Dagger Container objects; sync() forces the build to complete.
-  for (const [baseName, baseContainer] of builtBases.entries()) {
-    console.log(`Syncing base: ${baseName}`);
-    await baseContainer.sync();
-  }
+  // Base images were already exported and loaded into the local daemon by
+  // buildBases().  No sync() needed here — the export call already forced
+  // each base build to complete and the daemon now has <name>:latest tagged.
 
   const buildPromises = VESSELS.map(async (vessel) => {
     console.log(`Building vessel: ${vessel.name}`);
@@ -135,10 +145,16 @@ async function buildVessels(
   await Promise.all(buildPromises);
 }
 
-async function testImages(client: Client): Promise<void> {
+async function testImages(
+  client: Client,
+  builtBases: Map<string, Container>
+): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
+
+  // builtBases guarantees base images are exported and loaded into the local
+  // daemon (done by buildBases()), so vessel Dockerfiles resolve FROM ${BASE_IMAGE}.
 
   // Test each vessel: ensure it starts and /health responds
   const testPromises = VESSELS.map(async (vessel) => {
@@ -190,7 +206,8 @@ connect(
         break;
 
       case "test":
-        await testImages(client);
+        const basesForTest = await buildBases(client);
+        await testImages(client, basesForTest);
         console.log("All image tests passed.");
         break;
 
