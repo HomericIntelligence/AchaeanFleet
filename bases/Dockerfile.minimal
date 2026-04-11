@@ -39,22 +39,9 @@ RUN groupadd -g ${GROUP_ID} agent && \
     useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
     echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Configure tmux
-RUN mkdir -p /home/agent && \
-    echo "set -g mouse on" >> /home/agent/.tmux.conf && \
-    echo "set -g history-limit 50000" >> /home/agent/.tmux.conf && \
-    echo "set -g status-bg colour235" >> /home/agent/.tmux.conf && \
-    echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
-    chown -R agent:agent /home/agent
-
-# Install Oh My Zsh
-USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-USER root
-
-# Create workspace and app directories
-RUN mkdir -p /workspace /app && \
-    chown -R agent:agent /workspace /app
+# Shared agent environment setup (tmux config, Oh My Zsh, workspace dirs)
+COPY scripts/setup-agent-env.sh /tmp/setup-agent-env.sh
+RUN chmod +x /tmp/setup-agent-env.sh && /tmp/setup-agent-env.sh && rm /tmp/setup-agent-env.sh
 
 WORKDIR /workspace
 
