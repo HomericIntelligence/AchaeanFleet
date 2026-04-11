@@ -22,7 +22,7 @@ RUN curl -fsSL https://opencode.ai/install | bash || \
     )
 
 # Verify installation
-RUN opencode --version || true
+RUN opencode --version
 
 USER agent
 

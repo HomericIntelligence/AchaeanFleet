@@ -14,7 +14,7 @@ USER root
 RUN npm install -g @openai/codex
 
 # Verify installation
-RUN codex --version || true
+RUN codex --version
 
 USER agent
 

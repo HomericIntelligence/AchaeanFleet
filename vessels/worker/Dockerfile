@@ -12,18 +12,22 @@ LABEL org.opencontainers.image.description="Shell worker vessel — no AI tool, 
 
 USER root
 
-# Install additional tools useful for shell workers
+# Install additional tools useful for shell workers (yq may not be in apt on all distros)
 RUN apt-get update && apt-get install -y \
     jq \
-    yq \
     make \
-    && rm -rf /var/lib/apt/lists/* || true
+    && rm -rf /var/lib/apt/lists/*
 
-# Install yq if not available via apt
-RUN which yq || \
-    curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" \
-        -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq
+# Install yq via direct binary download if not already available
+RUN which yq \
+    || ( \
+        curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" \
+            -o /usr/local/bin/yq \
+        && chmod +x /usr/local/bin/yq \
+    )
+
+# Verify yq is present
+RUN yq --version
 
 USER agent
 
