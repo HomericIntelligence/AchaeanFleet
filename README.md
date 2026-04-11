@@ -82,6 +82,25 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 23080     hi-worker-1
 ```
 
+## Network topology
+
+Containers are attached to two separate bridge networks for defense-in-depth:
+
+```
+  agamemnon-frontend   — all agent vessels; ProjectAgamemnon (host) reaches
+                         agents via Docker bridge gateway 172.20.0.1
+  agent-backend        — opt-in lateral traffic; only hi-worker-1 spans both
+```
+
+| Network | Who joins |
+|---------|-----------|
+| `agamemnon-frontend` | all agents |
+| `agent-backend` | `hi-worker-1` only (spans both) |
+
+This limits lateral movement: a compromised agent on `agamemnon-frontend` cannot
+directly reach the `agent-backend` subnet. See [docs/network-topology.md](docs/network-topology.md)
+for the full diagram, design rationale, and manual isolation verification steps.
+
 ## Agamemnon agent sidecar
 
 All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.

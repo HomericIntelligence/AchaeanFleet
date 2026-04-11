@@ -8,12 +8,17 @@
 #   docker compose -f docker-compose.mesh.yml up -d
 #
 # Check health: docker compose -f docker-compose.mesh.yml ps
+#
+# Network topology:
+#   agamemnon-frontend  — all agents; ProjectAgamemnon reaches agents via 172.20.0.1
+#   agent-backend       — opt-in lateral traffic; hi-worker-1 spans both networks
 
 version: "3.9"
 
 networks:
-  homeric-mesh:
-    name: ${MESH_NETWORK:-homeric-mesh}
+  agamemnon-frontend:
+    driver: bridge
+  agent-backend:
     driver: bridge
 
 # Shared environment for all agents
@@ -36,7 +41,7 @@ services:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-aindrea
     hostname: hi-aindrea
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23001:23001"]
     environment:
       <<: *common-env
@@ -54,7 +59,7 @@ services:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-baird
     hostname: hi-baird
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23003:23001"]
     environment:
       <<: *common-env
@@ -75,7 +80,7 @@ services:
     image: ${CODEX_IMAGE:-achaean-codex:latest}
     container_name: hi-codex-1
     hostname: hi-codex-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23010:23001"]
     environment:
       <<: *common-env
@@ -96,7 +101,7 @@ services:
     image: ${AIDER_IMAGE:-achaean-aider:latest}
     container_name: hi-aider-1
     hostname: hi-aider-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23020:23001"]
     environment:
       <<: *common-env
@@ -118,7 +123,7 @@ services:
     image: ${GOOSE_IMAGE:-achaean-goose:latest}
     container_name: hi-goose-1
     hostname: hi-goose-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23030:23001"]
     environment:
       <<: *common-env
@@ -139,7 +144,7 @@ services:
     image: ${CLINE_IMAGE:-achaean-cline:latest}
     container_name: hi-cline-1
     hostname: hi-cline-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23040:23001"]
     environment:
       <<: *common-env
@@ -160,7 +165,7 @@ services:
     image: ${OPENCODE_IMAGE:-achaean-opencode:latest}
     container_name: hi-opencode-1
     hostname: hi-opencode-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23050:23001"]
     environment:
       <<: *common-env
@@ -181,7 +186,7 @@ services:
     image: ${CODEBUFF_IMAGE:-achaean-codebuff:latest}
     container_name: hi-codebuff-1
     hostname: hi-codebuff-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23060:23001"]
     environment:
       <<: *common-env
@@ -202,7 +207,7 @@ services:
     image: ${AMPCODE_IMAGE:-achaean-ampcode:latest}
     container_name: hi-ampcode-1
     hostname: hi-ampcode-1
-    networks: [homeric-mesh]
+    networks: [agamemnon-frontend]
     ports: ["23070:23001"]
     environment:
       <<: *common-env
@@ -218,12 +223,18 @@ services:
 
   # -------------------------------------------------------------------------
   # Shell Worker (minimal base, no AI tool)
+  # Spans both networks: receives tasks from Agamemnon (frontend) and
+  # can coordinate with other agents directly (backend).
   # -------------------------------------------------------------------------
   hi-worker-1:
     image: ${WORKER_IMAGE:-achaean-worker:latest}
     container_name: hi-worker-1
     hostname: hi-worker-1
-    networks: [homeric-mesh]
+    networks:
+      agamemnon-frontend:
+        aliases: [hi-worker-1]
+      agent-backend:
+        aliases: [hi-worker-1]
     ports: ["23080:23001"]
     environment:
       <<: *common-env
