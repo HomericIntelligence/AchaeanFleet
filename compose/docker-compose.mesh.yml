@@ -146,8 +146,8 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-claude
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -169,8 +169,8 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-claude
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -194,8 +194,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codex-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-codex
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -220,8 +220,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aider-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-aider
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -245,8 +245,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Goose-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-goose
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -270,8 +270,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Cline-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-cline
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -295,8 +295,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Opencode-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-opencode
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -320,8 +320,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codebuff-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-codebuff
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -345,8 +345,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Ampcode-1:/workspace
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-ampcode
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
 
@@ -370,7 +370,7 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     restart: unless-stopped
-    deploy:
-      resources: *resources-worker
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     healthcheck: *healthcheck
     <<: *security
