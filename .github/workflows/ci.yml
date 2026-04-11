@@ -7,17 +7,37 @@ on:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - '**/Dockerfile*'
+      - '.hadolint.yaml'
   pull_request:
     branches: [main]
     paths:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - '**/Dockerfile*'
+      - '.hadolint.yaml'
 
 jobs:
+  lint-dockerfiles:
+    name: Lint Dockerfiles
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    concurrency:
+      group: lint-dockerfiles-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
+
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-latest
+    needs: lint-dockerfiles
     strategy:
       matrix:
         base:
