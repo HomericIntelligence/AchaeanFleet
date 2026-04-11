@@ -15,9 +15,8 @@ USER root
 # Install additional tools useful for shell workers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
-    yq \
     make \
-    && rm -rf /var/lib/apt/lists/* || true
+    && rm -rf /var/lib/apt/lists/*
 
 # Install yq if not available via apt — pinned version with SHA256 verification (no unverified download)
 ARG YQ_VERSION=4.52.5
