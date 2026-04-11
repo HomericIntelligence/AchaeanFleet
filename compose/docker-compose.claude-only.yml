@@ -28,6 +28,19 @@ networks:
     driver: bridge
     # Internal DNS: containers resolve each other by service name
 
+# Shared tmpfs mounts for paths that need write access under read-only root.
+# /tmp        - general temp files and tmux sockets (/tmp/tmux-*)
+# /run        - runtime PID files and sockets
+# /home/agent/.cache  - tool caches (npm, Claude Code, etc.)
+# /home/agent/.config - runtime config writes
+# /home/agent/.local  - Python user installs and local state
+x-tmpfs: &tmpfs
+  - /tmp
+  - /run
+  - /home/agent/.cache
+  - /home/agent/.config
+  - /home/agent/.local
+
 services:
   # -------------------------------------------------------------------------
   # ProjectAgamemnon coordinator (existing, not modified — just connected here)
@@ -63,6 +76,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
+    read_only: true
+    tmpfs: *tmpfs
     restart: unless-stopped
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -96,6 +111,8 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
+    read_only: true
+    tmpfs: *tmpfs
     restart: unless-stopped
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -128,6 +145,8 @@ services:
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Vegai:/workspace
     working_dir: /workspace
+    read_only: true
+    tmpfs: *tmpfs
     restart: unless-stopped
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
