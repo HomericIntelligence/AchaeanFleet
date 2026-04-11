@@ -17,9 +17,8 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install Cline CLI
-ENV CLINE_VERSION=2.14.0
-RUN npm install -g cline@${CLINE_VERSION}  # pinned for reproducibility — see #57
+# Install Cline CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g cline@2.14.0
 
 # Verify installation
 RUN cline --version

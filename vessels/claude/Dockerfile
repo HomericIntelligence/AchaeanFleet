@@ -18,9 +18,8 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install Claude Code CLI
-ENV CLAUDE_CODE_VERSION=2.1.101
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}  # pinned for reproducibility — see #57
+# Install Claude Code CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g @anthropic-ai/claude-code@2.1.101
 
 # Install GitHub CLI (needed for issue/PR operations)
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \

@@ -49,9 +49,8 @@ RUN apt-get update && apt-get install -y gnupg && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/* /tmp/nodesource.gpg.key
 
-# Install Yarn
-ENV YARN_VERSION=1.22.22
-RUN npm install -g yarn@${YARN_VERSION}  # pinned for reproducibility — see #57
+# Install Yarn (version pinned for reproducibility — issue #2)
+RUN npm install -g yarn@1.22.22
 
 # Create non-root user
 ARG USER_ID=1000

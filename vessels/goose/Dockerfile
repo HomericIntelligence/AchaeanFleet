@@ -36,9 +36,11 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install Goose via official install script, with tarball fallback
-RUN curl -fsSL https://github.com/block/goose/releases/latest/download/install.sh | bash || \
-    (curl -fsSL https://github.com/block/goose/releases/latest/download/goose-linux-x86_64.tar.gz \
+# Pinned Goose version for reproducibility (issue #2). Update ENV to bump.
+ENV GOOSE_VERSION=v1.30.0
+
+# Install Goose binary at pinned version
+RUN curl -fsSL "https://github.com/block/goose/releases/download/${GOOSE_VERSION}/goose-linux-x86_64.tar.gz" \
         -o /tmp/goose.tar.gz && \
      tar -xzf /tmp/goose.tar.gz -C /usr/local/bin && \
      chmod +x /usr/local/bin/goose && \
