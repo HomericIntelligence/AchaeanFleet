@@ -18,9 +18,8 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install aider-chat
-ENV AIDER_VERSION=0.82.3
-RUN pip install --no-cache-dir "aider-chat==${AIDER_VERSION}"  # pinned for reproducibility — see #57
+# Install aider-chat (version pinned for reproducibility — issue #2)
+RUN pip install --no-cache-dir "aider-chat==0.82.3"
 
 # Verify installation
 RUN aider --version

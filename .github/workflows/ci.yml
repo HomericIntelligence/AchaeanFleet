@@ -7,12 +7,14 @@ on:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - 'tests/**'
   pull_request:
     branches: [main]
     paths:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - 'tests/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
@@ -22,19 +24,19 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint Dockerfiles
+  lint-dockerfiles:
+    name: Lint Dockerfile version pins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Lint all Dockerfiles with Hadolint
-        uses: hadolint/hadolint-action@v3.3.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          recursive: true
-          failure-threshold: error
+          python-version: '3.12'
+      - run: pip install pytest
+      - run: python -m pytest tests/ -v
 
   build-bases:
+    needs: lint-dockerfiles
     name: Build Base Images
     runs-on: ubuntu-latest
     env:

@@ -48,9 +48,8 @@ RUN apt-get update && apt-get install -y gnupg && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/* /tmp/nodesource.gpg.key
 
-# Install Yarn
-ENV YARN_VERSION=1.22.22
-RUN npm install -g yarn@${YARN_VERSION}  # pinned for reproducibility — see #57
+# Install Yarn (version pinned for reproducibility — issue #2)
+RUN npm install -g yarn@1.22.22
 
 # Create non-root user
 ARG USER_ID=1000
@@ -67,16 +66,13 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
 
-# Install Oh My Zsh from a pinned commit (reproducible, no curl|bash)
-ENV OHMYZSH_COMMIT=7c10d9839f05b8b73e26aa4e0f04cc886fbba6a6
+# Install Oh My Zsh
 USER agent
-RUN git clone https://github.com/ohmyzsh/ohmyzsh.git /home/agent/.oh-my-zsh && \
-    git -C /home/agent/.oh-my-zsh checkout "$OHMYZSH_COMMIT" && \
-    cp /home/agent/.oh-my-zsh/templates/zshrc.zsh-template /home/agent/.zshrc
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 USER root
 
-# Upgrade pip
-RUN pip install --upgrade pip
+# Upgrade pip (version pinned for reproducibility — issue #2)
+RUN pip install --upgrade "pip==26.0.1"
 
 WORKDIR /workspace
 

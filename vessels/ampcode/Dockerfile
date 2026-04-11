@@ -17,9 +17,8 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install AmpCode CLI
-ENV AMP_VERSION=0.0.1775866026-gd3abf3
-RUN npm install -g @sourcegraph/amp@${AMP_VERSION}  # pinned for reproducibility — see #57
+# Install AmpCode CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g @sourcegraph/amp@0.0.1775866026-gd3abf3
 
 # Verify installation
 RUN amp --version

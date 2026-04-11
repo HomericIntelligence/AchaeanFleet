@@ -17,9 +17,8 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install OpenAI Codex CLI
-ENV CODEX_VERSION=0.120.0
-RUN npm install -g @openai/codex@${CODEX_VERSION}  # pinned for reproducibility — see #57
+# Install OpenAI Codex CLI (version pinned for reproducibility — issue #2)
+RUN npm install -g @openai/codex@0.120.0
 
 # Verify installation
 RUN codex --version
