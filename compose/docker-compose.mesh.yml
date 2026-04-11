@@ -16,6 +16,13 @@ networks:
     name: ${MESH_NETWORK:-homeric-mesh}
     driver: bridge
 
+# Shared security hardening applied to all services
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 # Shared environment for all agents
 x-common-env: &common-env
   AGAMEMNON_URL: ${AGAMEMNON_URL:-http://172.20.0.1:8080}
@@ -33,6 +40,7 @@ services:
   # Claude agents (Node base)
   # -------------------------------------------------------------------------
   hi-aindrea:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-aindrea
     hostname: hi-aindrea
@@ -51,6 +59,7 @@ services:
     healthcheck: *healthcheck
 
   hi-baird:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-baird
     hostname: hi-baird
@@ -72,6 +81,7 @@ services:
   # Codex agent (Node base)
   # -------------------------------------------------------------------------
   hi-codex-1:
+    <<: *security
     image: ${CODEX_IMAGE:-achaean-codex:latest}
     container_name: hi-codex-1
     hostname: hi-codex-1
@@ -93,6 +103,7 @@ services:
   # Aider agent (Python base)
   # -------------------------------------------------------------------------
   hi-aider-1:
+    <<: *security
     image: ${AIDER_IMAGE:-achaean-aider:latest}
     container_name: hi-aider-1
     hostname: hi-aider-1
@@ -115,6 +126,7 @@ services:
   # Goose agent (minimal/binary base)
   # -------------------------------------------------------------------------
   hi-goose-1:
+    <<: *security
     image: ${GOOSE_IMAGE:-achaean-goose:latest}
     container_name: hi-goose-1
     hostname: hi-goose-1
@@ -136,6 +148,7 @@ services:
   # Cline agent (Node base)
   # -------------------------------------------------------------------------
   hi-cline-1:
+    <<: *security
     image: ${CLINE_IMAGE:-achaean-cline:latest}
     container_name: hi-cline-1
     hostname: hi-cline-1
@@ -157,6 +170,7 @@ services:
   # OpenCode agent (minimal/binary base)
   # -------------------------------------------------------------------------
   hi-opencode-1:
+    <<: *security
     image: ${OPENCODE_IMAGE:-achaean-opencode:latest}
     container_name: hi-opencode-1
     hostname: hi-opencode-1
@@ -178,6 +192,7 @@ services:
   # Codebuff agent (Node base)
   # -------------------------------------------------------------------------
   hi-codebuff-1:
+    <<: *security
     image: ${CODEBUFF_IMAGE:-achaean-codebuff:latest}
     container_name: hi-codebuff-1
     hostname: hi-codebuff-1
@@ -199,6 +214,7 @@ services:
   # AmpCode agent (Node base)
   # -------------------------------------------------------------------------
   hi-ampcode-1:
+    <<: *security
     image: ${AMPCODE_IMAGE:-achaean-ampcode:latest}
     container_name: hi-ampcode-1
     hostname: hi-ampcode-1
@@ -220,6 +236,7 @@ services:
   # Shell Worker (minimal base, no AI tool)
   # -------------------------------------------------------------------------
   hi-worker-1:
+    <<: *security
     image: ${WORKER_IMAGE:-achaean-worker:latest}
     container_name: hi-worker-1
     hostname: hi-worker-1

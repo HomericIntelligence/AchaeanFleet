@@ -107,6 +107,61 @@ When you report a vulnerability:
 - Social engineering attacks
 - Physical security
 
+## Container Runtime Hardening
+
+All compose services apply the following runtime security options.
+
+### `no-new-privileges:true`
+
+```yaml
+security_opt:
+  - no-new-privileges:true
+```
+
+Prevents any process inside the container from gaining additional privileges via `setuid`/`setgid` binaries. This means even if a container binary has the setuid bit set, the kernel will not allow privilege escalation through it. This is particularly important given that base images grant the `agent` user passwordless `sudo` — `no-new-privileges` ensures that path cannot be exploited from within the container.
+
+### `cap_drop: ALL`
+
+```yaml
+cap_drop:
+  - ALL
+```
+
+Drops the entire set of Linux capabilities that Docker grants by default, including:
+
+| Capability | Why dropped |
+|-----------|-------------|
+| `NET_RAW` | Agent containers don't send raw network packets |
+| `SYS_CHOWN` | No ownership changes needed at runtime |
+| `CHOWN` | Same as above |
+| `SETUID` / `SETGID` | No privilege transitions needed |
+| `KILL` | Agents don't need to signal arbitrary processes |
+| `NET_BIND_SERVICE` | Ports are above 1024; not needed |
+| `AUDIT_WRITE` | No kernel audit logging needed |
+| Others | Not required for AI tool execution |
+
+No `cap_add` entries are included — none of the current vessel types (claude, codex, aider, goose, cline, opencode, codebuff, ampcode, worker) require any capabilities beyond an unprivileged userspace process.
+
+### Seccomp
+
+A custom seccomp profile is not currently shipped. Docker's default seccomp profile remains active (it blocks ~44 dangerous syscalls). A vessel-specific profile is deferred to a follow-on issue.
+
+### Runtime Validation
+
+To confirm reduced privileges on a running container:
+
+```bash
+# Verify no-new-privileges and cap_drop are applied
+docker inspect hi-aindrea | jq '.[0].HostConfig | {SecurityOpt, CapDrop, CapAdd}'
+
+# Expected output:
+# {
+#   "SecurityOpt": ["no-new-privileges:true"],
+#   "CapDrop": ["ALL"],
+#   "CapAdd": null
+# }
+```
+
 ## Security Best Practices
 
 When contributing to AchaeanFleet:
