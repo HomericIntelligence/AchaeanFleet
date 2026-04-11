@@ -28,6 +28,11 @@ x-healthcheck: &healthcheck
   start_period: 15s
   retries: 3
 
+# Shared security hardening (least-privilege defaults)
+x-security: &security
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
 services:
   # -------------------------------------------------------------------------
   # Claude agents (Node base)
@@ -49,6 +54,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   hi-baird:
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
@@ -67,6 +73,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Codex agent (Node base)
@@ -88,6 +95,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Aider agent (Python base)
@@ -110,6 +118,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Goose agent (minimal/binary base)
@@ -131,6 +140,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Cline agent (Node base)
@@ -152,6 +162,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # OpenCode agent (minimal/binary base)
@@ -173,6 +184,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Codebuff agent (Node base)
@@ -194,6 +206,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # AmpCode agent (Node base)
@@ -215,6 +228,7 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
 
   # -------------------------------------------------------------------------
   # Shell Worker (minimal base, no AI tool)
@@ -235,3 +249,4 @@ services:
     working_dir: /workspace
     restart: unless-stopped
     healthcheck: *healthcheck
+    <<: *security
