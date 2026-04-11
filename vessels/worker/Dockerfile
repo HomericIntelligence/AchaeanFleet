@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.description="Shell worker vessel — no AI tool, 
 USER root
 
 # Install additional tools useful for shell workers
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
     yq \
     make \
