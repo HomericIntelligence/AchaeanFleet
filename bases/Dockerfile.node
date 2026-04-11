@@ -6,9 +6,15 @@
 
 FROM node:20-slim
 
+ARG GIT_SHA=unknown
+ARG VERSION=unknown
+
 LABEL org.opencontainers.image.title="achaean-base-node"
 LABEL org.opencontainers.image.description="AchaeanFleet Node.js base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
+LABEL org.opencontainers.image.revision=$GIT_SHA
+LABEL org.opencontainers.image.version=$VERSION
+LABEL git-sha=$GIT_SHA
 
 USER root
 
