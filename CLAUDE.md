@@ -69,10 +69,10 @@ volumes:
 ```
 8080      ProjectAgamemnon coordinator (existing, not in this repo)
 23001     hi-aindrea (claude)
-23002     (reserved)
+23002     (unassigned)
 23003     hi-baird (claude)
 23004     hi-vegai (claude)
-23005     (reserved)
+23005     (unassigned)
 23010     hi-codex-1
 23020     hi-aider-1
 23030     hi-goose-1
