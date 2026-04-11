@@ -41,9 +41,17 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
 
-# Install Oh My Zsh
+# Install Oh My Zsh (pinned commit; verify SHA256 before execution)
+# renovate: datasource=github-commits depName=ohmyzsh/ohmyzsh
+ARG OHMYZSH_COMMIT=7c10d9839f05b8b73e26aa4e0f04cc886fbba6a6
+COPY scripts/checksums/ohmyzsh-7c10d98.sha256 /tmp/omz.sha256
 USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+RUN curl -fsSL \
+        "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/${OHMYZSH_COMMIT}/tools/install.sh" \
+        -o /tmp/omz-install.sh && \
+    echo "$(cat /tmp/omz.sha256)  /tmp/omz-install.sh" | sha256sum --check && \
+    sh /tmp/omz-install.sh --unattended && \
+    rm -f /tmp/omz-install.sh /tmp/omz.sha256
 USER root
 
 # Create workspace and app directories
