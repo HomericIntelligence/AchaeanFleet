@@ -1,5 +1,17 @@
 # Security Policy
 
+## Supported Images
+
+AchaeanFleet builds container images, not versioned software releases. The following image series receive security patches:
+
+| Image Series                   | Supported |
+|--------------------------------|-----------|
+| `achaean-*:latest`             | Yes       |
+| `achaean-*:<sha256-digest>`    | Yes (pinned digest builds) |
+| `achaean-*:<old-tag>`          | No — rebuild from `latest` |
+
+**Policy:** Only `latest` and pinned SHA256 digest builds are supported. There are no versioned release branches; rebuild from the current `main` to get security fixes.
+
 ## Reporting Security Vulnerabilities
 
 **Do not open public issues for security vulnerabilities.**
@@ -8,11 +20,17 @@ We take security seriously. If you discover a security vulnerability, please rep
 
 ## How to Report
 
-### Email (Preferred)
+### GitHub Security Advisories (Preferred)
 
-Send an email to: **<4211002+mvillmow@users.noreply.github.com>**
+Use GitHub's private vulnerability reporting:
 
-Or use the GitHub private vulnerability reporting feature if available.
+**[Report a vulnerability](https://github.com/mvillmow/AchaeanFleet/security/advisories/new)**
+
+This is the preferred channel — it keeps the report private, lets us draft a coordinated advisory, and integrates with GitHub's Security tab automatically.
+
+### Email (Fallback)
+
+If you cannot use GitHub Security Advisories, send an email to: **<4211002+mvillmow@users.noreply.github.com>**
 
 ### What to Include
 
@@ -94,11 +112,33 @@ When you report a vulnerability:
 
 ### In Scope
 
+**Credential exposure**
+- API keys, tokens, or secrets embedded in Dockerfiles, Compose files, or CI config (`ENV`, `ARG`, `--build-arg`, `.env` files checked in)
+- Home directory mounts (`- /home/...:/home/...`) that expose host credentials or SSH keys to containers
+
+**Privilege escalation**
+- Missing `USER` directive — containers running as root by default
+- `NOPASSWD` sudo grants inside images
+- Dangerous Linux capability grants (`--cap-add`, `SYS_ADMIN`, etc.)
+- Writable volume mounts into sensitive host paths
+
+**Config injection**
+- Insecure Docker Compose overrides that allow environment variable injection
+- Build arguments that propagate secrets into image layers
+- Writable socket or socket-proxy mounts without authentication
+
+**Supply chain risks**
+- Base image CVEs: OS package vulnerabilities introduced via `apt`/`apk` in `bases/` or `vessels/`
+- npm transitive dependency CVEs in Node-based vessels
+- `curl | bash` or `wget | sh` install patterns without checksum verification
+- Mutable image tags (`:latest` used as `FROM` without pinned digest in production)
+
+**Other**
 - Dockerfiles (base images and vessel images)
-- Docker Compose files
+- Docker Compose files (`compose/`)
 - Dagger CI pipeline scripts (`dagger/`)
-- Justfile recipes
-- Nomad job specs
+- Nomad job specs (`nomad/`)
+- GitHub Actions workflows (`.github/`)
 
 ### Out of Scope
 
@@ -106,6 +146,10 @@ When you report a vulnerability:
 - Third-party base images (report upstream to the image maintainer)
 - Social engineering attacks
 - Physical security
+
+## Automated Detection
+
+AchaeanFleet CI runs [Trivy](https://github.com/aquasecurity/trivy-action) on all images with `severity: HIGH,CRITICAL`. CVEs already detected by Trivy in CI are tracked as issues; you do not need to report these separately unless you have additional exploitation context or a bypass.
 
 ## Security Best Practices
 
