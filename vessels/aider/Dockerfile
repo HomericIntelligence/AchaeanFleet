@@ -9,6 +9,13 @@ FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.title="achaean-aider"
 LABEL org.opencontainers.image.description="Aider AI coding assistant vessel"
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${VCS_REF}
+LABEL org.opencontainers.image.version=${VERSION}
+
 USER root
 
 # Install aider-chat
