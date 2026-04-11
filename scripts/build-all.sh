@@ -6,8 +6,8 @@
 #
 # Usage:
 #   bash scripts/build-all.sh
-#   TAG=v1.2.3 bash scripts/build-all.sh              # Override image tag
-#   CONTAINER_CMD=podman bash scripts/build-all.sh    # Use podman instead of docker
+#   TAG=v1.2.3 bash scripts/build-all.sh         # Override image tag
+#   CONTAINER_CMD=podman bash scripts/build-all.sh  # Use Podman instead of Docker
 
 set -euo pipefail
 
