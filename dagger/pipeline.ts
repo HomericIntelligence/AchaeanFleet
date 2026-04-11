@@ -7,13 +7,14 @@
  * Usage:
  *   dagger run ts-node dagger/pipeline.ts build
  *   dagger run ts-node dagger/pipeline.ts push --registry ghcr.io/homericintelligence
+ *   dagger run ts-node dagger/pipeline.ts push --registry ghcr.io/homericintelligence --tag v1.2.3
  *   dagger run ts-node dagger/pipeline.ts test
  *
  * Phase 5 target — requires Dagger SDK installed:
  *   npm install @dagger.io/dagger
  */
 
-import { connect, Client, Container } from "@dagger.io/dagger";
+import { connect, Client } from "@dagger.io/dagger";
 import { execSync } from "child_process";
 
 // Base image definitions
@@ -72,7 +73,28 @@ const VESSELS = [
   },
 ] as const;
 
-async function buildBases(client: Client): Promise<Map<string, Container>> {
+/** Returns the 7-character short git SHA of HEAD, or "unknown" if git is unavailable. */
+function getShortSha(): string {
+  try {
+    return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+}
+
+/** Returns today's date as YYYY-MM-DD. */
+function getDatestamp(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Builds all three base images and returns a map of name → Dagger Container.
+ * When running locally (no registry), also applies SHA and date tags via `docker tag`.
+ */
+async function buildBases(
+  client: Client,
+  registry?: string
+): Promise<Map<string, any>> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
@@ -103,10 +125,17 @@ async function buildBases(client: Client): Promise<Map<string, Container>> {
   return builtBases;
 }
 
+/**
+ * Builds all vessel images. When a registry is provided, pushes with multi-tag set:
+ * :latest, :git-<sha>, and :YYYY-MM-DD. When an explicit tag is provided, also
+ * pushes that tag (e.g. a semver string). Without a registry, applies SHA and date
+ * tags locally via `docker tag` for developer use.
+ */
 async function buildVessels(
   client: Client,
-  builtBases: Map<string, Container>,
-  registry?: string
+  builtBases: Map<string, any>,
+  registry?: string,
+  tag?: string
 ): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
@@ -115,6 +144,9 @@ async function buildVessels(
   // Base images were already exported and loaded into the local daemon by
   // buildBases().  No sync() needed here — the export call already forced
   // each base build to complete and the daemon now has <name>:latest tagged.
+
+  const shortSha = getShortSha();
+  const datestamp = getDatestamp();
 
   const buildPromises = VESSELS.map(async (vessel) => {
     console.log(`Building vessel: ${vessel.name}`);
@@ -126,16 +158,19 @@ async function buildVessels(
     });
 
     if (registry) {
-      // Always push :latest
-      const latestTag = `${registry}/${vessel.name}:latest`;
-      console.log(`Pushing: ${latestTag}`);
-      await image.publish(latestTag);
+      // Multi-tag set: :latest, :git-<sha>, :YYYY-MM-DD, and optionally the explicit tag
+      const tags = [
+        `${registry}/${vessel.name}:latest`,
+        `${registry}/${vessel.name}:git-${shortSha}`,
+        `${registry}/${vessel.name}:${datestamp}`,
+      ];
+      if (tag) {
+        tags.push(`${registry}/${vessel.name}:${tag}`);
+      }
 
-      // Also push the pinnable tag (SHA or semver) if provided
-      if (imageTag && imageTag !== "latest") {
-        const pinnableTag = `${registry}/${vessel.name}:${imageTag}`;
-        console.log(`Pushing: ${pinnableTag}`);
-        await image.publish(pinnableTag);
+      for (const t of tags) {
+        console.log(`Pushing: ${t}`);
+        await image.publish(t);
       }
     }
 
@@ -182,8 +217,7 @@ const registryArg = process.argv.indexOf("--registry");
 const registry =
   registryArg !== -1 ? process.argv[registryArg + 1] : undefined;
 const tagArg = process.argv.indexOf("--tag");
-const imageTag =
-  tagArg !== -1 ? process.argv[tagArg + 1] : undefined;
+const tag = tagArg !== -1 ? process.argv[tagArg + 1] : undefined;
 
 connect(
   async (client) => {
@@ -199,10 +233,12 @@ connect(
           console.error("--registry <url> required for push");
           process.exit(1);
         }
-        const basesForPush = await buildBases(client);
-        await buildVessels(client, basesForPush, registry, imageTag);
-        const tagSuffix = imageTag ? ` (tags: ${imageTag}, latest)` : " (tag: latest)";
-        console.log(`All images pushed to ${registry}${tagSuffix}`);
+        const basesForPush = await buildBases(client, registry);
+        await buildVessels(client, basesForPush, registry, tag);
+        console.log(`All images pushed to ${registry}`);
+        if (tag) {
+          console.log(`  Tagged with: ${tag}`);
+        }
         break;
 
       case "test":
@@ -213,7 +249,9 @@ connect(
 
       default:
         console.error(`Unknown command: ${command}`);
-        console.error("Usage: pipeline.ts [build|push|test] [--registry URL] [--tag TAG]");
+        console.error(
+          "Usage: pipeline.ts [build|push|test] [--registry URL] [--tag TAG]"
+        );
         process.exit(1);
     }
   },

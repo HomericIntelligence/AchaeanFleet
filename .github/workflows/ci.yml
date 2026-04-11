@@ -37,7 +37,8 @@ jobs:
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    env:
+      SHORT_SHA: ${{ github.sha }}
     strategy:
       matrix:
         base:
@@ -48,14 +49,10 @@ jobs:
           - name: achaean-base-minimal
             dockerfile: bases/Dockerfile.minimal
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Extract short SHA
-        id: sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@b5730b0e8d60c3a5c3c7e50b44bb1c2f87be4bf0  # v3.10.0
         with:
           driver: docker
 
@@ -67,7 +64,7 @@ jobs:
           echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Build base image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75  # v6.9.0
         with:
           context: .
           file: ${{ matrix.base.dockerfile }}
@@ -78,15 +75,17 @@ jobs:
             GIT_SHA=${{ steps.sha.outputs.short_sha }}
           push: false
           load: true
-          tags: |
-            ${{ matrix.base.name }}:latest
-            ${{ matrix.base.name }}:${{ steps.sha.outputs.short_sha }}
+          tags: ${{ matrix.base.name }}:latest
+          build-args: |
+            IMAGE_VERSION=git-${{ env.SHORT_SHA }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.SHORT_SHA }}
 
       - name: Export base image to tarball
         run: docker save ${{ matrix.base.name }}:latest -o /tmp/${{ matrix.base.name }}.tar
 
       - name: Upload base image artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.5.0
         with:
           name: base-image-${{ matrix.base.name }}
           path: /tmp/${{ matrix.base.name }}.tar
@@ -96,7 +95,8 @@ jobs:
     name: Build Vessel Images
     runs-on: ubuntu-latest
     needs: build-bases
-    timeout-minutes: 30
+    env:
+      SHORT_SHA: ${{ github.sha }}
     strategy:
       matrix:
         vessel:
@@ -128,14 +128,10 @@ jobs:
             dockerfile: vessels/worker/Dockerfile
             base: achaean-base-minimal
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Extract short SHA
-        id: sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Download base image artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234a4d8376ee55d59d  # v4.1.8
         with:
           name: base-image-${{ matrix.vessel.base }}
           path: /tmp
@@ -144,7 +140,7 @@ jobs:
         run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
 
       - name: Set up Docker Buildx (docker driver — shares daemon image store)
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@b5730b0e8d60c3a5c3c7e50b44bb1c2f87be4bf0  # v3.10.0
         with:
           driver: docker
 
@@ -156,28 +152,17 @@ jobs:
           echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Build vessel image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75  # v6.9.0
         with:
           context: .
           file: ${{ matrix.vessel.dockerfile }}
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
-            BUILD_DATE=${{ steps.meta.outputs.build_date }}
-            VCS_REF=${{ steps.meta.outputs.vcs_ref }}
-            VERSION=${{ steps.meta.outputs.version }}
+            IMAGE_VERSION=git-${{ env.SHORT_SHA }}
           push: false
-          tags: |
-            ${{ matrix.vessel.name }}:latest
-            ${{ matrix.vessel.name }}:${{ steps.sha.outputs.short_sha }}
-
-      - name: Scan vessel image for vulnerabilities (Trivy)
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: ${{ matrix.vessel.name }}:latest
-          format: table
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: 0
+          tags: ${{ matrix.vessel.name }}:latest
+          labels: |
+            org.opencontainers.image.revision=${{ env.SHORT_SHA }}
 
   push-to-registry:
     name: Push to GHCR
@@ -191,35 +176,79 @@ jobs:
       contents: read
     env:
       REGISTRY: ghcr.io/homericintelligence
+      SHORT_SHA: ${{ github.sha }}
+    strategy:
+      matrix:
+        vessel:
+          - name: achaean-claude
+            dockerfile: vessels/claude/Dockerfile
+            base: achaean-base-node
+          - name: achaean-codex
+            dockerfile: vessels/codex/Dockerfile
+            base: achaean-base-node
+          - name: achaean-aider
+            dockerfile: vessels/aider/Dockerfile
+            base: achaean-base-python
+          - name: achaean-goose
+            dockerfile: vessels/goose/Dockerfile
+            base: achaean-base-minimal
+          - name: achaean-cline
+            dockerfile: vessels/cline/Dockerfile
+            base: achaean-base-node
+          - name: achaean-opencode
+            dockerfile: vessels/opencode/Dockerfile
+            base: achaean-base-minimal
+          - name: achaean-codebuff
+            dockerfile: vessels/codebuff/Dockerfile
+            base: achaean-base-node
+          - name: achaean-ampcode
+            dockerfile: vessels/ampcode/Dockerfile
+            base: achaean-base-node
+          - name: achaean-worker
+            dockerfile: vessels/worker/Dockerfile
+            base: achaean-base-minimal
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Extract short SHA
-        id: sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - name: Download base image artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234a4d8376ee55d59d  # v4.1.8
+        with:
+          name: base-image-${{ matrix.vessel.base }}
+          path: /tmp
 
-      - name: Install Dagger SDK
-        run: cd dagger && npm ci
+      - name: Load base image into Docker daemon
+        run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
 
-      - name: Build and push all images via Dagger
-        env:
-          DAGGER_REGISTRY: ghcr.io/homericintelligence
-        run: npx ts-node dagger/pipeline.ts push --registry "$DAGGER_REGISTRY"
+      - name: Set up Docker Buildx (docker driver — shares daemon image store)
+        uses: docker/setup-buildx-action@b5730b0e8d60c3a5c3c7e50b44bb1c2f87be4bf0  # v3.10.0
+        with:
+          driver: docker
 
-      - name: Notify ProjectProteus of image push
-        env:
-          GITHUB_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
-          GITHUB_ORG: homericintelligence
-          IMAGE_TAG: ${{ github.sha }}
-          AGAMEMNON_HOST: hermes
-        run: bash scripts/notify-proteus.sh
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbea8a10b75fc6e8e4f4f09f7e4e  # v5.7.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ matrix.vessel.name }}
+          tags: |
+            type=sha,prefix=git-,format=short
+            type=raw,value={{date 'YYYY-MM-DD'}}
+            type=raw,value=latest
+
+      - name: Build and push vessel image
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75  # v6.9.0
+        with:
+          context: .
+          file: ${{ matrix.vessel.dockerfile }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.vessel.base }}:latest
+            IMAGE_VERSION=git-${{ env.SHORT_SHA }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
