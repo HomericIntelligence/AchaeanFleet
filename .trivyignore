@@ -1,0 +1,12 @@
+# .trivyignore
+#
+# CVEs that have been reviewed and accepted as unfixable or false-positive
+# for the AchaeanFleet container images.
+#
+# Format: one CVE ID per line (comments start with #)
+# Reference: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#trivyignore
+#
+# Example:
+#   CVE-2023-XXXXX  # upstream not yet patched, no fix available in Debian bookworm
+#
+# Keep this list short — if you're adding a CVE here, document why below it.

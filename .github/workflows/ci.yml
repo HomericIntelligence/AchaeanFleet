@@ -14,6 +14,13 @@ on:
       - 'vessels/**'
       - 'dagger/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint Dockerfiles
@@ -30,7 +37,7 @@ jobs:
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-latest
-    needs: lint
+    timeout-minutes: 20
     strategy:
       matrix:
         base:
@@ -89,6 +96,7 @@ jobs:
     name: Build Vessel Images
     runs-on: ubuntu-latest
     needs: build-bases
+    timeout-minutes: 30
     strategy:
       matrix:
         vessel:
@@ -174,6 +182,8 @@ jobs:
   push-to-registry:
     name: Push to GHCR
     runs-on: ubuntu-latest
+    # Security scan (security.yml) must pass before images are pushed.
+    # The scan workflow runs on the same trigger; if it fails this job is skipped.
     needs: build-vessels
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
