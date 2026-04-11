@@ -8,8 +8,6 @@
 #   cp .env.example .env && nano .env
 #   docker compose -f docker-compose.claude-only.yml up -d
 
-version: "3.9"
-
 networks:
   homeric-mesh:
     name: ${MESH_NETWORK:-homeric-mesh}

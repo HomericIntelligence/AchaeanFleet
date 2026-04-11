@@ -9,8 +9,6 @@
 #
 # Check health: docker compose -f docker-compose.mesh.yml ps
 
-version: "3.9"
-
 networks:
   homeric-mesh:
     name: ${MESH_NETWORK:-homeric-mesh}
