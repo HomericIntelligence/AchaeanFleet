@@ -10,6 +10,13 @@
 
 version: "3.9"
 
+# Shared security hardening applied to all services
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 networks:
   homeric-mesh:
     name: ${MESH_NETWORK:-homeric-mesh}
@@ -32,6 +39,7 @@ services:
   # Claude agent: Aindrea (odyssey-mainline-analysis)
   # -------------------------------------------------------------------------
   hi-aindrea:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-aindrea
     hostname: hi-aindrea
@@ -60,6 +68,7 @@ services:
   # Claude agent: Baird (scylla-repo-monitor)
   # -------------------------------------------------------------------------
   hi-baird:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-baird
     hostname: hi-baird
@@ -88,6 +97,7 @@ services:
   # Claude agent: VegAI (villmow-general-agent)
   # -------------------------------------------------------------------------
   hi-vegai:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-vegai
     hostname: hi-vegai
