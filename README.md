@@ -131,6 +131,25 @@ All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar
 The binary lives in ProjectAgamemnon and is never copied into images at build time.
 Configure its path via `AGAMEMNON_URL` in `compose/.env`.
 
+## Testing
+
+```bash
+# Validate all compose YAML files parse without errors (no images needed)
+just test-compose
+
+# Build the worker vessel, start it, probe /health on port 23080, then tear down
+just test-smoke
+```
+
+`test-compose` runs `docker compose config` against each compose file and exits non-zero on any parse error.
+No images are required — just Docker Compose and the repo checkout.
+
+`test-smoke` builds `achaean-base-minimal` and `achaean-worker` locally, starts the worker via
+`compose/docker-compose.smoke.yml`, polls `http://localhost:23080/health` until it responds, and tears down.
+Requires Docker. Takes ~2–5 minutes on first run due to image builds.
+
+Both checks run automatically in CI on every PR that touches `bases/**`, `vessels/**`, `compose/**`, or `dagger/**`.
+
 ## Adding a new agent type
 
 1. Pick a base: `node`, `python`, or `minimal`

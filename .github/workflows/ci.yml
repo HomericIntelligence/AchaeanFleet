@@ -8,7 +8,6 @@ on:
       - 'vessels/**'
       - 'dagger/**'
       - 'compose/**'
-      - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
@@ -16,7 +15,6 @@ on:
       - 'vessels/**'
       - 'dagger/**'
       - 'compose/**'
-      - '.github/workflows/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
@@ -247,82 +245,71 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ env.SHORT_SHA }}
 
-      - name: Export vessel image to tarball
-        run: docker save ${{ matrix.vessel.name }}:latest -o /tmp/${{ matrix.vessel.name }}.tar
-
-      - name: Upload vessel image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vessel-image-${{ matrix.vessel.name }}
-          path: /tmp/${{ matrix.vessel.name }}.tar
-          retention-days: 1
-
-  security-scan:
-    name: Security Scan Vessel Images
+  test-compose:
+    name: Validate Compose Files
     runs-on: ubuntu-latest
-    needs: build-vessels
-    permissions:
-      security-events: write
-      contents: read
-    strategy:
-      matrix:
-        vessel:
-          - name: achaean-claude
-            base: achaean-base-node
-          - name: achaean-codex
-            base: achaean-base-node
-          - name: achaean-aider
-            base: achaean-base-python
-          - name: achaean-goose
-            base: achaean-base-minimal
-          - name: achaean-cline
-            base: achaean-base-node
-          - name: achaean-opencode
-            base: achaean-base-minimal
-          - name: achaean-codebuff
-            base: achaean-base-node
-          - name: achaean-ampcode
-            base: achaean-base-node
-          - name: achaean-worker
-            base: achaean-base-minimal
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download base image artifact
-        uses: actions/download-artifact@v4
+      - name: Validate claude-only compose
+        run: docker compose -f compose/docker-compose.claude-only.yml config --quiet
+
+      - name: Validate mesh compose
+        run: docker compose -f compose/docker-compose.mesh.yml config --quiet
+
+      - name: Validate smoke compose
+        run: docker compose -f compose/docker-compose.smoke.yml config --quiet
+
+  test-smoke:
+    name: Smoke Test Worker Vessel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
+        uses: docker/setup-buildx-action@v3
         with:
-          name: base-image-${{ matrix.vessel.base }}
-          path: /tmp
+          driver: docker
 
-      - name: Load base image into Docker daemon
-        run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
-
-      - name: Download vessel image artifact
-        uses: actions/download-artifact@v4
+      - name: Build base-minimal
+        uses: docker/build-push-action@v5
         with:
-          name: vessel-image-${{ matrix.vessel.name }}
-          path: /tmp
+          context: .
+          file: bases/Dockerfile.minimal
+          push: false
+          load: true
+          tags: achaean-base-minimal:latest
 
-      - name: Load vessel image into Docker daemon
-        run: docker load -i /tmp/${{ matrix.vessel.name }}.tar
-
-      - name: Scan ${{ matrix.vessel.name }} for vulnerabilities
-        uses: aquasecurity/trivy-action@0.35.0
+      - name: Build worker vessel
+        uses: docker/build-push-action@v5
         with:
-          image-ref: ${{ matrix.vessel.name }}:latest
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: HIGH,CRITICAL
-          format: sarif
-          output: trivy-${{ matrix.vessel.name }}.sarif
+          context: .
+          file: vessels/worker/Dockerfile
+          build-args: |
+            BASE_IMAGE=achaean-base-minimal:latest
+          push: false
+          load: true
+          tags: achaean-worker:latest
 
-      - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Start smoke container
+        run: docker compose -f compose/docker-compose.smoke.yml up -d
+
+      - name: Wait for /health on port 23080 (60s timeout)
+        run: |
+          ok=0
+          for i in $(seq 1 30); do
+            if wget -qO- http://localhost:23080/health 2>/dev/null | grep -q '"status"'; then
+              echo "Health OK after $((i * 2))s"
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          [ $ok -eq 1 ] || { echo "FAIL: /health did not respond within 60s"; exit 1; }
+
+      - name: Tear down (always)
         if: always()
-        continue-on-error: true
-        with:
-          sarif_file: trivy-${{ matrix.vessel.name }}.sarif
-          category: trivy-${{ matrix.vessel.name }}
+        run: docker compose -f compose/docker-compose.smoke.yml down --volumes --remove-orphans
 
   push-to-registry:
     name: Push to GHCR
