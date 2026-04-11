@@ -19,11 +19,11 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Install additional tools useful for shell workers
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    jq \
-    make \
-    && rm -rf /var/lib/apt/lists/*
+# Install required tools — failures here are fatal
+RUN apt-get update && apt-get install -y jq make && rm -rf /var/lib/apt/lists/*
+
+# Install yq from apt if available; curl fallback below handles missing packages
+RUN apt-get update && apt-get install -y yq && rm -rf /var/lib/apt/lists/* || true
 
 # Install yq if not available via apt — pinned version with SHA256 verification (no unverified download)
 ARG YQ_VERSION=4.52.5
