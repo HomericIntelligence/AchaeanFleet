@@ -154,6 +154,18 @@ mesh-down:
     {{compose_cmd}} -f compose/docker-compose.mesh.yml down
 
 # =============================================================================
+# Lint
+# =============================================================================
+
+# Install pre-commit hooks into .git/hooks (run once after cloning)
+lint-install:
+    pre-commit install
+
+# Run all linters across all files
+lint:
+    pre-commit run --all-files
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 
