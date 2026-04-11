@@ -139,7 +139,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Install Dagger SDK
-        run: npm install @dagger.io/dagger
+        run: cd dagger && npm ci
 
       - name: Build and push all images via Dagger
         env:
