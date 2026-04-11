@@ -7,14 +7,19 @@
 # Usage:
 #   cp .env.example .env && nano .env
 #   docker compose -f docker-compose.claude-only.yml up -d
+#
+# Network topology:
+#   agamemnon-frontend  — all Claude agents; internal DNS resolves by service name
+#   agent-backend       — defined but unused in this file; available for future use
 
 version: "3.9"
 
 networks:
-  homeric-mesh:
-    name: ${MESH_NETWORK:-homeric-mesh}
+  agamemnon-frontend:
     driver: bridge
-    # Internal DNS: containers resolve each other by service name
+    # Internal DNS: agents resolve each other by service name within this network
+  agent-backend:
+    driver: bridge
 
 services:
   # -------------------------------------------------------------------------
@@ -26,7 +31,7 @@ services:
   #   ports:
   #     - "8080:8080"
   #   networks:
-  #     - homeric-mesh
+  #     - agamemnon-frontend
 
   # -------------------------------------------------------------------------
   # Claude agent: Aindrea (odyssey-mainline-analysis)
@@ -36,7 +41,7 @@ services:
     container_name: hi-aindrea
     hostname: hi-aindrea
     networks:
-      - homeric-mesh
+      - agamemnon-frontend
     ports:
       - "23001:23001"
     environment:
@@ -64,7 +69,7 @@ services:
     container_name: hi-baird
     hostname: hi-baird
     networks:
-      - homeric-mesh
+      - agamemnon-frontend
     ports:
       - "23003:23001"
     environment:
@@ -92,7 +97,7 @@ services:
     container_name: hi-vegai
     hostname: hi-vegai
     networks:
-      - homeric-mesh
+      - agamemnon-frontend
     ports:
       - "23004:23001"
     environment:
