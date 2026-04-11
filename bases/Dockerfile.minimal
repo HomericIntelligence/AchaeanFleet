@@ -35,6 +35,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     ca-certificates \
     build-essential \
     python3 \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 20.x via GPG-signed NodeSource repository (no curl-pipe-bash)

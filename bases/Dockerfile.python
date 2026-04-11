@@ -34,6 +34,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     procps \
     ca-certificates \
     build-essential \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 20.x via GPG-signed NodeSource repository (no curl-pipe-bash)
