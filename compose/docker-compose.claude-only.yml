@@ -8,18 +8,18 @@
 #   cp .env.example .env && nano .env
 #   docker compose -f docker-compose.claude-only.yml up -d
 #
-# To pin all images to a specific version, set IMAGE_TAG in .env:
-#   IMAGE_TAG=v1.0.0    (semver release — reproducible)
-#   IMAGE_TAG=abc1234   (7-char git SHA from CI — traceable)
-#   IMAGE_TAG=latest    (default — always the newest build, not pinned)
+# API key secrets:
+#   mkdir -p secrets && echo -n "sk-ant-..." > secrets/anthropic_api_key && chmod 600 secrets/anthropic_api_key
+#   (set SECRETS_DIR in .env if your secrets dir lives elsewhere)
 
 version: "3.9"
 
-x-logging: &default-logging
-  driver: json-file
-  options:
-    max-size: "${LOG_MAX_SIZE:-10m}"
-    max-file: "${LOG_MAX_FILES:-3}"
+# Shared security hardening applied to all services
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
 
 networks:
   agamemnon-frontend:
@@ -40,6 +40,10 @@ x-tmpfs: &tmpfs
   - /home/agent/.cache
   - /home/agent/.config
   - /home/agent/.local
+
+secrets:
+  anthropic_api_key:
+    file: ${SECRETS_DIR:-./secrets}/anthropic_api_key
 
 services:
   # -------------------------------------------------------------------------
@@ -69,9 +73,11 @@ services:
       - AGENT_ID=aindrea
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=aindrea
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AGAMEMNON_URL=${AGAMEMNON_URL:-https://caddy:8443}
-      - TLS_CA_CERT=${TLS_CA_CERT:-/certs/ca.crt}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+      # Fallback: set ANTHROPIC_API_KEY in .env for plain env-var mode
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
@@ -103,9 +109,10 @@ services:
       - AGENT_ID=baird
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=baird
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AGAMEMNON_URL=${AGAMEMNON_URL:-https://caddy:8443}
-      - TLS_CA_CERT=${TLS_CA_CERT:-/certs/ca.crt}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
@@ -137,9 +144,10 @@ services:
       - AGENT_ID=vegai
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=vegai
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - AGAMEMNON_URL=${AGAMEMNON_URL:-https://caddy:8443}
-      - TLS_CA_CERT=${TLS_CA_CERT:-/certs/ca.crt}
+      - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Vegai:/workspace
     working_dir: /workspace
