@@ -14,7 +14,7 @@ USER root
 RUN npm install -g cline
 
 # Verify installation
-RUN cline --version || true
+RUN cline --version
 
 USER agent
 

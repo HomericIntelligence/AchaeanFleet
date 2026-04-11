@@ -15,7 +15,7 @@ USER root
 RUN pip install --no-cache-dir aider-chat
 
 # Verify installation
-RUN aider --version || true
+RUN aider --version
 
 USER agent
 
