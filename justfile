@@ -26,6 +26,14 @@ compose_cmd := `which podman-compose 2>/dev/null && echo podman-compose || echo 
 # Build
 # =============================================================================
 
+# One-command environment setup for new developers
+bootstrap:
+    @echo "=== AchaeanFleet bootstrap ==="
+    @test -f compose/.env || cp compose/.env.example compose/.env && echo "Created compose/.env -- edit API keys"
+    @cd dagger && npm install
+    @just runtime
+    @echo "=== Ready. Edit compose/.env then run: just build-all ==="
+
 # Show which container runtime is active
 runtime:
     @echo "Container runtime: {{container_cmd}}"
