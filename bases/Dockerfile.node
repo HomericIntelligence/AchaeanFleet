@@ -4,7 +4,7 @@
 # Compatible with the HomericIntelligence agent mesh.
 # All node-based agent vessels (Claude, Codex, Cline, Codebuff, AmpCode) FROM this.
 
-FROM node:20-slim
+FROM node:20-slim@sha256:f93745c153377ee2fbbdd6e24efcd03cd2e86d6ab1d8aa9916a3790c40313a55
 
 LABEL org.opencontainers.image.title="achaean-base-node"
 LABEL org.opencontainers.image.description="AchaeanFleet Node.js base image for AI agent containers"
@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/Ac
 USER root
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
@@ -40,11 +40,6 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-bg colour235" >> /home/agent/.tmux.conf && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
-
-# Install Oh My Zsh
-USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-USER root
 
 # Create workspace and app directories
 RUN mkdir -p /workspace /app && \
