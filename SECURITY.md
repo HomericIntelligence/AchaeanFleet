@@ -107,6 +107,27 @@ When you report a vulnerability:
 - Social engineering attacks
 - Physical security
 
+## TLS Architecture
+
+All inter-service communication within the homeric-mesh is encrypted.
+See [`tls/README.md`](tls/README.md) for the full architecture.
+
+**Quick summary:**
+
+- A Caddy reverse proxy (`compose/docker-compose.caddy.yml`) terminates TLS on port `8443`
+- Agent containers connect to `https://caddy:8443` (not directly to Agamemnon on `http://8080`)
+- A local CA certificate is mounted at `/certs/ca.crt` in each container for validation
+- NATS (when integrated) uses `tls://nats:4222` — see `tls/nats/nats-tls.conf`
+
+**To set up TLS before starting the mesh:**
+```bash
+bash tls/generate-certs.sh
+```
+
+**Private keys are git-ignored** — `tls/certs/` is excluded from version control.
+
+See [ADR-007](docs/adr/007-tls-mesh-communications.md) for the architectural decision record.
+
 ## Security Best Practices
 
 When contributing to AchaeanFleet:
@@ -116,6 +137,8 @@ When contributing to AchaeanFleet:
 - Pin base image digests rather than mutable tags
 - Include a non-root `USER` directive in all production images
 - Scan images for known CVEs before pushing
+- Never commit TLS private keys — `tls/certs/` is in `.gitignore`
+- Run `bash tls/generate-certs.sh` locally; distribute certs to hosts out-of-band
 
 ## Contact
 
