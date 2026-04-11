@@ -49,6 +49,14 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${CLAUDE_MEM_LIMIT:-4G}
+          cpus: '${CLAUDE_CPU_LIMIT:-2.0}'
+        reservations:
+          memory: ${CLAUDE_MEM_RESERVATION:-512M}
+          cpus: '${CLAUDE_CPU_RESERVATION:-0.25}'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
       interval: 30s
@@ -77,6 +85,14 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${CLAUDE_MEM_LIMIT:-4G}
+          cpus: '${CLAUDE_CPU_LIMIT:-2.0}'
+        reservations:
+          memory: ${CLAUDE_MEM_RESERVATION:-512M}
+          cpus: '${CLAUDE_CPU_RESERVATION:-0.25}'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
       interval: 30s
@@ -105,6 +121,14 @@ services:
       - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
     working_dir: /workspace
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${CLAUDE_MEM_LIMIT:-4G}
+          cpus: '${CLAUDE_CPU_LIMIT:-2.0}'
+        reservations:
+          memory: ${CLAUDE_MEM_RESERVATION:-512M}
+          cpus: '${CLAUDE_CPU_RESERVATION:-0.25}'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
       interval: 30s

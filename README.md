@@ -96,6 +96,44 @@ Configure its path via `AGAMEMNON_URL` in `compose/.env`.
 4. Add to the build matrix in `.github/workflows/ci.yml`
 5. Run `just build-vessel <name>` to verify
 
+## Resource limits
+
+Every service in both compose files has `deploy.resources.limits` and `deploy.resources.reservations` set to prevent a single runaway agent from OOM-killing the host or starving other containers.
+
+Default limits (configurable via `.env`):
+
+| Agent type | Memory limit | CPU limit | Memory reservation | CPU reservation |
+|---|---|---|---|---|
+| Claude (aindrea, baird, vegai) | 4G | 2.0 | 512M | 0.25 |
+| Codex | 4G | 2.0 | 512M | 0.25 |
+| Aider | 4G | 2.0 | 512M | 0.25 |
+| Goose | 4G | 2.0 | 512M | 0.25 |
+| Cline | 4G | 2.0 | 512M | 0.25 |
+| OpenCode | 4G | 2.0 | 512M | 0.25 |
+| Codebuff | 4G | 2.0 | 512M | 0.25 |
+| AmpCode | 4G | 2.0 | 512M | 0.25 |
+| Worker | 1G | 1.0 | 128M | 0.1 |
+
+**Tuning:**
+
+Override any limit in `compose/.env` before starting the mesh:
+
+```bash
+# Tighten Claude agents on a 16 GB host running the full mesh
+CLAUDE_MEM_LIMIT=2G
+CLAUDE_CPU_LIMIT=1.0
+
+# Give the worker more headroom for heavy CI workloads
+WORKER_MEM_LIMIT=2G
+WORKER_CPU_LIMIT=2.0
+```
+
+Verify limits after bringing the mesh up:
+
+```bash
+docker compose -f compose/docker-compose.mesh.yml config | grep -A4 resources
+```
+
 ## Nomad (Phase 6)
 
 ```bash
