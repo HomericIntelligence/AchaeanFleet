@@ -145,3 +145,11 @@ jobs:
         env:
           DAGGER_REGISTRY: ghcr.io/homericintelligence
         run: npx ts-node dagger/pipeline.ts push --registry "$DAGGER_REGISTRY"
+
+      - name: Notify ProjectProteus of image push
+        env:
+          GITHUB_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+          GITHUB_ORG: homericintelligence
+          IMAGE_TAG: ${{ github.sha }}
+          AGAMEMNON_HOST: hermes
+        run: bash scripts/notify-proteus.sh
