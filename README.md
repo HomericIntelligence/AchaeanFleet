@@ -82,24 +82,20 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 23080     hi-worker-1
 ```
 
-## Network topology
+## Log management
 
-Containers are attached to two separate bridge networks for defense-in-depth:
+All compose services use the `json-file` driver with rotation to prevent unbounded log growth.
+The defaults cap each container at ~30 MB of logs (10 MB per file × 3 files).
+
+Override in `compose/.env`:
 
 ```
-  agamemnon-frontend   — all agent vessels; ProjectAgamemnon (host) reaches
-                         agents via Docker bridge gateway 172.20.0.1
-  agent-backend        — opt-in lateral traffic; only hi-worker-1 spans both
+LOG_MAX_SIZE=50m   # max size of a single log file (default: 10m)
+LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
 ```
 
-| Network | Who joins |
-|---------|-----------|
-| `agamemnon-frontend` | all agents |
-| `agent-backend` | `hi-worker-1` only (spans both) |
-
-This limits lateral movement: a compromised agent on `agamemnon-frontend` cannot
-directly reach the `agent-backend` subnet. See [docs/network-topology.md](docs/network-topology.md)
-for the full diagram, design rationale, and manual isolation verification steps.
+> **WSL2 note:** Without log rotation, 10+ long-running containers can fill the WSL2 virtual disk
+> and make the entire instance unresponsive. Never remove the `logging` block from compose services.
 
 ## Agamemnon agent sidecar
 

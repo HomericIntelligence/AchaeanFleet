@@ -40,13 +40,14 @@ x-common-env: &common-env
   AGAMEMNON_URL: ${AGAMEMNON_URL:-https://caddy:8443}
   TLS_CA_CERT: ${TLS_CA_CERT:-/certs/ca.crt}
 
-# Shared cert volume mount (read-only)
-x-cert-volume: &cert-volume
-  - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
+# Shared logging
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "${LOG_MAX_SIZE:-10m}"
+    max-file: "${LOG_MAX_FILES:-3}"
 
-# Shared healthcheck — validates TLS via Caddy's plain-HTTP health endpoint
-# Caddy exposes :2019/health on its internal port, agents use it to confirm
-# the TLS proxy is up before marking themselves healthy.
+# Shared healthcheck
 x-healthcheck: &healthcheck
   test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
   interval: 30s
@@ -91,8 +92,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -116,8 +116,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -143,8 +142,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -171,8 +169,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -198,8 +195,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -225,8 +221,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -252,8 +247,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -279,8 +273,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -306,8 +299,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security
 
@@ -339,7 +331,6 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck: *healthcheck
     <<: *security

@@ -8,9 +8,18 @@
 #   cp .env.example .env && nano .env
 #   docker compose -f docker-compose.claude-only.yml up -d
 #
-# Network topology:
-#   agamemnon-frontend  — all Claude agents; internal DNS resolves by service name
-#   agent-backend       — defined but unused in this file; available for future use
+# To pin all images to a specific version, set IMAGE_TAG in .env:
+#   IMAGE_TAG=v1.0.0    (semver release — reproducible)
+#   IMAGE_TAG=abc1234   (7-char git SHA from CI — traceable)
+#   IMAGE_TAG=latest    (default — always the newest build, not pinned)
+
+version: "3.9"
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "${LOG_MAX_SIZE:-10m}"
+    max-file: "${LOG_MAX_FILES:-3}"
 
 networks:
   agamemnon-frontend:
@@ -70,8 +79,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
@@ -105,8 +113,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
@@ -139,8 +146,7 @@ services:
     read_only: true
     tmpfs: *tmpfs
     restart: unless-stopped
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
