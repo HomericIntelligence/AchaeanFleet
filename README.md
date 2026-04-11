@@ -82,6 +82,43 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 23080     hi-worker-1
 ```
 
+## Secret management
+
+API keys are kept out of `docker inspect` output and `docker compose config` by
+mounting them as Docker secrets files rather than passing them as environment
+variables.
+
+### Method 1 — Docker secrets (recommended)
+
+```bash
+mkdir -p compose/secrets
+# Write the key value only — no quotes, no trailing newline
+echo -n "sk-ant-api03-..." > compose/secrets/anthropic_api_key
+echo -n "sk-proj-..."      > compose/secrets/openai_api_key
+chmod 600 compose/secrets/*
+```
+
+Each container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key` (or
+`openai_api_key`) and exports the value into the environment before handing off
+to the agent. Leave `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` blank in `.env`.
+
+The `compose/secrets/` directory is gitignored — only the `.gitkeep` placeholder
+is committed.
+
+### Method 2 — Plain environment variables (fallback)
+
+Set `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` in `compose/.env`. The entrypoint
+falls back to these when the secret files are absent. **Keys will be visible in
+`docker inspect <container>` output** — use this only for local development when
+secrets file setup is not practical.
+
+### Security note
+
+Docker secrets keep keys out of `docker inspect` and `docker compose config`.
+The key will still appear in the child process environment after `exec` in
+`entrypoint.sh`. True process-environment isolation requires each agent tool's
+CLI to read the secret file directly — that is outside the scope of this repo.
+
 ## Agamemnon agent sidecar
 
 All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.
