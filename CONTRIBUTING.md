@@ -190,6 +190,64 @@ just compose-down
 - **Pinning**: Pin base image digests, not mutable tags
 - **Labels**: Include standard OCI labels (maintainer, version, description)
 
+### Pinning and Version Updates
+
+Every `npm install -g` and `pip install` command in a Dockerfile must specify an exact version.
+This keeps builds reproducible and prevents silent breakage from upstream updates (see issue #57).
+
+**Finding current pinned versions**
+
+Each tool version is declared as an `ENV` variable directly above its install command:
+
+```dockerfile
+ENV CLAUDE_CODE_VERSION=2.1.101
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+```
+
+Search for `ENV *_VERSION` to find all pins at once:
+
+```bash
+grep -r '_VERSION=' bases/ vessels/
+```
+
+**Discovering the latest version of a package**
+
+```bash
+# npm packages
+npm view @anthropic-ai/claude-code version
+npm view @openai/codex version
+npm view cline version
+npm view codebuff version
+npm view @sourcegraph/amp version
+npm view yarn version
+
+# pip packages
+pip index versions aider-chat
+```
+
+**Updating a pin**
+
+1. Edit the `ENV <TOOL>_VERSION=<new_version>` line in the relevant Dockerfile.
+2. Run the regression test to confirm all pins are still exact:
+
+```bash
+python3 -m pytest tests/test_dockerfile_pins.py -v
+```
+
+3. Rebuild the affected image and verify it starts correctly:
+
+```bash
+just build-vessel <name>
+just verify
+```
+
+**Automated Dependabot PRs**
+
+Dependabot is configured in `.github/dependabot.yml` to open monthly PRs for Docker base image
+and GitHub Actions version bumps. npm tool package versions require manual review because
+Dependabot cannot update inline `ENV` pins in Dockerfiles — bump these by following the steps
+above when a new release of a tool is available.
+
 ## Pull Request Process
 
 ### Before You Start

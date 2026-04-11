@@ -18,7 +18,8 @@ LABEL org.opencontainers.image.version=${VERSION}
 USER root
 
 # Install Codebuff CLI
-RUN npm install -g codebuff
+ENV CODEBUFF_VERSION=1.0.638
+RUN npm install -g codebuff@${CODEBUFF_VERSION}  # pinned for reproducibility — see #57
 
 # Verify installation
 RUN codebuff --version
