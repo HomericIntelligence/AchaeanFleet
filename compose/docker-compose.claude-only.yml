@@ -102,7 +102,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Vegai:/workspace
     working_dir: /workspace
     restart: unless-stopped
     healthcheck:
