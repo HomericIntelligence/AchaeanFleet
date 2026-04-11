@@ -31,13 +31,11 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     ca-certificates \
     build-essential \
     python3 \
-    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # node:20-slim ships with user 'node' (UID 1000). Rename to 'agent' for convention.
 RUN usermod -l agent -d /home/agent -m node && \
-    groupmod -n agent node && \
-    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    groupmod -n agent node
 
 # Configure tmux
 RUN mkdir -p /home/agent && \
