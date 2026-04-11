@@ -28,5 +28,8 @@ Thumbs.db
 # Docker build cache artifacts
 .dockerignore.bak
 
+# Pixi environment cache
+.pixi/
+
 # Local test outputs
 /tmp/
