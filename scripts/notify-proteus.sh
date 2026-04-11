@@ -5,7 +5,7 @@
 set -euo pipefail
 
 GITHUB_TOKEN=${GITHUB_TOKEN:-}
-ORG=${GITHUB_ORG:-homeric-intelligence}
+ORG=${GITHUB_ORG:-HomericIntelligence}
 REPO=${NOTIFY_REPO:-Myrmidons}
 IMAGE_TAG=${IMAGE_TAG:-latest}
 
