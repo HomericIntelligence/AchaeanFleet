@@ -3,6 +3,10 @@ compose/.env
 .env
 *.env
 
+# TLS private keys and generated certificates
+# Run: bash tls/generate-certs.sh  to regenerate
+tls/certs/
+
 # Node.js (Dagger pipeline)
 node_modules/
 npm-debug.log*

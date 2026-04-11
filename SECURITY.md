@@ -160,6 +160,8 @@ When contributing to AchaeanFleet:
 - Pin base image digests rather than mutable tags
 - Include a non-root `USER` directive in all production images
 - Scan images for known CVEs before pushing
+- Never commit TLS private keys — `tls/certs/` is in `.gitignore`
+- Run `bash tls/generate-certs.sh` locally; distribute certs to hosts out-of-band
 
 ## Contact
 

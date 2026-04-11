@@ -1,0 +1,40 @@
+# Caddyfile — TLS-terminating reverse proxy for the homeric-mesh
+#
+# Caddy listens on :8443 with a self-signed cert issued by the local CA
+# (generated via tls/generate-certs.sh) and forwards plaintext to
+# ProjectAgamemnon running on the host at port 8080.
+#
+# Container mount: tls/caddy/Caddyfile → /etc/caddy/Caddyfile
+# Cert mount:      tls/certs/           → /certs  (read-only)
+#
+# ProjectAgamemnon on host is reachable via the Docker bridge gateway.
+# The compose/docker-compose.caddy.yml service sets AGAMEMNON_HOST_URL.
+
+{
+  # Disable the admin API on the public interface (internal only)
+  admin off
+
+  # Suppress Caddy's own ACME/Let's Encrypt attempts — we use our own CA
+  auto_https off
+}
+
+# TLS listener — all mesh agents connect here
+:8443 {
+  tls /certs/caddy.crt /certs/caddy.key
+
+  # Reverse proxy to ProjectAgamemnon on the Docker bridge host
+  # AGAMEMNON_HOST_URL is set to http://172.20.0.1:8080 in compose
+  reverse_proxy {$AGAMEMNON_HOST_URL:http://172.20.0.1:8080}
+
+  log {
+    output stdout
+    format json
+    level INFO
+  }
+}
+
+# Plain-HTTP health endpoint for Docker health checks against *Caddy itself*
+# (not proxied — responds on the container's loopback only)
+:2019 {
+  respond /health 200
+}
