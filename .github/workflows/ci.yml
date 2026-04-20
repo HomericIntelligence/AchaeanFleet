@@ -68,11 +68,9 @@ jobs:
             BUILD_DATE=${{ steps.meta.outputs.build_date }}
             VCS_REF=${{ steps.meta.outputs.vcs_ref }}
             VERSION=${{ steps.meta.outputs.version }}
+            GIT_SHA=${{ steps.sha.outputs.short_sha }}
           push: false
           load: true
-          build-args: |
-            GIT_SHA=${{ steps.sha.outputs.short_sha }}
-            VERSION=${{ github.ref_name }}
           tags: |
             ${{ matrix.base.name }}:latest
             ${{ matrix.base.name }}:${{ steps.sha.outputs.short_sha }}
