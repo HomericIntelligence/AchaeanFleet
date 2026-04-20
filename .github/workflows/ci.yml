@@ -34,7 +34,7 @@ jobs:
       group: lint-dockerfiles-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Lint bases/Dockerfile.node
         uses: hadolint/hadolint-action@v3.1.0
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Validate claude-only compose
         run: docker compose -f compose/docker-compose.claude-only.yml config --quiet
@@ -130,7 +130,7 @@ jobs:
           - name: achaean-base-minimal
             dockerfile: bases/Dockerfile.minimal
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0
@@ -209,7 +209,7 @@ jobs:
             dockerfile: vessels/worker/Dockerfile
             base: achaean-base-minimal
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Download base image artifact
         uses: actions/download-artifact@fa0a91b85d4f404e444306234a4d8376ee55d59d  # v4.1.8
@@ -249,7 +249,7 @@ jobs:
     name: Validate Compose Files
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Validate claude-only compose
         run: docker compose -f compose/docker-compose.claude-only.yml config --quiet
@@ -264,7 +264,7 @@ jobs:
     name: Smoke Test Worker Vessel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
         uses: docker/setup-buildx-action@v3
@@ -353,7 +353,7 @@ jobs:
             dockerfile: vessels/worker/Dockerfile
             base: achaean-base-minimal
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Log in to GHCR
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
