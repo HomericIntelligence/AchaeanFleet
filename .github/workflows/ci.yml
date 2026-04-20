@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
-        uses: docker/setup-buildx-action@b5730b0e8d60c3a5c3c7e50b44bb1c2f87be4bf0  # v3.10.0
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0
         with:
           driver: docker
 
@@ -140,7 +140,7 @@ jobs:
         run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
 
       - name: Set up Docker Buildx (docker driver — shares daemon image store)
-        uses: docker/setup-buildx-action@b5730b0e8d60c3a5c3c7e50b44bb1c2f87be4bf0  # v3.10.0
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0
         with:
           driver: docker
 
@@ -227,7 +227,7 @@ jobs:
         run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
 
       - name: Set up Docker Buildx (docker driver — shares daemon image store)
-        uses: docker/setup-buildx-action@b5730b0e8d60c3a5c3c7e50b44bb1c2f87be4bf0  # v3.10.0
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0
         with:
           driver: docker
 
