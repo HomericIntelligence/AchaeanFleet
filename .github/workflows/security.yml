@@ -56,7 +56,7 @@ jobs:
           tags: ${{ matrix.base.name }}:scan
 
       - name: Scan base image with Trivy
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ matrix.base.name }}:scan
           format: sarif
@@ -146,7 +146,7 @@ jobs:
           tags: ${{ matrix.vessel.name }}:scan
 
       - name: Scan vessel image with Trivy
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ matrix.vessel.name }}:scan
           format: sarif
