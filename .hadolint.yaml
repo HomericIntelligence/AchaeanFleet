@@ -1,66 +1,45 @@
 # hadolint configuration for AchaeanFleet
 #
 # Intentional suppressions — each rule is suppressed because the pattern
-# is reviewed and accepted for this repo. See rationale below.
+# is reviewed and accepted for this repo.
 
 failure-threshold: warning
 
 ignore:
   # DL3008: apt packages not pinned to a specific version.
-  # Intentional: base image tag digest acts as the version lock for the
-  # whole layer. Pinning individual apt packages here would couple us to
-  # Debian/Ubuntu package versioning minutiae without adding meaningful
-  # reproducibility beyond what the digest already provides.
+  # Intentional: base image digest acts as the version lock.
   - DL3008
 
+  # DL3015: Avoid --no-install-recommends.
+  # Base images intentionally install recommended packages for a full
+  # developer/agent environment.
+  - DL3015
+
   # DL3016: npm packages not pinned to a specific version.
-  # Intentional: vessel images install CLI tools (claude-code, codex, etc.)
-  # that are always used at latest. Version pinning is handled at the compose
-  # level via image digest, not inside the Dockerfile.
+  # Vessel images install CLI tools at latest by design.
   - DL3016
 
   # DL3013: pip packages not pinned to a specific version.
-  # Same rationale as DL3016 above (aider-chat vessel).
+  # Same rationale as DL3016.
   - DL3013
 
-  # DL3028: gem packages not pinned (no Ruby gems in this repo, but listed
-  # for completeness should any be added).
-  # - DL3028
-
-  # DL3059: multiple consecutive RUN instructions in a single Dockerfile.
-  # Acceptable here: vessel Dockerfiles intentionally separate install and
-  # verify steps for clarity. Layer caching benefit during development
-  # outweighs the marginal reduction in layer count for these tool-specific
-  # images.
+  # DL3059: multiple consecutive RUN instructions.
+  # Intentional for readability and cache ergonomics.
   - DL3059
 
-  # SC2312: curl-pipe-bash patterns (goose, opencode, worker yq install).
-  # These are official upstream install scripts for tools that only publish
-  # a pipe-to-shell installer (Goose, OpenCode). The fallback download paths
-  # and explicit binary installations are provided as alternatives where
-  # possible, but the primary path is the upstream script. Each usage has
-  # been reviewed individually.
-  - SC2312
-
   # DL3006: Always tag the version of an image explicitly.
-  # Vessel Dockerfiles use ARG BASE_IMAGE=...:latest and FROM ${BASE_IMAGE} —
-  # the base version is controlled via the build-arg, which is set to the
-  # artifact-pinned base image tag in CI. Hadolint cannot resolve ARG
-  # substitutions so it warns; this is intentional and safe.
+  # Vessel Dockerfiles use ARG BASE_IMAGE and FROM ${BASE_IMAGE};
+  # hadolint cannot resolve ARG substitutions.
   - DL3006
 
-  # DL4006: Set the SHELL option -o pipefail before RUN with a pipe.
-  # Our base images use /bin/sh (not bash) and do not support pipefail.
-  # Each pipe-containing RUN has been reviewed for error-propagation safety.
+  # DL4006: Set SHELL -o pipefail before RUN with a pipe.
+  # Base images use /bin/sh which does not support pipefail.
   - DL4006
 
-  # DL3015: Avoid additional packages by specifying --no-install-recommends.
-  # Base images intentionally install recommended packages for a full
-  # developer/agent environment (zsh, vim, nano, etc.).
-  - DL3015
+  # SC2312: curl-pipe-bash patterns.
+  # Used only for official upstream install scripts that have no alternative.
+  - SC2312
 
-  # SC2015: Note that A && B || C is not if-then-else. C may run when A is true.
-  # The apt-get install yq fallback uses || true intentionally to make yq
-  # optional. The subsequent explicit `which yq || { ... }` block handles
-  # the fallback case correctly.
+  # SC2015: A && B || C is not if-then-else.
+  # apt-get install yq fallback uses || true intentionally.
   - SC2015
