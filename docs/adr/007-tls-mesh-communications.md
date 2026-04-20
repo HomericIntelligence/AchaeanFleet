@@ -1,8 +1,8 @@
 # ADR-007: TLS for Homeric-Mesh Inter-Service Communication
 
-**Status:** Accepted  
-**Date:** 2026-04-10  
-**Issue:** [#26 — Security: Agent containers use NATS and Agamemnon over unencrypted HTTP](https://github.com/HomericIntelligence/AchaeanFleet/issues/26)  
+**Status:** Accepted
+**Date:** 2026-04-10
+**Issue:** [#26 — Security: Agent containers use NATS and Agamemnon over unencrypted HTTP](https://github.com/HomericIntelligence/AchaeanFleet/issues/26)
 **OWASP:** A02:2021 — Cryptographic Failures
 
 ---
