@@ -51,11 +51,6 @@ x-healthcheck: &healthcheck
   start_period: 15s
   retries: 3
 
-# Shared security hardening (least-privilege defaults)
-x-security: &security
-  cap_drop: [ALL]
-  security_opt: [no-new-privileges:true]
-
 # Resource limits for Claude/Codex/Aider/Goose/Cline/OpenCode/Codebuff/AmpCode agents
 x-resources-claude: &resources-claude
   limits:
