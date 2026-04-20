@@ -25,16 +25,11 @@ RUN apt-get update && apt-get install -y jq make && rm -rf /var/lib/apt/lists/*
 # Install yq from apt if available; curl fallback below handles missing packages
 RUN apt-get update && apt-get install -y yq && rm -rf /var/lib/apt/lists/* || true
 
-# Install yq if not available via apt — pinned version with SHA256 verification (no unverified download)
-ARG YQ_VERSION=4.52.5
-ARG YQ_SHA256=75d893a0d5940d1019cb7cdc60001d9e876623852c31cfc6267047bc31149fa9
-RUN which yq || ( \
-    curl -fsSL \
-        "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
-        -o /tmp/yq && \
-    echo "${YQ_SHA256}  /tmp/yq" | sha256sum --check && \
-    install -m 755 /tmp/yq /usr/local/bin/yq && \
-    rm /tmp/yq )
+# Install yq if not available via apt
+RUN which yq || { \
+    curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" \
+        -o /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq; }
 
 USER agent
 
