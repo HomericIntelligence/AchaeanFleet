@@ -47,7 +47,7 @@ jobs:
           driver: docker
 
       - name: Build base image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.base.dockerfile }}
@@ -126,7 +126,7 @@ jobs:
           driver: docker
 
       - name: Build base image for this vessel
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.vessel.base_dockerfile }}
@@ -135,7 +135,7 @@ jobs:
           tags: ${{ matrix.vessel.base }}:latest
 
       - name: Build vessel image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.vessel.dockerfile }}
