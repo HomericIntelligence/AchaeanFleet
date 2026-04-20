@@ -41,3 +41,26 @@ ignore:
   # possible, but the primary path is the upstream script. Each usage has
   # been reviewed individually.
   - SC2312
+
+  # DL3006: Always tag the version of an image explicitly.
+  # Vessel Dockerfiles use ARG BASE_IMAGE=...:latest and FROM ${BASE_IMAGE} —
+  # the base version is controlled via the build-arg, which is set to the
+  # artifact-pinned base image tag in CI. Hadolint cannot resolve ARG
+  # substitutions so it warns; this is intentional and safe.
+  - DL3006
+
+  # DL4006: Set the SHELL option -o pipefail before RUN with a pipe.
+  # Our base images use /bin/sh (not bash) and do not support pipefail.
+  # Each pipe-containing RUN has been reviewed for error-propagation safety.
+  - DL4006
+
+  # DL3015: Avoid additional packages by specifying --no-install-recommends.
+  # Base images intentionally install recommended packages for a full
+  # developer/agent environment (zsh, vim, nano, etc.).
+  - DL3015
+
+  # SC2015: Note that A && B || C is not if-then-else. C may run when A is true.
+  # The apt-get install yq fallback uses || true intentionally to make yq
+  # optional. The subsequent explicit `which yq || { ... }` block handles
+  # the fallback case correctly.
+  - SC2015
