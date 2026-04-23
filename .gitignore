@@ -35,5 +35,11 @@ Thumbs.db
 # Pixi environment cache
 .pixi/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
 # Local test outputs
 /tmp/
