@@ -9,10 +9,6 @@
 #
 # Override variables at run time:
 #   nomad job run -var="agamemnon_url=http://192.168.1.10:8080" nomad/mesh.nomad.hcl
-#
-# Supply API keys via a .nomadvar file (never commit this file):
-#   nomad job run -var-file=secrets.nomadvar nomad/mesh.nomad.hcl
-# See nomad/README.md for the full secrets injection workflow.
 
 # =============================================================================
 # Variables (override via -var or .nomadvar files)
@@ -36,15 +32,6 @@ variable "workspace_root" {
   default     = "/home/mvillmow"
 }
 
-variable "anthropic_api_key" {
-  description = "Anthropic API key for Claude agents — supply via .nomadvar file or Vault; never set a default"
-  type        = string
-}
-
-variable "openai_api_key" {
-  description = "OpenAI-compatible API key for agents that need it (e.g. aider) — supply via .nomadvar file or Vault; never set a default"
-  type        = string
-}
 
 # =============================================================================
 # Job
@@ -94,15 +81,21 @@ job "achaean-mesh" {
       }
 
       env {
-        AGENT_PORT        = "23001"
-        TMUX_SESSION_NAME = "claude-${NOMAD_ALLOC_INDEX}"
-        AGENT_ID          = "claude-${NOMAD_ALLOC_INDEX}"
-        AGAMEMNON_URL     = var.agamemnon_url
-        ANTHROPIC_API_KEY = var.anthropic_api_key
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
       }
 
-      # Production alternative: Nomad Vault integration (Phase 6)
-      # Uncomment to pull the key from Vault instead of a .nomadvar file.
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="claude-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="claude-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      # Secrets via Nomad Vault integration (Phase 6)
       # template {
       #   data = <<EOH
       #   {{ with secret "secret/achaean/claude" }}
@@ -156,13 +149,19 @@ job "achaean-mesh" {
       }
 
       env {
-        AGENT_PORT        = "23001"
-        TMUX_SESSION_NAME = "aider-${NOMAD_ALLOC_INDEX}"
-        AGENT_ID          = "aider-${NOMAD_ALLOC_INDEX}"
-        AGAMEMNON_URL     = var.agamemnon_url
-        AIDER_MODEL       = "claude-3-5-sonnet-20241022"
-        ANTHROPIC_API_KEY = var.anthropic_api_key
-        OPENAI_API_KEY    = var.openai_api_key
+        AGENT_PORT  = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+        AIDER_MODEL = "claude-3-5-sonnet-20241022"
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="aider-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="aider-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
       }
 
       resources {
@@ -209,10 +208,18 @@ job "achaean-mesh" {
       }
 
       env {
-        AGENT_PORT        = "23001"
-        TMUX_SESSION_NAME = "worker-${NOMAD_ALLOC_INDEX}"
-        AGENT_ID          = "worker-${NOMAD_ALLOC_INDEX}"
-        AGAMEMNON_URL     = var.agamemnon_url
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="worker-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="worker-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
       }
 
       resources {
