@@ -117,6 +117,56 @@ When contributing to AchaeanFleet:
 - Include a non-root `USER` directive in all production images
 - Scan images for known CVEs before pushing
 
+## CVE Suppression Policy (.trivyignore)
+
+The CI workflow uses `ignore-unfixed: true` in `aquasecurity/trivy-action`, which automatically skips CVEs that have no upstream fix. `.trivyignore` is reserved for the remaining edge cases: CVEs where a fix exists upstream but cannot yet be applied in this image, or where the vulnerable code path is provably unreachable.
+
+### When suppression is appropriate
+
+A CVE may be added to `.trivyignore` only after confirming **all** of the following:
+
+1. `ignore-unfixed: true` in the workflow does not already suppress it — if it does, no `.trivyignore` entry is needed.
+2. The fix is not available in the current base image's OS distribution (verify against the Debian Security Tracker, Alpine secdb, or the relevant upstream advisory).
+3. Bumping the base image digest and running `apt-get upgrade -y` in a local test build does **not** resolve the finding.
+4. Either: (a) no attacker-controlled input path to the vulnerable code exists in this repo's runtime context, or (b) the upstream package maintainer has acknowledged the issue but has not yet released a patched version.
+
+Suppression is a last resort. Prefer bumping the base image digest first.
+
+### Required entry format
+
+Every `.trivyignore` entry must include a structured comment block immediately above the CVE ID:
+
+```
+# CVE-YYYY-NNNNN
+# Category: OS | npm | python | other
+# Rationale: <upstream not patched in debian:bookworm as of YYYY-MM-DD> | <code path unreachable because ...>
+# Exploitability: <none — no attacker-controlled input reaches this code> | <low — ...>
+# Expires: YYYY-MM-DD  (max 90 days from approval date; re-review before this date)
+# Reviewer: @<github-handle>  PR #<number>
+CVE-YYYY-NNNNN
+```
+
+All six fields are required. Entries missing any field will be rejected in PR review.
+
+### Approval process
+
+- All `.trivyignore` additions must be submitted as a pull request.
+- The PR must be approved by the repo maintainer (`@mvillmow`) before merge.
+- The PR description must reproduce the six comment fields above and link to the upstream advisory.
+- Each entry must have an `Expires` date no more than 90 days from the approval date.
+
+### Expiry and maintenance
+
+- On or before the `Expires` date, the entry must be re-reviewed: either removed (if a fix is now available in the base image) or renewed with an updated `Expires` date via a new PR.
+- When bumping base image digests, re-scan locally and remove any `.trivyignore` entries that are resolved by the new digest.
+- Entries past their expiry date are treated as a policy violation — open a PR to remove or renew them before they block CI.
+
+### What `.trivyignore` is NOT for
+
+- Do not add entries for CVEs that `ignore-unfixed: true` already suppresses workflow-wide.
+- Do not suppress a CVE that a base image digest bump would resolve.
+- Do not add entries without a linked PR and maintainer approval.
+
 ## Contact
 
 For security-related questions that are not vulnerability reports:
