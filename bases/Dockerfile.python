@@ -2,27 +2,18 @@
 #
 # Provides: python:3.12-slim + Node.js 20 + tmux + zsh + git
 # Python-based agent vessels (Aider) FROM this.
-#
-# Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
-FROM python:3.14-slim@sha256:bc389f7dfcb21413e72a28f491985326994795e34d2b86c8ae2f417b4e7818aa
+# Node.js 20 source stage — binary copied into runtime, no external scripts
+FROM node:20-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0 AS node-source
+
+FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="achaean-base-python"
 LABEL org.opencontainers.image.description="AchaeanFleet Python base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
-LABEL org.opencontainers.image.revision=$GIT_SHA
-LABEL org.opencontainers.image.version=$VERSION
-LABEL git-sha=$GIT_SHA
 
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
-LABEL org.opencontainers.image.created=${BUILD_DATE}
-LABEL org.opencontainers.image.revision=${VCS_REF}
-LABEL org.opencontainers.image.version=${VERSION}
-
-# Install system dependencies and apply security patches
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     curl \
     wget \
     git \
@@ -33,30 +24,25 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     procps \
     ca-certificates \
     build-essential \
-    sudo \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x via GPG-signed NodeSource repository (no curl-pipe-bash)
-RUN apt-get update && apt-get install -y gnupg && \
-    mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-        -o /tmp/nodesource.gpg.key && \
-    gpg --dearmor < /tmp/nodesource.gpg.key > /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" \
-        > /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends nodejs && \
-    rm -rf /var/lib/apt/lists/* /tmp/nodesource.gpg.key
+# Copy Node.js binary and npm from the node-source stage (no external scripts)
+COPY --from=node-source /usr/local/bin/node /usr/local/bin/node
+COPY --from=node-source /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
+    chmod +x /usr/local/lib/node_modules/npm/bin/npm-cli.js \
+             /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
-# Install Yarn (version pinned for reproducibility — issue #2)
-RUN npm install -g yarn@1.22.22
+# Install Yarn
+RUN npm install -g yarn
 
 # Create non-root user
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 RUN groupadd -g ${GROUP_ID} agent && \
     useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
-    echo "agent ALL=(ALL) NOPASSWD: /usr/bin/tmux, /usr/bin/git" >> /etc/sudoers
+    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Configure tmux
 RUN mkdir -p /home/agent && \
@@ -95,9 +81,4 @@ ENV AGENT_PORT=23001
 ENV GIT_USER_NAME="HomericIntelligence Agent"
 ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
 
-COPY bases/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 USER agent
-
-ENTRYPOINT ["/entrypoint.sh"]
