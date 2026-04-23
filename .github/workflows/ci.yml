@@ -258,6 +258,10 @@ jobs:
           path: /tmp/${{ matrix.base.name }}.tar
           retention-days: 1
 
+      - name: Clean up base image tarball
+        if: always()
+        run: rm -f /tmp/${{ matrix.base.name }}.tar
+
   build-vessels:
     name: Build Vessel Images
     runs-on: ubuntu-latest
@@ -431,6 +435,10 @@ jobs:
           name: vessel-image-${{ matrix.vessel.name }}
           path: /tmp/${{ matrix.vessel.name }}.tar
           retention-days: 1
+
+      - name: Clean up downloaded base image tarball
+        if: always()
+        run: rm -f /tmp/${{ matrix.vessel.base }}.tar
 
   push-to-registry:
     name: Push to GHCR
