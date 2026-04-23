@@ -1,0 +1,53 @@
+name: Security Audit (Scheduled)
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  security-events: write
+  packages: read
+
+jobs:
+  scan-registry-images:
+    name: Audit Registry Image (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - achaean-claude
+          - achaean-codex
+          - achaean-aider
+          - achaean-goose
+          - achaean-cline
+          - achaean-opencode
+          - achaean-codebuff
+          - achaean-ampcode
+          - achaean-worker
+    env:
+      REGISTRY: ghcr.io/homericintelligence
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan published image with Trivy
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ matrix.image }}:latest
+          format: sarif
+          output: trivy-${{ matrix.image }}.sarif
+          exit-code: '0'
+          ignore-unfixed: false
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+
+      - name: Upload SARIF results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.image }}.sarif
+          category: trivy-scheduled-${{ matrix.image }}

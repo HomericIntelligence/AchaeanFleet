@@ -14,6 +14,10 @@ on:
       - 'vessels/**'
       - 'dagger/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   build-bases:
     name: Build Base Images
@@ -115,14 +119,71 @@ jobs:
           push: false
           tags: ${{ matrix.vessel.name }}:latest
 
+      - name: Export vessel image to tarball
+        run: docker save ${{ matrix.vessel.name }}:latest -o /tmp/${{ matrix.vessel.name }}.tar
+
+      - name: Upload vessel image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vessel-image-${{ matrix.vessel.name }}
+          path: /tmp/${{ matrix.vessel.name }}.tar
+          retention-days: 1
+
+  scan-images:
+    name: Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: build-vessels
+    permissions:
+      security-events: write
+    strategy:
+      matrix:
+        vessel:
+          - achaean-claude
+          - achaean-codex
+          - achaean-aider
+          - achaean-goose
+          - achaean-cline
+          - achaean-opencode
+          - achaean-codebuff
+          - achaean-ampcode
+          - achaean-worker
+    steps:
+      - name: Download vessel image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vessel-image-${{ matrix.vessel }}
+          path: /tmp
+
+      - name: Load vessel image
+        run: docker load -i /tmp/${{ matrix.vessel }}.tar
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: ${{ matrix.vessel }}:latest
+          format: sarif
+          output: trivy-${{ matrix.vessel }}.sarif
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+      - name: Upload SARIF results
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.vessel }}.sarif
+          category: trivy-${{ matrix.vessel }}
+
   push-to-registry:
     name: Push to GHCR
     runs-on: ubuntu-latest
-    needs: build-vessels
+    needs: [build-vessels, scan-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       packages: write
       contents: read
+      security-events: write
     env:
       REGISTRY: ghcr.io/homericintelligence
     steps:
