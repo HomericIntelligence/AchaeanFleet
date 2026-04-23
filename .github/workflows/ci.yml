@@ -7,12 +7,16 @@ on:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - 'tests/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - 'tests/**'
+      - '.github/workflows/**'
 
 jobs:
   build-bases:
