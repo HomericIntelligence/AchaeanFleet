@@ -112,12 +112,7 @@ async function buildVessels(
     exclude: [".git", "node_modules", ".env"],
   });
 
-  // Ensure each vessel's base image is fully resolved before starting the vessel build.
-  // builtBases contains Dagger Container objects; sync() forces the build to complete.
-  for (const [baseName, baseContainer] of builtBases.entries()) {
-    console.log(`Syncing base: ${baseName}`);
-    await baseContainer.sync();
-  }
+  // Base images exported and loaded into daemon by buildBases().
 
   const buildPromises = VESSELS.map(async (vessel) => {
     console.log(`Building vessel: ${vessel.name}`);
@@ -180,9 +175,6 @@ const registry =
   registryArg !== -1 ? process.argv[registryArg + 1] : undefined;
 
 // Tag metadata — injected by CI via environment variables.
-// SHORT_SHA: 7-char git commit identifier (first 7 chars of GITHUB_SHA).
-// DATE_TAG:  Collision-safe date tag of the form YYYY-MM-DD-<short_sha>.
-// Both fall back to "local" so that local builds still succeed without env vars.
 const shortSha = (process.env.SHORT_SHA ?? "local").slice(0, 7);
 const dateTag = process.env.DATE_TAG ?? `local-${shortSha}`;
 
