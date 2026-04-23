@@ -40,6 +40,8 @@ spec:
           value: "/certs/ca.crt"
         - name: AGENT_MODE
           value: "headless"
+        - name: AGENT_PORT
+          value: "23080"
       volumeMounts:
         - name: agent-sidecar
           mountPath: /app/agent-sidecar
