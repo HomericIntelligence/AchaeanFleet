@@ -26,6 +26,13 @@ const BASES = [
   { name: "achaean-base-minimal", dockerfile: "bases/Dockerfile.minimal" },
 ] as const;
 
+// Smoke test commands per base type — node base tests node; python base tests python3; minimal base has neither
+const BASE_SMOKE_CMD: Record<string, string> = {
+  "achaean-base-node":    "tmux -V && git --version && node --version",
+  "achaean-base-python":  "tmux -V && git --version && python3 --version",
+  "achaean-base-minimal": "tmux -V && git --version",
+};
+
 // Vessel image definitions
 const VESSELS = [
   {
@@ -157,9 +164,10 @@ async function testImages(client: Client): Promise<void> {
       buildArgs: [{ name: "BASE_IMAGE", value: `${vessel.base}:latest` }],
     });
 
-    // Basic smoke test: check that required binaries exist
+    // Basic smoke test: check binaries guaranteed by each base type
+    const smokeCmd = BASE_SMOKE_CMD[vessel.base] ?? "tmux -V && git --version";
     const result = await image
-      .withExec(["sh", "-c", "tmux -V && git --version && node --version"])
+      .withExec(["sh", "-c", smokeCmd])
       .stdout();
 
     console.log(`  ${vessel.name} smoke test passed:\n  ${result.trim()}`);
