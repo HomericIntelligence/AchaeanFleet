@@ -13,5 +13,12 @@ pytest = ">=8.1.0,<9"
 [tasks]
 build-all  = "just build-all"
 test       = "just test"
+test-shell = "just test-shell"
 push       = "just push"
 pytest     = "python -m pytest tests/ -v"
+
+[feature.dev.dependencies]
+bats-core = ">=1.11.0"
+
+[environments]
+dev = ["dev"]
