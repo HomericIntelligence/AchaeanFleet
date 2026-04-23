@@ -6,11 +6,12 @@ channels = ["conda-forge"]
 platforms = ["linux-64"]
 
 [dependencies]
-just = ">=1.13"
-python = ">=3.11"
-pytest = ">=7.0"
+just   = ">=1.13"
+python = ">=3.11,<3.14"
+pytest = ">=8.1.0,<9"
 
 [tasks]
 build-all = "just build-all"
 test      = "just test"
 push      = "just push"
+pytest    = "python -m pytest tests/"
