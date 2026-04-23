@@ -8,6 +8,8 @@ on:
       - 'vessels/**'
       - 'dagger/**'
       - 'compose/**'
+      - 'tests/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +17,8 @@ on:
       - 'vessels/**'
       - 'dagger/**'
       - 'compose/**'
+      - 'tests/**'
+      - '.github/workflows/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
