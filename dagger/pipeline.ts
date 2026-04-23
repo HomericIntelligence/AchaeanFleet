@@ -15,7 +15,9 @@
  */
 
 import { connect, Client } from "@dagger.io/dagger";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
+import * as os from "os";
+import * as path from "path";
 
 // Base image definitions
 const BASES = [
@@ -87,9 +89,17 @@ function getDatestamp(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+async function exportToLocalDaemon(container: any, name: string): Promise<void> {
+  const tarPath = path.join(os.tmpdir(), `${name}.tar`);
+  console.log(`Exporting ${name} → ${tarPath}`);
+  await container.export(tarPath);
+  console.log(`Loading ${name} into local daemon`);
+  execFileSync("docker", ["load", "-i", tarPath], { stdio: "inherit" });
+}
+
 /**
  * Builds all three base images and returns a map of name → Dagger Container.
- * When running locally (no registry), also applies SHA and date tags via `docker tag`.
+ * Exports each base to the local Docker daemon so vessel FROM lines resolve.
  */
 async function buildBases(
   client: Client,
@@ -99,7 +109,7 @@ async function buildBases(
     exclude: [".git", "node_modules", ".env"],
   });
 
-  const builtBases = new Map<string, Container>();
+  const builtBases = new Map<string, any>();
 
   for (const base of BASES) {
     console.log(`Building base: ${base.name}`);
@@ -107,18 +117,7 @@ async function buildBases(
       .container()
       .build(src, { dockerfile: base.dockerfile });
 
-    // Export the built image to a local tarball so vessel Dockerfiles can
-    // resolve FROM ${BASE_IMAGE} against the local Docker daemon.  The export
-    // call also forces the Dagger build to complete before we proceed.
-    const tarPath = `/tmp/${base.name}.tar`;
-    console.log(`Exporting base ${base.name} → ${tarPath}`);
-    await image.export(tarPath);
-
-    // Load the tarball into the local Docker daemon and tag it as <name>:latest
-    // so that the vessel build args resolve to the freshly-built image.
-    console.log(`Loading ${base.name}:latest into local daemon`);
-    execSync(`docker load -i ${tarPath} && docker tag ${base.name} ${base.name}:latest 2>/dev/null || docker load -i ${tarPath}`, { stdio: "inherit" });
-
+    await exportToLocalDaemon(image, base.name);
     builtBases.set(base.name, image);
   }
 
@@ -128,8 +127,7 @@ async function buildBases(
 /**
  * Builds all vessel images. When a registry is provided, pushes with multi-tag set:
  * :latest, :git-<sha>, and :YYYY-MM-DD. When an explicit tag is provided, also
- * pushes that tag (e.g. a semver string). Without a registry, applies SHA and date
- * tags locally via `docker tag` for developer use.
+ * pushes that tag (e.g. a semver string). Without a registry, exports to local daemon.
  */
 async function buildVessels(
   client: Client,
@@ -172,6 +170,8 @@ async function buildVessels(
         console.log(`Pushing: ${t}`);
         await image.publish(t);
       }
+    } else {
+      await exportToLocalDaemon(image, vessel.name);
     }
 
     return image;
@@ -182,7 +182,7 @@ async function buildVessels(
 
 async function testImages(
   client: Client,
-  builtBases: Map<string, Container>
+  builtBases: Map<string, any>
 ): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
