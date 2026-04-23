@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     jq \
     yq \
     make \
-    && rm -rf /var/lib/apt/lists/* || true
+    && rm -rf /var/lib/apt/lists/*
 
 # Install yq if not available via apt
 RUN which yq || \

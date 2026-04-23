@@ -1,0 +1,23 @@
+# hadolint configuration for AchaeanFleet Dockerfiles
+#
+# Rules suppressed with rationale:
+#   DL3008 — apt-get without version pins: vessels install tools whose versions
+#             are managed by upstream; pinning would require constant maintenance.
+#   DL3013 — pip without version pins: same rationale as DL3008 for pip.
+#   DL3016 — npm without version pins: same rationale as DL3008 for npm.
+#   DL3059 — multiple consecutive RUN instructions: accepted pattern for
+#             readability when each RUN has a distinct semantic purpose.
+#   SC2312 — consider invoking separately / checking exit code: false-positive
+#             on patterns like `$(curl ...)` used in install one-liners.
+#
+# DL4006/SC2015 (|| true masking exit codes) is intentionally NOT suppressed —
+# that is exactly the class of error this linting job was added to catch.
+
+failure-threshold: warning
+
+ignore:
+  - DL3008
+  - DL3013
+  - DL3016
+  - DL3059
+  - SC2312
