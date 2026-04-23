@@ -5,7 +5,7 @@
 #
 # Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
-FROM debian:bookworm-slim@sha256:4724b8cc51e33e398f0e2e15e18d5ec2851ff0c2280647e1310bc1642182655d
+FROM debian:bookworm-slim@sha256:4724b8cc51e33e398f0e2e15e18d5ec2851ff0c2280647e1310bc1642182655d # debian:bookworm-slim
 
 LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
