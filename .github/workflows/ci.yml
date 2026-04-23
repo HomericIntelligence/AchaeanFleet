@@ -116,7 +116,6 @@ jobs:
         run: docker compose -f compose/docker-compose.mesh.yml config --quiet
 
   build-bases:
-    needs: lint-dockerfiles
     name: Build Base Images
     runs-on: ubuntu-latest
     needs: [validate]
@@ -153,14 +152,12 @@ jobs:
             BUILD_DATE=${{ steps.meta.outputs.build_date }}
             VCS_REF=${{ steps.meta.outputs.vcs_ref }}
             VERSION=${{ steps.meta.outputs.version }}
-            GIT_SHA=${{ steps.sha.outputs.short_sha }}
+            IMAGE_VERSION=git-${{ github.sha }}
           push: false
           load: true
           tags: ${{ matrix.base.name }}:latest
-          build-args: |
-            IMAGE_VERSION=git-${{ env.SHORT_SHA }}
           labels: |
-            org.opencontainers.image.revision=${{ env.SHORT_SHA }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Export base image to tarball
         run: docker save ${{ matrix.base.name }}:latest -o /tmp/${{ matrix.base.name }}.tar
@@ -175,7 +172,7 @@ jobs:
   build-vessels:
     name: Build Vessel Images
     runs-on: ubuntu-latest
-    needs: build-bases
+    needs: [build-bases]
     env:
       SHORT_SHA: ${{ github.sha }}
     strategy:
@@ -245,21 +242,6 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ env.SHORT_SHA }}
 
-  test-compose:
-    name: Validate Compose Files
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Validate claude-only compose
-        run: docker compose -f compose/docker-compose.claude-only.yml config --quiet
-
-      - name: Validate mesh compose
-        run: docker compose -f compose/docker-compose.mesh.yml config --quiet
-
-      - name: Validate smoke compose
-        run: docker compose -f compose/docker-compose.smoke.yml config --quiet
-
   test-smoke:
     name: Smoke Test Worker Vessel
     runs-on: ubuntu-latest
@@ -314,7 +296,7 @@ jobs:
   push-to-registry:
     name: Push to GHCR
     runs-on: ubuntu-latest
-    needs: [security-scan]
+    needs: [build-vessels]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       packages: write
