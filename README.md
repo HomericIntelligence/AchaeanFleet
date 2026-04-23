@@ -64,6 +64,26 @@ just test
 just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 ```
 
+## Environment variables
+
+| Variable        | Required | Default                          | Purpose                                             |
+|-----------------|----------|----------------------------------|-----------------------------------------------------|
+| `CONTAINER_CMD` | No       | auto-detected (`podman`/`docker`) | Override the container binary                      |
+| `TAG`           | No       | `latest`                         | Image tag applied to all built images               |
+| `REGISTRY`      | No       | `ghcr.io/homericintelligence`    | Registry prefix used by `just push`                 |
+
+**Podman users (Fedora, RHEL):** The justfile auto-detects `podman` if it is on your `PATH`.
+To force a specific binary:
+
+```bash
+CONTAINER_CMD=podman just build-all
+CONTAINER_CMD=podman just build-vessel claude
+```
+
+> **Note:** Podman rootless requires that volume mounts for the Agamemnon sidecar use the `:Z`
+> SELinux label on SELinux-enforcing hosts. The Compose files in `compose/` already include `:Z`
+> where needed.
+
 ## Port mapping
 
 ```

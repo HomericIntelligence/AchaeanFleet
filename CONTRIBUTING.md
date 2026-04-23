@@ -70,6 +70,22 @@ just lint
 
 Hooks run automatically on `git commit` after installation.
 
+### Container runtime selection
+
+The justfile auto-detects `podman` if available, otherwise falls back to `docker`.
+To override explicitly, set `CONTAINER_CMD`:
+
+```bash
+# Force Podman
+CONTAINER_CMD=podman just build-all
+
+# Force Docker
+CONTAINER_CMD=docker just build-all
+```
+
+On SELinux-enforcing systems (Fedora, RHEL), Podman rootless works without additional flags —
+the Compose files already include `:Z` volume labels.
+
 ## What You Can Contribute
 
 - **Vessel Dockerfiles** — New agent-specific container images
