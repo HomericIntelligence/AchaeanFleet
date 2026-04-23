@@ -87,6 +87,14 @@ volumes:
 
 All containers join the `homeric-mesh` bridge network. Containers resolve each other by service name via Docker's internal DNS. ProjectAgamemnon on the host connects via `172.20.0.1` (the Docker bridge gateway).
 
+## Nomad
+
+See [`nomad/PATTERNS.md`](nomad/PATTERNS.md) for the full HCL authoring guide.
+
+**Key rule:** Use `template` stanzas with Consul Template syntax for Nomad runtime values
+(`NOMAD_ALLOC_INDEX`, `NOMAD_ALLOC_ID`, etc.). Never use `${VAR}` in a bare `env` stanza
+for alloc-scoped values — Nomad does not interpolate them at runtime.
+
 ## Adding a new agent type
 
 1. Choose a base image (`node`, `python`, or `minimal`)
