@@ -11,6 +11,8 @@ on:
       - 'tests/**'
       - '.github/workflows/**'
       - 'nomad/**'
+      - 'pixi.toml'
+      - 'pixi.lock'
   pull_request:
     branches: [main]
     paths:
@@ -21,6 +23,8 @@ on:
       - 'tests/**'
       - '.github/workflows/**'
       - 'nomad/**'
+      - 'pixi.toml'
+      - 'pixi.lock'
   schedule:
     - cron: '0 6 * * 1'  # Every Monday 06:00 UTC — digest freshness check
 
@@ -143,6 +147,26 @@ jobs:
 
       - name: Lint YAML files
         run: yamllint -c .yamllint.yml .github/workflows/ compose/
+
+      - name: Cache pixi environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pixi
+            ~/.cache/rattler/cache
+          key: pixi-${{ runner.os }}-${{ hashFiles('pixi.lock') }}
+          restore-keys: pixi-${{ runner.os }}-
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@v0.8.0
+        with:
+          cache: false
+
+      - name: Install dependencies
+        run: pixi install
+
+      - name: Run pytest
+        run: pixi run pytest
 
   validate:
     name: Validate Compose Files
