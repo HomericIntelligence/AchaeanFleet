@@ -7,14 +7,33 @@ on:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - 'compose/**'
   pull_request:
     branches: [main]
     paths:
       - 'bases/**'
       - 'vessels/**'
       - 'dagger/**'
+      - 'compose/**'
 
 jobs:
+  validate-compose:
+    name: Validate Compose Files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.claude-only.yml
+        run: |
+          docker compose -f compose/docker-compose.claude-only.yml --env-file compose/.env.example config --quiet
+
+      - name: Validate docker-compose.mesh.yml
+        run: |
+          docker compose -f compose/docker-compose.mesh.yml --env-file compose/.env.example config --quiet
+
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-latest
