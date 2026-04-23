@@ -3,7 +3,7 @@
 # Intentional suppressions — each rule is suppressed because the pattern
 # is reviewed and accepted for this repo.
 
-failure-threshold: warning
+failure-threshold: error
 
 ignore:
   # DL3008: apt packages not pinned to a specific version.
