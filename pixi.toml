@@ -9,6 +9,13 @@ platforms = ["linux-64"]
 just = ">=1.13"
 
 [tasks]
-build-all = "just build-all"
-test      = "just test"
-push      = "just push"
+build-all  = "just build-all"
+test       = "just test"
+test-shell = "just test-shell"
+push       = "just push"
+
+[feature.dev.dependencies]
+bats-core = ">=1.11.0"
+
+[environments]
+dev = ["dev"]

@@ -1,0 +1,29 @@
+name: Shell Script Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.sh'
+      - 'tests/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.sh'
+      - 'tests/**'
+
+jobs:
+  shell-tests:
+    name: BATS shell tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: sudo apt-get install -y bats
+
+      - name: Verify notify-proteus.sh default org (fast grep check)
+        run: grep -q 'homeric-intelligence' scripts/notify-proteus.sh
+
+      - name: Run BATS tests
+        run: bats tests/notify-proteus.bats
