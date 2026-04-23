@@ -309,6 +309,37 @@ jobs:
         if: always()
         run: docker compose -f compose/docker-compose.smoke.yml down --volumes --remove-orphans
 
+
+  build-goose-multiarch:
+    name: Build Goose Vessel (Multi-Arch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build minimal base (amd64 + arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: bases/Dockerfile.minimal
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: achaean-base-minimal:latest
+
+      - name: Build goose vessel (amd64 + arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: vessels/goose/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BASE_IMAGE=achaean-base-minimal:latest
+          push: false
+          tags: achaean-goose:latest
+
   push-to-registry:
     name: Push to GHCR
     runs-on: ubuntu-latest

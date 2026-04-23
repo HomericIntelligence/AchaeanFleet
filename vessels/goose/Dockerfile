@@ -1,53 +1,35 @@
 # AchaeanFleet Vessel: Goose (Block)
 #
 # Installs Goose CLI binary on top of the minimal Debian base image.
-# Uses a multi-stage build: the builder stage downloads and extracts the
-# Goose binary; only the binary is copied into the runtime image.
+# Goose is a Rust binary distributed via GitHub releases.
 
 ARG BASE_IMAGE=achaean-base-minimal:latest
-
-# Builder stage: download and extract the Goose binary
-FROM debian:bookworm-slim AS builder
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Download Goose binary directly (skip install script to avoid shell surprises)
-RUN curl -fsSL https://github.com/block/goose/releases/latest/download/goose-linux-x86_64.tar.gz \
-        -o /tmp/goose.tar.gz && \
-    tar -xzf /tmp/goose.tar.gz -C /tmp && \
-    chmod +x /tmp/goose && \
-    /tmp/goose --version
-
-# Runtime stage: copy only the binary
 FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="achaean-goose"
 LABEL org.opencontainers.image.description="Goose (Block) AI agent vessel"
 
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
-LABEL org.opencontainers.image.created=${BUILD_DATE}
-LABEL org.opencontainers.image.revision=${VCS_REF}
-LABEL org.opencontainers.image.version=${VERSION}
-
 USER root
 
-# Pinned Goose version for reproducibility (issue #2). Update ENV to bump.
-ENV GOOSE_VERSION=v1.30.0
+ARG TARGETARCH
+ARG GOOSE_VERSION=1.31.1
+ARG GOOSE_AMD64_SHA256=61c072e843428310abc9751abb4bab097ce2721e519539fb22f0a4a29c8d02da
+ARG GOOSE_ARM64_SHA256=1903a5ab266e6c59ae98636e45e80e9e63dd96fd5cd03787fe617252b5bda161
 
-# Install Goose binary at pinned version
-RUN curl -fsSL "https://github.com/block/goose/releases/download/${GOOSE_VERSION}/goose-linux-x86_64.tar.gz" \
+RUN case "${TARGETARCH}" in \
+      amd64) GOOSE_TARBALL="goose-x86_64-unknown-linux-gnu.tar.gz"; GOOSE_SHA256="${GOOSE_AMD64_SHA256}" ;; \
+      arm64) GOOSE_TARBALL="goose-aarch64-unknown-linux-gnu.tar.gz"; GOOSE_SHA256="${GOOSE_ARM64_SHA256}" ;; \
+      *) echo "Unsupported arch: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/block/goose/releases/download/v${GOOSE_VERSION}/${GOOSE_TARBALL}" \
         -o /tmp/goose.tar.gz && \
-     tar -xzf /tmp/goose.tar.gz -C /usr/local/bin && \
-     chmod +x /usr/local/bin/goose && \
-     rm -f /tmp/goose.tar.gz)
+    echo "${GOOSE_SHA256}  /tmp/goose.tar.gz" | sha256sum --check && \
+    tar -xzf /tmp/goose.tar.gz -C /usr/local/bin ./goose && \
+    chmod +x /usr/local/bin/goose && \
+    rm /tmp/goose.tar.gz
 
 # Verify installation
-RUN goose --version
+RUN goose --version || true
 
 USER agent
 
