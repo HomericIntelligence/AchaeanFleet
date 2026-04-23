@@ -175,3 +175,7 @@ nomad job run \
   -var="agamemnon_sidecar_path=/opt/ProjectAgamemnon/agent-sidecar/agent-sidecar" \
   nomad/mesh.nomad.hcl
 ```
+
+API keys (`anthropic_api_key`, `openai_api_key`) are required variables with no
+default. See [`nomad/README.md`](nomad/README.md) for the full secrets injection
+workflow (`.nomadvar` file, `-var` flags, and Vault).
