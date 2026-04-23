@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - '**/*.sh'
+      - 'scripts/**'
       - 'tests/**'
   pull_request:
     branches: [main]
     paths:
       - '**/*.sh'
+      - 'scripts/**'
       - 'tests/**'
 
 jobs:
@@ -20,10 +22,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install bats-core
-        run: sudo apt-get install -y bats
+        uses: bats-core/bats-action@2
 
       - name: Verify notify-proteus.sh default org (fast grep check)
         run: grep -q 'HomericIntelligence' scripts/notify-proteus.sh
 
-      - name: Run BATS tests
+      - name: Run notify-proteus BATS tests
         run: bats tests/notify-proteus.bats
+
+      - name: Run shell tests
+        run: bats -r tests/shell/

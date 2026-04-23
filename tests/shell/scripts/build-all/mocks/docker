@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+echo "docker $*"
+exit "${DOCKER_MOCK_EXIT:-0}"
