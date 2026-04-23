@@ -47,6 +47,11 @@ jobs:
       - name: Export base image to tarball
         run: docker save ${{ matrix.base.name }}:latest -o /tmp/${{ matrix.base.name }}.tar
 
+      - name: Verify tarball is non-empty
+        run: |
+          [ -s /tmp/${{ matrix.base.name }}.tar ] || \
+            { echo "ERROR: /tmp/${{ matrix.base.name }}.tar is empty or missing"; exit 1; }
+
       - name: Upload base image artifact
         uses: actions/upload-artifact@v4
         with:
@@ -113,7 +118,23 @@ jobs:
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
           push: false
+          load: true
           tags: ${{ matrix.vessel.name }}:latest
+
+      - name: Export vessel image to tarball
+        run: docker save ${{ matrix.vessel.name }}:latest -o /tmp/${{ matrix.vessel.name }}.tar
+
+      - name: Verify tarball is non-empty
+        run: |
+          [ -s /tmp/${{ matrix.vessel.name }}.tar ] || \
+            { echo "ERROR: /tmp/${{ matrix.vessel.name }}.tar is empty or missing"; exit 1; }
+
+      - name: Upload vessel image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vessel-image-${{ matrix.vessel.name }}
+          path: /tmp/${{ matrix.vessel.name }}.tar
+          retention-days: 1
 
   push-to-registry:
     name: Push to GHCR
