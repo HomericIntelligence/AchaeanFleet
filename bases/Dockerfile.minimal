@@ -3,7 +3,7 @@
 # Provides: debian:bookworm-slim + Node.js 20 + tmux + zsh + git
 # Binary-based agent vessels (Goose, OpenCode, Worker) FROM this.
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:f9c6a2fd2ddbc23e336b6257a5245e31f996953ef06cd13a59fa0a1df2d5c252 # debian:bookworm-slim
 
 LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
