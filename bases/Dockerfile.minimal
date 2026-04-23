@@ -75,6 +75,18 @@ RUN git clone https://github.com/ohmyzsh/ohmyzsh.git /home/agent/.oh-my-zsh && \
     cp /home/agent/.oh-my-zsh/templates/zshrc.zsh-template /home/agent/.zshrc
 USER root
 
+# Strip setuid/setgid bits unconditionally at build time.
+# dpkg-statoverride registers overrides so apt upgrades don't re-apply setuid.
+# find strips any additional binaries not tracked by dpkg.
+RUN dpkg-statoverride --update --add root root 0755 /usr/bin/su          2>/dev/null || true && \
+    dpkg-statoverride --update --add root root 0755 /usr/bin/newgrp      2>/dev/null || true && \
+    dpkg-statoverride --update --add root root 0755 /usr/bin/passwd      2>/dev/null || true && \
+    dpkg-statoverride --update --add root root 0755 /usr/bin/chsh        2>/dev/null || true && \
+    dpkg-statoverride --update --add root root 0755 /usr/bin/chfn        2>/dev/null || true && \
+    dpkg-statoverride --update --add root root 0755 /bin/mount           2>/dev/null || true && \
+    dpkg-statoverride --update --add root root 0755 /bin/umount          2>/dev/null || true && \
+    find / -xdev -perm /6000 -type f -exec chmod a-s {} \; 2>/dev/null || true
+
 # Create workspace and app directories
 RUN mkdir -p /workspace /app && \
     chown -R agent:agent /workspace /app
