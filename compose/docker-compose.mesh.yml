@@ -107,6 +107,24 @@ services:
     logging: *default-logging
     healthcheck: *healthcheck
 
+  hi-eris:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: hi-eris
+    hostname: hi-eris
+    networks: [homeric-mesh]
+    ports: ["23002:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: eris
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: eris
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Eris:/workspace
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
   hi-baird:
     <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
@@ -130,6 +148,42 @@ services:
     tmpfs: *tmpfs
     restart: unless-stopped
     logging: *default-logging
+    healthcheck: *healthcheck
+
+  hi-vegai:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: hi-vegai
+    hostname: hi-vegai
+    networks: [homeric-mesh]
+    ports: ["23004:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: vegai
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: vegai
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+    working_dir: /workspace
+    restart: unless-stopped
+    healthcheck: *healthcheck
+
+  hi-pallas:
+    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
+    container_name: hi-pallas
+    hostname: hi-pallas
+    networks: [homeric-mesh]
+    ports: ["23005:23001"]
+    environment:
+      <<: *common-env
+      AGENT_ID: pallas
+      AGENT_PORT: "23001"
+      TMUX_SESSION_NAME: pallas
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Pallas:/workspace
+    working_dir: /workspace
+    restart: unless-stopped
     healthcheck: *healthcheck
 
   # -------------------------------------------------------------------------
