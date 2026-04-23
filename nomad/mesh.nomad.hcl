@@ -90,8 +90,13 @@ job "achaean-mesh" {
       driver = "docker"
 
       config {
-        image = "achaean-claude:latest"
-        ports = ["agent"]
+        image        = "achaean-claude:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        # Note: cap_drop ALL compatibility with Claude Code CLI is unverified.
+        # If Claude Code requires specific capabilities (e.g. NET_BIND_SERVICE),
+        # add cap_add = ["NET_BIND_SERVICE"] here after validating with a live run.
 
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
@@ -161,8 +166,10 @@ EOH
       driver = "docker"
 
       config {
-        image   = "achaean-aider:latest"
-        ports   = ["agent"]
+        image        = "achaean-aider:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
           "${var.tls_cert_dir}:/certs:ro",
@@ -571,8 +578,10 @@ EOH
       driver = "docker"
 
       config {
-        image   = "achaean-worker:latest"
-        ports   = ["agent"]
+        image        = "achaean-worker:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
         volumes = [
           "/tmp/ci-workspace:/workspace",
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
