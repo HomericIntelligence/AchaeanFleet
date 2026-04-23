@@ -1,0 +1,24 @@
+name: Shell Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'tests/shell/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'tests/shell/**'
+
+jobs:
+  bats:
+    name: BATS Shell Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bats-core
+        uses: bats-core/bats-action@2
+      - name: Run shell tests
+        run: bats -r tests/shell/

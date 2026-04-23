@@ -183,8 +183,8 @@ pod-list:
 # Test
 # =============================================================================
 
-# Smoke-test all vessel images (requires dagger)
-test:
+# Run all tests: BATS shell tests + dagger image smoke tests
+test: test-shell
     @echo "=== Running image smoke tests ==="
     npx ts-node dagger/pipeline.ts test
 
@@ -224,6 +224,11 @@ test-smoke:
     docker compose -f compose/docker-compose.smoke.yml down --volumes --remove-orphans || true
     [ $ok -eq 1 ] || { echo "FAIL: /health did not respond within 60s"; exit 1; }
     echo "=== Smoke test passed ==="
+
+# Run BATS shell tests only (no container runtime required)
+test-shell:
+    @echo "=== Running BATS shell tests ==="
+    bats -r tests/shell/
 
 # =============================================================================
 # Push
