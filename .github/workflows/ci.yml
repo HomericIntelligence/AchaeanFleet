@@ -44,6 +44,15 @@ jobs:
           load: true
           tags: ${{ matrix.base.name }}:latest
 
+      - name: Scan base image for HIGH/CRITICAL CVEs
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ matrix.base.name }}:latest
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
       - name: Export base image to tarball
         run: docker save ${{ matrix.base.name }}:latest -o /tmp/${{ matrix.base.name }}.tar
 
