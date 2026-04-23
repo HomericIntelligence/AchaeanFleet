@@ -395,3 +395,27 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Record image digest
+        id: digest
+        shell: bash
+        env:
+          VESSEL_NAME: ${{ matrix.vessel.name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          IMAGE_NAME=$(echo "$VESSEL_NAME" | tr '[:upper:]' '[:lower:]')
+          DIGEST=$(docker inspect --format '{{.Id}}' "${IMAGE_NAME}:latest")
+          if [[ -z "$DIGEST" ]]; then
+            echo "ERROR: docker inspect returned empty digest for ${IMAGE_NAME}:latest" >&2
+            exit 1
+          fi
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "## Image Digest: \`${IMAGE_NAME}:latest\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Image | \`${IMAGE_NAME}:latest\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Digest | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit | \`${COMMIT_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Image Digest::${IMAGE_NAME}:latest -> ${DIGEST}"
+
