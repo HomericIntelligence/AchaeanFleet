@@ -13,6 +13,7 @@ LABEL org.opencontainers.image.description="Shell worker vessel — no AI tool, 
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
+ARG YQ_VERSION=v4.53.2
 LABEL org.opencontainers.image.created=${BUILD_DATE}
 LABEL org.opencontainers.image.revision=${VCS_REF}
 LABEL org.opencontainers.image.version=${VERSION}
