@@ -10,6 +10,7 @@ on:
       - 'compose/**'
       - 'tests/**'
       - '.github/workflows/**'
+      - 'nomad/**'
   pull_request:
     branches: [main]
     paths:
@@ -19,6 +20,7 @@ on:
       - 'compose/**'
       - 'tests/**'
       - '.github/workflows/**'
+      - 'nomad/**'
   schedule:
     - cron: '0 6 * * 1'  # Every Monday 06:00 UTC — digest freshness check
 
@@ -30,6 +32,28 @@ permissions:
   contents: read
 
 jobs:
+  validate-nomad:
+    name: Validate Nomad Job HCL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nomad
+        env:
+          NOMAD_VERSION: "1.9.7"
+        run: |
+          curl -fsSL "https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip" \
+            -o /tmp/nomad.zip
+          unzip -q /tmp/nomad.zip -d /tmp
+          sudo mv /tmp/nomad /usr/local/bin/nomad
+          nomad version
+
+      - name: Validate Nomad job spec
+        run: nomad job validate nomad/mesh.nomad.hcl
+
   lint:
     name: Lint Dockerfiles and YAML
     runs-on: ubuntu-latest
