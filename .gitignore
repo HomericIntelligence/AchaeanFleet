@@ -2,6 +2,7 @@
 compose/.env
 .env
 *.env
+*.nomadvar
 
 # TLS private keys and generated certificates
 # Run: bash tls/generate-certs.sh  to regenerate
