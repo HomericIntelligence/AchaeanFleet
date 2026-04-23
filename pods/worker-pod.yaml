@@ -32,6 +32,8 @@ spec:
           value: "http://172.20.0.1:8080"
         - name: AGENT_MODE
           value: "headless"
+        - name: AGENT_PORT
+          value: "23080"
       volumeMounts:
         - name: agent-sidecar
           mountPath: /app/agent-sidecar
