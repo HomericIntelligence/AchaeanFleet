@@ -38,6 +38,13 @@ secrets:
   openai_api_key:
     file: ${SECRETS_DIR:-./secrets}/openai_api_key
 
+# Shared security hardening applied to all services
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 # Shared environment for all agents
 x-common-env: &common-env
   AGAMEMNON_URL: ${AGAMEMNON_URL:-https://caddy:8443}
@@ -99,7 +106,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   hi-baird:
     <<: *security
@@ -125,7 +131,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # Codex agent (Node base)
@@ -153,7 +158,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # Aider agent (Python base)
@@ -182,7 +186,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # Goose agent (minimal/binary base)
@@ -210,7 +213,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # Cline agent (Node base)
@@ -238,7 +240,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # OpenCode agent (minimal/binary base)
@@ -266,7 +267,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # Codebuff agent (Node base)
@@ -294,7 +294,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # AmpCode agent (Node base)
@@ -322,7 +321,6 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
 
   # -------------------------------------------------------------------------
   # Shell Worker (minimal base, no AI tool)
@@ -354,4 +352,3 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *healthcheck
-    <<: *security
