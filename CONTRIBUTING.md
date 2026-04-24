@@ -218,6 +218,19 @@ just compose-down
 - **Pinning**: Pin base image digests, not mutable tags
 - **Labels**: Include standard OCI labels (maintainer, version, description)
 
+### CI Docker Load Pattern
+
+The CI pipeline exports base images as tarballs and loads them in vessel build jobs using:
+
+```bash
+IMAGE_ID=$(docker load -i base.tar | awk '{print $NF}')
+docker tag "$IMAGE_ID" achaean-base-node:latest
+```
+
+The `IMAGE_ID` capture is required because `docker load` on compressed tarballs may change the image
+ID. A bare `docker load` without re-tagging can leave the wrong image name in the daemon, causing
+vessel builds to fail with "manifest not found". Do not revert to `docker load` without `docker tag`.
+
 ### Pinning and Version Updates
 
 Every `npm install -g` and `pip install` command in a Dockerfile must specify an exact version.
