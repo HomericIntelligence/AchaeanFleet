@@ -265,7 +265,7 @@ jobs:
         with:
           name: base-image-${{ matrix.base.name }}
           path: /tmp/${{ matrix.base.name }}.tar
-          retention-days: 1
+          retention-days: 7
 
       - name: Clean up base image tarball
         if: always()
@@ -445,7 +445,7 @@ jobs:
         with:
           name: vessel-image-${{ matrix.vessel.name }}
           path: /tmp/${{ matrix.vessel.name }}.tar
-          retention-days: 1
+          retention-days: 7
 
       - name: Clean up downloaded base image tarball
         if: always()
