@@ -13,6 +13,7 @@ LABEL org.opencontainers.image.description="AchaeanFleet Python base image for A
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
 
 # Install system dependencies
+# curl: required by Oh My Zsh installer in common-setup.sh
 RUN apt-get update && apt-get install -y \
     curl \
     wget \

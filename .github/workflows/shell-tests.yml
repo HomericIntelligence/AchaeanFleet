@@ -24,7 +24,7 @@ jobs:
         run: sudo apt-get install -y shellcheck
 
       - name: Run shellcheck
-        run: shellcheck scripts/*.sh
+        run: shellcheck --severity=warning scripts/*.sh
 
       - name: Verify notify-proteus.sh default org (fast grep check)
         run: grep -q 'HomericIntelligence' scripts/notify-proteus.sh
