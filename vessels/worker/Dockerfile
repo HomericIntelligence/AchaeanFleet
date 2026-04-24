@@ -21,13 +21,13 @@ LABEL org.opencontainers.image.version=${VERSION}
 USER root
 
 # Install required tools — failures here are fatal
-RUN apt-get update && apt-get install -y jq make && rm -rf /var/lib/apt/lists/*
-
-# Install yq if not available via apt
-RUN which yq || ( \
-    curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" \
-        -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq )
+RUN apt-get update && \
+    apt-get install -y jq make && \
+    rm -rf /var/lib/apt/lists/* && \
+    ( which yq || ( \
+        curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" \
+            -o /usr/local/bin/yq && \
+        chmod +x /usr/local/bin/yq ) )
 
 COPY vessels/worker/healthcheck-server.js /app/healthcheck-server.js
 RUN chown agent:agent /app/healthcheck-server.js
