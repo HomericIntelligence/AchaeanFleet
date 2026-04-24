@@ -175,8 +175,9 @@ Both checks run automatically in CI on every PR that touches `bases/**`, `vessel
 1. Pick a base: `node`, `python`, or `minimal`
 2. Create `vessels/<name>/Dockerfile` with `ARG BASE_IMAGE`
 3. Add entries to `compose/docker-compose.mesh.yml` and `dagger/pipeline.ts`
-4. Add to the build matrix in `.github/workflows/ci.yml`
-5. Run `just build-vessel <name>` to verify
+4. Add `<NAME>_PROJECT=/path/to/project` to `compose/.env.example` (defines the workspace this agent mounts)
+5. Add to the build matrix in `.github/workflows/ci.yml`
+6. Run `just build-vessel <name>` to verify
 
 ## Contributing
 
