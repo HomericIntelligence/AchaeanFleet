@@ -10,13 +10,15 @@ just       = ">=1.13"
 pre-commit = ">=3.0"
 python     = ">=3.11,<3.14"
 pytest     = ">=8.1.0,<9"
+pytest-cov = ">=5.0"
 
 [tasks]
-build-all  = "just build-all"
-test       = "just test"
-test-shell = "just test-shell"
-push       = "just push"
-pytest     = "python -m pytest tests/ -v"
+build-all   = "just build-all"
+test        = "just test"
+test-shell  = "just test-shell"
+push        = "just push"
+pytest      = "python -m pytest tests/ -v --cov=. --cov-report=term-missing"
+test-python = "python -m pytest tests/ -v"
 
 [feature.dev.dependencies]
 bats-core = ">=1.11.0"
