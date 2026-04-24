@@ -35,6 +35,12 @@ on:
       - 'pixi.lock'
   schedule:
     - cron: '0 6 * * 1'  # Every Monday 06:00 UTC — digest freshness check
+  workflow_dispatch:
+    inputs:
+      force_push:
+        type: boolean
+        default: false
+        description: "Force push-to-registry on non-main branches (for integration testing)"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
@@ -747,7 +753,7 @@ jobs:
     name: Push to GHCR
     runs-on: ubuntu-latest
     needs: [build-vessels]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.inputs.force_push == 'true'
     permissions:
       packages: write
       contents: read
@@ -877,7 +883,7 @@ jobs:
     name: Verify GHCR Tags
     runs-on: ubuntu-latest
     needs: push-to-registry
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.inputs.force_push == 'true'
     timeout-minutes: 10
     permissions:
       packages: read
