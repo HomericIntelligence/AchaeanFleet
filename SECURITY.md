@@ -26,6 +26,14 @@ Use GitHub's private vulnerability reporting:
 
 **[Report a vulnerability](https://github.com/mvillmow/AchaeanFleet/security/advisories/new)**
 
+**⚠️ Admin Setup Required:** Private vulnerability reporting must be enabled by a repo admin. If the link above returns a 404 or permission error, a maintainer needs to enable it first:
+
+1. Go to the repository's **Settings → Code security and analysis**
+2. Under **Private vulnerability reporting**, click **Enable**
+3. Once enabled, external reporters can use the link above
+
+Until this is enabled, reporters should use the email fallback below.
+
 This is the preferred channel — it keeps the report private, lets us draft a coordinated advisory, and integrates with GitHub's Security tab automatically.
 
 ### Email (Fallback)
