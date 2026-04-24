@@ -109,6 +109,20 @@ updates:
     reviewers:
       - "mvillmow"
 
+  # npm dependencies in dagger pipeline
+  - package-ecosystem: "npm"
+    directory: "/dagger"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(dagger)"
+    reviewers:
+      - "mvillmow"
+    open-pull-requests-limit: 5
+
   # GitHub Actions version bumps
   - package-ecosystem: "github-actions"
     directory: "/"
