@@ -84,6 +84,7 @@ jobs:
       - name: Validate Nomad job spec
         run: |
           for f in nomad/*.hcl; do
+            # Skip non-job HCL files (e.g. Vault policies)
             if ! grep -q '^job ' "$f"; then
               echo "Skipping $f (not a Nomad job spec)"
               continue

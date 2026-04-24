@@ -15,3 +15,12 @@
 # These are documentation examples, not real credentials
 secret-0-generic-api-key
 secret-0-anthropic-api-key
+
+# npm transitive dependencies in @anthropic-ai/claude-code node_modules
+# These are indirect deps bundled by the upstream package — no direct fix available
+CVE-2024-21538  # cross-spawn ReDoS — fixed upstream but not yet in claude-code bundle
+CVE-2025-64756  # glob command injection — in npm bundled glob, not user-controllable
+CVE-2026-26996  # minimatch DoS — transitive dep in claude-code, upstream fix pending
+CVE-2026-27903  # minimatch DoS — transitive dep in claude-code, upstream fix pending
+CVE-2026-27904  # minimatch DoS — transitive dep in claude-code, upstream fix pending
+CVE-2026-23745  # node-tar arbitrary file overwrite — in npm bundled tar, no user input path
