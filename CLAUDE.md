@@ -105,6 +105,23 @@ All compose services use `read_only: true` for security hardening. Write access 
 
 All containers join the `homeric-mesh` bridge network. Containers resolve each other by service name via Docker's internal DNS. ProjectAgamemnon on the host connects via `172.20.0.1` (the Docker bridge gateway).
 
+## Health Checks
+
+All base images include a `HEALTHCHECK` instruction that polls `http://localhost:23001/health` every 10 seconds. The endpoint is served by `healthcheck-server.js` (Node) or an equivalent inside the vessel.
+
+**Parameters (base image default):**
+```
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3
+```
+
+**Compose override**: The `x-healthcheck` anchor in `compose/docker-compose.mesh.yml` overrides the Dockerfile default. Compose healthcheck takes precedence — the Dockerfile HEALTHCHECK is only used when running with `docker run` or `podman play kube`.
+
+**Vessel override for non-default port**: If your vessel uses a port other than 23001, override the HEALTHCHECK in the vessel Dockerfile:
+```dockerfile
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:<PORT>/health 2>/dev/null || exit 1
+```
+
 ## Nomad
 
 See [`nomad/PATTERNS.md`](nomad/PATTERNS.md) for the full HCL authoring guide.
