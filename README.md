@@ -49,6 +49,21 @@ just compose-up
 just mesh-up
 ```
 
+## Host requirements
+
+**Claude-only fleet (Phase 3):**
+- Memory: 12 GB minimum (5 Claude agents × 4G limit; practical min ~2.5 GB with reservations)
+- CPU: 2 cores
+- Disk: 5 GB for images
+
+**Full heterogeneous mesh (Phase 4):**
+- Memory: **50 GB hard limit** (8 AI agents × 4G + 1 worker × 1G); **practical minimum 8 GB** with memory reservations
+- CPU: 8+ cores recommended
+- Disk: 15 GB for images
+
+Memory limits are tunable in `compose/.env` — reduce `*_MEM_LIMIT` values if your host is smaller.
+Each agent reserves 512 MB (worker reserves 128 MB) to guarantee minimum responsiveness during burst load.
+
 ## Building images
 
 ```bash
