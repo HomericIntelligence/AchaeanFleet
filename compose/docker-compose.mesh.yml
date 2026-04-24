@@ -186,7 +186,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
+      - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Vegai:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
     read_only: true
