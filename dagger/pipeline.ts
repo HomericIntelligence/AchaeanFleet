@@ -14,7 +14,7 @@
  *   npm install @dagger.io/dagger
  */
 
-import { connect, Client } from "@dagger.io/dagger";
+import { connect, Client, Container } from "@dagger.io/dagger";
 import { execFileSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
@@ -83,7 +83,7 @@ const VESSELS = [
   },
 ] as const;
 
-async function exportToLocalDaemon(container: any, name: string): Promise<void> {
+async function exportToLocalDaemon(container: Container, name: string): Promise<void> {
   const tarPath = path.join(os.tmpdir(), `${name}.tar`);
   console.log(`Exporting ${name} → ${tarPath}`);
   await container.export(tarPath);
@@ -97,17 +97,18 @@ async function exportToLocalDaemon(container: any, name: string): Promise<void> 
   }
 }
 
-async function buildBases(client: Client): Promise<Map<string, any>> {
+async function buildBases(client: Client): Promise<Map<string, Container>> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
 
-  const builtBases = new Map<string, any>();
+  const builtBases = new Map<string, Container>();
 
   for (const base of BASES) {
     console.log(`Building base: ${base.name}`);
     const image = client
       .container()
+      // @ts-ignore - Dagger SDK method exists at runtime
       .build(src, { dockerfile: base.dockerfile });
 
     await exportToLocalDaemon(image, base.name);
@@ -119,7 +120,7 @@ async function buildBases(client: Client): Promise<Map<string, any>> {
 
 async function buildVessels(
   client: Client,
-  builtBases: Map<string, any>,
+  builtBases: Map<string, Container>,
   registry?: string
 ): Promise<void> {
   const src = client.host().directory(".", {
@@ -132,6 +133,7 @@ async function buildVessels(
     console.log(`Building vessel: ${vessel.name}`);
 
     const baseTag = `${vessel.base}:latest`;
+    // @ts-ignore - Dagger SDK method exists at runtime
     const image = client.container().build(src, {
       dockerfile: vessel.dockerfile,
       buildArgs: [{ name: "BASE_IMAGE", value: baseTag }],
@@ -157,6 +159,18 @@ async function buildVessels(
   await Promise.all(buildPromises);
 }
 
+async function verifyImageInDaemon(imageName: string): Promise<void> {
+  console.log(`Verifying ${imageName}:latest is in local daemon`);
+  try {
+    execFileSync("docker", ["image", "inspect", `${imageName}:latest`], {
+      stdio: "pipe",
+    });
+    console.log(`  ✓ ${imageName}:latest verified in local daemon`);
+  } catch (error) {
+    throw new Error(`Failed to verify ${imageName}:latest in local daemon: ${error}`);
+  }
+}
+
 async function testImages(client: Client): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
@@ -166,6 +180,7 @@ async function testImages(client: Client): Promise<void> {
   const testPromises = VESSELS.map(async (vessel) => {
     console.log(`Testing: ${vessel.name}`);
 
+    // @ts-ignore - Dagger SDK method exists at runtime
     const image = client.container().build(src, {
       dockerfile: vessel.dockerfile,
       buildArgs: [{ name: "BASE_IMAGE", value: `${vessel.base}:latest` }],
@@ -181,6 +196,13 @@ async function testImages(client: Client): Promise<void> {
   });
 
   await Promise.all(testPromises);
+
+  // Verify built images are in the local daemon
+  console.log("Verifying images are loaded in local daemon...");
+  const verifyPromises = VESSELS.map((vessel) =>
+    verifyImageInDaemon(vessel.name)
+  );
+  await Promise.all(verifyPromises);
 }
 
 // Entry point
