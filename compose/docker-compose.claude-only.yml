@@ -39,6 +39,7 @@ networks:
 # /home/agent/.npm    - npm global cache (Node-based vessels)
 # /home/agent/.config - runtime config writes
 # /home/agent/.local  - Python user installs and local state
+# /home/agent/.npm    - npm global cache
 x-tmpfs: &tmpfs
   - /tmp
   - /run
@@ -46,6 +47,7 @@ x-tmpfs: &tmpfs
   - /home/agent/.npm
   - /home/agent/.config
   - /home/agent/.local
+  - /home/agent/.npm
 
 x-logging: &default-logging
   driver: json-file
