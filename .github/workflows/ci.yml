@@ -350,13 +350,16 @@ jobs:
           ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.claude-only.yml config > /tmp/claude-only-config.yml
           ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.mesh.yml config > /tmp/mesh-config.yml
 
-          # Check for hardcoded dummy values (would mean the keys were embedded in env blocks)
-          if grep -q "ANTHROPIC_API_KEY: dummy" /tmp/claude-only-config.yml || grep -q "OPENAI_API_KEY: dummy" /tmp/claude-only-config.yml; then
-            echo "ERROR: Secret key(s) appear hardcoded in docker-compose.claude-only.yml"
+          # ANTHROPIC_API_KEY must come from Docker secrets (not env), so it should
+          # never appear as a literal value in the expanded config. OPENAI_API_KEY is
+          # intentionally passed via ${OPENAI_API_KEY:-} env substitution for services
+          # that need it (cline, codebuff, ampcode, opencode) — allowed pattern.
+          if grep -q "ANTHROPIC_API_KEY: dummy" /tmp/claude-only-config.yml; then
+            echo "ERROR: ANTHROPIC_API_KEY appears hardcoded in docker-compose.claude-only.yml"
             exit 1
           fi
-          if grep -q "ANTHROPIC_API_KEY: dummy" /tmp/mesh-config.yml || grep -q "OPENAI_API_KEY: dummy" /tmp/mesh-config.yml; then
-            echo "ERROR: Secret key(s) appear hardcoded in docker-compose.mesh.yml"
+          if grep -q "ANTHROPIC_API_KEY: dummy" /tmp/mesh-config.yml; then
+            echo "ERROR: ANTHROPIC_API_KEY appears hardcoded in docker-compose.mesh.yml"
             exit 1
           fi
           echo "Secret keys verified absent from hardcoded env blocks: OK"
