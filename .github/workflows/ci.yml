@@ -861,7 +861,22 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Record image digest
+      - name: Record base image push status
+        if: matrix.vessel.name == 'achaean-claude'  # Only run once per job
+        shell: bash
+        env:
+          REGISTRY: ghcr.io/homericintelligence
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          echo "## Pushed Base Images" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Base | Tags |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          for base in achaean-base-node achaean-base-python achaean-base-minimal; do
+            echo "| \`${base}\` | \`latest\`, \`git-${COMMIT_SHA::7}\`, \`$(date -u +%Y-%m-%d)\` |" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Record vessel image digest
         id: digest
         shell: bash
         env:
@@ -880,7 +895,7 @@ jobs:
             exit 1
           fi
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
-          echo "## Image Digest: \`${IMAGE_NAME}:latest\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Vessel Image Digest: \`${IMAGE_NAME}:latest\`" >> "$GITHUB_STEP_SUMMARY"
           echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
           echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Image | \`${IMAGE_NAME}:latest\` |" >> "$GITHUB_STEP_SUMMARY"
