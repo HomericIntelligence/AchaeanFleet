@@ -64,24 +64,6 @@ volumes:
 
 **Never copy the Agamemnon agent sidecar into the image at build time** — this would lock the image to a specific ProjectAgamemnon version.
 
-## Read-only root filesystem
-
-All compose services use `read_only: true` for security hardening. Write access is explicitly granted to specific paths via tmpfs mounts and named volumes:
-
-**tmpfs mounts (ephemeral, cleared on container restart):**
-- `/tmp` — temp files and tmux sockets (`/tmp/tmux-*`)
-- `/run` — runtime PID files and socket files
-- `/home/agent/.cache` — tool caches (npm, pip, Claude Code, etc.)
-- `/home/agent/.config` — runtime configuration writes
-- `/home/agent/.local` — Python user-site packages and local state
-
-**Named/bind volumes (persistent):**
-- `/workspace` — agent work directory, mounted from `${WORKSPACE_ROOT}` (writable for agents to read/write project files)
-- `/certs` — TLS certificates, mounted read-only (`:ro`)
-
-**Intentionally read-only:**
-- `/app/agent-sidecar` — ProjectAgamemnon sidecar binary, mounted from host at build time with `:ro` flag. Never write here; the sidecar is managed by ProjectAgamemnon lifecycle.
-
 ## Port mapping convention
 
 ```
@@ -117,6 +99,6 @@ for alloc-scoped values — Nomad does not interpolate them at runtime.
 
 1. Choose a base image (`node`, `python`, or `minimal`)
 2. Create `vessels/<agentname>/Dockerfile` with `ARG BASE_IMAGE` + install step
-3. Add an entry to `compose/docker-compose.mesh.yml`
+3. Add an entry to `compose/docker-compose.mesh.yml`. By default, attach to the `agamemnon-frontend` network only. Add the agent to `agent-backend` network only if the agent needs direct container-to-container communication with other agents.
 4. Add to the matrix in `.github/workflows/ci.yml`
 5. Add vessel entry in `dagger/pipeline.ts`
