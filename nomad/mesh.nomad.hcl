@@ -9,6 +9,11 @@
 #
 # Override variables at run time:
 #   nomad job run -var="agamemnon_url=http://192.168.1.10:8080" nomad/mesh.nomad.hcl
+#
+# SECRETS MANAGEMENT (Phase 6):
+# API keys and dynamic secrets are injected via Nomad's Vault integration.
+# See nomad/PATTERNS.md § 5 for the template stanza pattern and anti-patterns to avoid.
+# Never pass secrets as inline env vars or store them in HCL.
 
 # =============================================================================
 # Variables (override via -var or .nomadvar files)
