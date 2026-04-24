@@ -63,6 +63,9 @@ RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 # Upgrade pip (version pinned for reproducibility — issue #2)
 RUN pip install --upgrade "pip==26.0.1"
 
+COPY bases/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 WORKDIR /workspace
 
 ENV AGENT_ID=agent-local
@@ -73,3 +76,5 @@ ENV GIT_USER_NAME="HomericIntelligence Agent"
 ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
 
 USER agent
+
+ENTRYPOINT ["/entrypoint.sh"]

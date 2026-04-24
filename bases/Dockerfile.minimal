@@ -61,6 +61,9 @@ USER root
 COPY bases/scripts/strip-setuid.sh /tmp/strip-setuid.sh
 RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 
+COPY bases/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Create workspace and app directories
 RUN mkdir -p /workspace /app && \
     chown -R agent:agent /workspace /app
@@ -75,3 +78,5 @@ ENV GIT_USER_NAME="HomericIntelligence Agent"
 ENV GIT_USER_EMAIL="agent@HomericIntelligence.ai"
 
 USER agent
+
+ENTRYPOINT ["/entrypoint.sh"]
