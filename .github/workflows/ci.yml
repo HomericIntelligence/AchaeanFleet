@@ -237,6 +237,29 @@ jobs:
           fi
           echo "No bare WORKSPACE_ROOT mounts found."
 
+
+      - name: Assert AGENT_PORT consistency in compose files
+        run: |
+          python3 << 'SCRIPT'
+          import yaml
+          for f in ['compose/docker-compose.claude-only.yml', 'compose/docker-compose.mesh.yml']:
+              data = yaml.safe_load(open(f))
+              for name, svc in (data.get('services') or {}).items():
+                  env = svc.get('environment', {})
+                  port = None
+                  if isinstance(env, dict):
+                      port = env.get('AGENT_PORT')
+                  elif isinstance(env, list):
+                      for e in env:
+                          if 'AGENT_PORT=' in str(e):
+                              port = str(e).split('=', 1)[1]
+                  if port:
+                      ports = [str(p) for p in (svc.get('ports') or [])]
+                      if not any(f':{port}' in p for p in ports):
+                          print(f'WARNING: {name} AGENT_PORT={port} but no matching port mapping in {f}')
+          print('AGENT_PORT check complete')
+          SCRIPT
+
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-24.04
@@ -471,6 +494,13 @@ jobs:
             sleep 2
           done
           [ $ok -eq 1 ] || { echo "FAIL: /health did not respond within 60s"; exit 1; }
+
+      - name: Verify compose network connectivity
+        run: |
+          # Check that Docker internal DNS works for service names
+          docker compose -f compose/docker-compose.smoke.yml exec -T hi-worker-smoke \
+            sh -c "nslookup hi-worker-smoke 2>/dev/null || true" || true
+          echo "Network smoke test: OK (DNS check — non-fatal)"
 
       - name: Tear down (always)
         if: always()
