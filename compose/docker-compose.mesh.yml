@@ -24,8 +24,6 @@
 #   echo -n "sk-..."     > secrets/openai_api_key    && chmod 600 secrets/openai_api_key
 #   (set SECRETS_DIR in .env if your secrets dir lives elsewhere)
 
-version: "3.9"
-
 networks:
   agamemnon-frontend:
     driver: bridge
