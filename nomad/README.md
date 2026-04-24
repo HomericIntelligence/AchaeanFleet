@@ -86,6 +86,15 @@ vault {
 }
 ```
 
+The `achaean-secrets` policy must exist in your Vault instance. Create it with:
+
+```hcl
+# nomad/vault-policy.hcl — apply with: vault policy write achaean-secrets nomad/vault-policy.hcl
+path "secret/data/achaean/*" {
+  capabilities = ["read"]
+}
+```
+
 Then uncomment the `template` block in each task and remove the `-var`
 overrides — Vault becomes the sole source of truth.
 
