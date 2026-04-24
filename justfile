@@ -10,7 +10,11 @@ default:
 # Variables
 # =============================================================================
 
+# Override: REGISTRY=ghcr.io/org (default: ghcr.io/homericintelligence) — registry prefix for push
 registry := env_var_or_default("REGISTRY", "ghcr.io/homericintelligence")
+
+# Override: TAG=v1.2.3 (default: latest) — image tag applied to all built images
+tag := env_var_or_default("TAG", "latest")
 
 bases := "achaean-base-node achaean-base-python achaean-base-minimal"
 
@@ -250,7 +254,7 @@ test-compose:
     echo "=== Validating compose files ==="
     for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml compose/docker-compose.smoke.yml; do
         echo "  Checking $f ..."
-        docker compose -f "$f" config --quiet || { echo "FAIL: $f"; exit 1; }
+        {{compose_cmd}} -f "$f" config --quiet || { echo "FAIL: $f"; exit 1; }
         echo "  OK: $f"
     done
     echo "=== All compose files valid ==="
@@ -259,13 +263,15 @@ test-compose:
 test-smoke:
     #!/usr/bin/env bash
     set -euo pipefail
+    container_cmd="$(which podman 2>/dev/null || echo docker)"
+    compose_cmd="$(which podman-compose 2>/dev/null || echo 'docker compose')"
     echo "=== Smoke test: building worker vessel ==="
-    docker build -f bases/Dockerfile.minimal -t achaean-base-minimal:latest .
-    docker build -f vessels/worker/Dockerfile \
+    ${container_cmd} build -f bases/Dockerfile.minimal -t achaean-base-minimal:latest .
+    ${container_cmd} build -f vessels/worker/Dockerfile \
         --build-arg BASE_IMAGE=achaean-base-minimal:latest \
         -t achaean-worker:latest .
     echo "=== Starting smoke container ==="
-    docker compose -f compose/docker-compose.smoke.yml up -d
+    ${compose_cmd} -f compose/docker-compose.smoke.yml up -d
     echo "=== Waiting for /health on port 23080 (up to 60s) ==="
     ok=0
     for i in $(seq 1 30); do
@@ -276,7 +282,7 @@ test-smoke:
         fi
         sleep 2
     done
-    docker compose -f compose/docker-compose.smoke.yml down --volumes --remove-orphans || true
+    ${compose_cmd} -f compose/docker-compose.smoke.yml down --volumes --remove-orphans || true
     [ $ok -eq 1 ] || { echo "FAIL: /health did not respond within 60s"; exit 1; }
     echo "=== Smoke test passed ==="
 
@@ -311,8 +317,12 @@ compose-up:
 compose-down:
     {{compose_cmd}} -f compose/docker-compose.claude-only.yml down
 
+# Check if TLS certs exist; if not, generate them
+certs-check:
+    @test -d tls/certs && test -f tls/certs/ca.crt || (echo "TLS certs not found — running generate-certs.sh…" && bash tls/generate-certs.sh)
+
 # Start full mesh compose (Phase 4)
-mesh-up:
+mesh-up: (certs-check)
     {{compose_cmd}} -f compose/docker-compose.mesh.yml up -d
 
 # Stop full mesh compose
@@ -356,8 +366,10 @@ clean-dangling:
     echo "=== Pruning stopped containers ==="
     ${container_cmd} container prune -f
     echo "=== Pruning build cache ==="
-    ${container_cmd} builder prune -f || true
-    echo "=== Dangling artifacts removed ==="
+    ${container_cmd} builder prune -f 2>/dev/null || true
+    echo "=== Pruning volumes ==="
+    {{container_cmd}} volume prune -f || true
+    @echo "=== Disk cleanup complete — check above for reclaimed space ==="
 
 # Full cleanup: remove achaean-* images + dangling layers + build cache
 clean-all:
