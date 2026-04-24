@@ -23,7 +23,7 @@ jobs:
         run: sudo apt-get install -y bats
 
       - name: Verify notify-proteus.sh default org (fast grep check)
-        run: grep -q 'homeric-intelligence' scripts/notify-proteus.sh
+        run: grep -q 'HomericIntelligence' scripts/notify-proteus.sh
 
       - name: Run BATS tests
         run: bats tests/notify-proteus.bats

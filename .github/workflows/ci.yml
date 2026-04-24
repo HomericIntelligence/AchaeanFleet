@@ -11,6 +11,10 @@ on:
       - 'tests/**'
       - '.github/workflows/**'
       - 'nomad/**'
+      - 'pods/**'
+      - 'scripts/**'
+      - '**/*.md'
+      - 'justfile'
       - 'pixi.toml'
       - 'pixi.lock'
   pull_request:
@@ -23,6 +27,10 @@ on:
       - 'tests/**'
       - '.github/workflows/**'
       - 'nomad/**'
+      - 'pods/**'
+      - 'scripts/**'
+      - '**/*.md'
+      - 'justfile'
       - 'pixi.toml'
       - 'pixi.lock'
   schedule:
