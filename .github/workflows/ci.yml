@@ -611,6 +611,19 @@ jobs:
             echo "WARNING: Expected goose 1.31.1 but got: $goose_ver"
           fi
 
+      - name: Verify AI tool binary is installed
+        run: |
+          AGENT_PROGRAM=$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' \
+            "${{ matrix.vessel.name }}:latest" | grep '^AGENT_PROGRAM=' | cut -d= -f2)
+          if [[ -z "$AGENT_PROGRAM" || "$AGENT_PROGRAM" == "none" ]]; then
+            echo "AGENT_PROGRAM=none or unset — skipping tool binary check (agent-sidecar vessel)"
+            exit 0
+          fi
+          echo "Checking binary: $AGENT_PROGRAM"
+          docker run --rm --entrypoint="" "${{ matrix.vessel.name }}:latest" \
+            sh -c "command -v $AGENT_PROGRAM || { echo 'ERROR: $AGENT_PROGRAM not found'; exit 1; }"
+          echo "Tool binary check passed: $AGENT_PROGRAM is installed"
+
       - name: Verify ENTRYPOINT is set
         run: |
           entrypoint=$(docker inspect "${{ matrix.vessel.name }}:latest" --format '{{json .Config.Entrypoint}}')
