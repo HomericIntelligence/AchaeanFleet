@@ -45,6 +45,8 @@ spec:
           value: "https://caddy:8443"
         - name: TLS_CA_CERT
           value: "/certs/ca.crt"
+        - name: AGENT_PORT
+          value: "23001"
       volumeMounts:
         - name: agent-sidecar
           mountPath: /app/agent-sidecar
