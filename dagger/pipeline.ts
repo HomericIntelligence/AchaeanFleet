@@ -140,6 +140,12 @@ async function buildVessels(
   });
 
   // Base images exported and loaded into daemon by buildBases().
+  // On push path, explicitly export bases to daemon before vessel builds begin.
+  if (registry) {
+    for (const base of BASES) {
+      await exportToLocalDaemon(builtBases.get(base.name)!, base.name);
+    }
+  }
 
   // OCI label build args
   const buildDate = new Date().toISOString();
