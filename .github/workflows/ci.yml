@@ -260,6 +260,71 @@ jobs:
           print('AGENT_PORT check complete')
           SCRIPT
 
+      - name: Validate .env.example contains required variables
+        run: |
+          file="compose/.env.example"
+          if [[ ! -f "$file" ]]; then
+            echo "ERROR: $file not found"
+            exit 1
+          fi
+
+          missing=0
+          for key in ANTHROPIC_API_KEY OPENAI_API_KEY; do
+            if ! grep -q "^${key}=" "$file"; then
+              echo "ERROR: $key not found in $file"
+              missing=1
+            fi
+          done
+
+          if [[ $missing -eq 1 ]]; then
+            exit 1
+          fi
+          echo "All required environment variables found in $file"
+
+      - name: Validate compose services have logging configured
+        run: |
+          # Check claude-only: expect 7 services with max-size configured
+          claude_count=$(docker compose -f compose/docker-compose.claude-only.yml config | grep -c "max-size" || true)
+          if [[ $claude_count -ne 7 ]]; then
+            echo "ERROR: claude-only expected 7 services with logging, found $claude_count"
+            exit 1
+          fi
+
+          # Check mesh: expect 9 services with max-size configured
+          mesh_count=$(docker compose -f compose/docker-compose.mesh.yml config | grep -c "max-size" || true)
+          if [[ $mesh_count -ne 9 ]]; then
+            echo "ERROR: mesh expected 9 services with logging, found $mesh_count"
+            exit 1
+          fi
+
+          echo "Logging configuration verified: claude-only=$claude_count, mesh=$mesh_count"
+
+      - name: Check for expired .trivyignore entries
+        run: |
+          file=".trivyignore"
+          if [[ ! -f "$file" ]]; then
+            echo "No .trivyignore file found; skipping expiry check"
+            exit 0
+          fi
+
+          today=$(date -u +%Y-%m-%d)
+          expired=0
+
+          while IFS= read -r line; do
+            if [[ "$line" =~ ^#\ Expires:\ ([0-9]{4}-[0-9]{2}-[0-9]{2})$ ]]; then
+              expiry_date="${BASH_REMATCH[1]}"
+              if [[ "$expiry_date" < "$today" ]]; then
+                echo "ERROR: .trivyignore entry expired: $expiry_date"
+                expired=1
+              fi
+            fi
+          done < "$file"
+
+          if [[ $expired -eq 1 ]]; then
+            exit 1
+          fi
+          echo ".trivyignore entries checked for expiry; all current"
+
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-24.04
@@ -487,6 +552,15 @@ jobs:
             exit 1
           fi
           echo "ENTRYPOINT: $entrypoint"
+
+      - name: Verify HEALTHCHECK is present
+        run: |
+          healthcheck=$(docker inspect --format '{{json .Config.Healthcheck}}' "${{ matrix.vessel.name }}:latest")
+          if [[ "$healthcheck" == "null" ]]; then
+            echo "ERROR: HEALTHCHECK not set on ${{ matrix.vessel.name }}:latest"
+            exit 1
+          fi
+          echo "HEALTHCHECK: $healthcheck"
 
       - name: Trivy scan vessel image
         uses: aquasecurity/trivy-action@6c175e9e2f4b7ab73f4eba9148e7803dc5f640f6 # v0.35.0
@@ -807,11 +881,28 @@ jobs:
             "achaean-worker"
           )
 
+          # Function to verify with retry (3 attempts, 10s sleep between)
+          verify_manifest() {
+            local image="$1"
+            local attempt=1
+            while [[ $attempt -le 3 ]]; do
+              if docker manifest inspect "$image" >/dev/null 2>&1; then
+                return 0
+              fi
+              if [[ $attempt -lt 3 ]]; then
+                echo "Retry $attempt/3 for $image in 10s..."
+                sleep 10
+              fi
+              ((attempt++))
+            done
+            return 1
+          }
+
           failed=0
           for vessel in "${vessels[@]}"; do
             for tag in "latest" "${SHA_TAG}" "${DATE_TAG}"; do
               image="${REGISTRY}/${vessel}:${tag}"
-              if docker manifest inspect "$image" >/dev/null 2>&1; then
+              if verify_manifest "$image"; then
                 echo "| $vessel | $tag | ✅ verified |" >> "$GITHUB_STEP_SUMMARY"
               else
                 echo "| $vessel | $tag | ❌ failed |" >> "$GITHUB_STEP_SUMMARY"
