@@ -12,8 +12,6 @@
 #   mkdir -p secrets && echo -n "sk-ant-..." > secrets/anthropic_api_key && chmod 600 secrets/anthropic_api_key
 #   (set SECRETS_DIR in .env if your secrets dir lives elsewhere)
 
-version: "3.9"
-
 # Shared security hardening applied to all services
 x-security: &security
   security_opt:
