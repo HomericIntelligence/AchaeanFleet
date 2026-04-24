@@ -658,3 +658,66 @@ jobs:
           echo "| Digest | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Commit | \`${COMMIT_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "::notice title=Image Digest::${IMAGE_NAME}:latest -> ${DIGEST}"
+
+  verify-registry:
+    name: Verify GHCR Tags
+    runs-on: ubuntu-latest
+    needs: push-to-registry
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 10
+    permissions:
+      packages: read
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Log in to GHCR (read-only)
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify registry tags
+        env:
+          REGISTRY: ghcr.io/homericintelligence
+          SHA_TAG: ${{ needs.push-to-registry.outputs.sha_tag }}
+          DATE_TAG: ${{ needs.push-to-registry.outputs.date_tag }}
+        run: |
+          set -euo pipefail
+
+          # Initialize summary table
+          echo "## Registry Tag Verification" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Vessel | Tag | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+
+          vessels=(
+            "achaean-claude"
+            "achaean-codex"
+            "achaean-aider"
+            "achaean-goose"
+            "achaean-cline"
+            "achaean-opencode"
+            "achaean-codebuff"
+            "achaean-ampcode"
+            "achaean-worker"
+          )
+
+          failed=0
+          for vessel in "${vessels[@]}"; do
+            for tag in "latest" "${SHA_TAG}" "${DATE_TAG}"; do
+              image="${REGISTRY}/${vessel}:${tag}"
+              if docker manifest inspect "$image" >/dev/null 2>&1; then
+                echo "| $vessel | $tag | ✅ verified |" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "| $vessel | $tag | ❌ failed |" >> "$GITHUB_STEP_SUMMARY"
+                failed=1
+              fi
+            done
+          done
+
+          if [[ $failed -eq 1 ]]; then
+            echo "ERROR: One or more tag verifications failed" >&2
+            exit 1
+          fi
+          echo "All vessel tags verified successfully."
