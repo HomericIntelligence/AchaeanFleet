@@ -176,6 +176,34 @@ jobs:
       - name: Run pytest
         run: pixi run pytest
 
+  validate-dagger:
+    name: Validate Dagger Pipeline
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Cache dagger node_modules
+        uses: actions/cache@v3
+        with:
+          path: dagger/node_modules
+          key: ${{ runner.os }}-dagger-npm-${{ hashFiles('dagger/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dagger-npm-
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        working-directory: dagger
+        run: npm ci
+
+      - name: Audit npm dependencies
+        working-directory: dagger
+        run: npm audit --audit-level=high
+
   validate:
     name: Validate Compose Files
     runs-on: ubuntu-latest
@@ -188,6 +216,14 @@ jobs:
 
       - name: Validate mesh compose
         run: docker compose -f compose/docker-compose.mesh.yml config --quiet
+
+      - name: Reject bare WORKSPACE_ROOT workspace mounts
+        run: |
+          if grep -rE '\$\{WORKSPACE_ROOT[^}]*\}:/workspace' compose/; then
+            echo "ERROR: bare WORKSPACE_ROOT mount found — use a subdirectory like \${WORKSPACE_ROOT}/Agents/<Name>:/workspace"
+            exit 1
+          fi
+          echo "No bare WORKSPACE_ROOT mounts found."
 
   build-bases:
     name: Build Base Images
@@ -251,6 +287,12 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: HIGH,CRITICAL
+
+      - name: Smoke test base image setup
+        run: |
+          docker run --rm ${{ matrix.base.name }}:latest test -f /home/agent/.tmux.conf
+          docker run --rm ${{ matrix.base.name }}:latest test -d /home/agent/.oh-my-zsh
+          echo "Base image smoke tests passed."
 
       - name: Export base image to tarball
         run: docker save ${{ matrix.base.name }}:latest -o /tmp/${{ matrix.base.name }}.tar
