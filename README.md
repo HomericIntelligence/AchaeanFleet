@@ -139,12 +139,6 @@ echo -n "sk-ant-api03-..." > compose/secrets/anthropic_api_key
 echo -n "sk-proj-..."      > compose/secrets/openai_api_key
 chmod 600 compose/secrets/*
 ```
-LOG_MAX_SIZE=50m   # max size of a single log file (default: 10m)
-LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
-```
-
-> **WSL2 note:** Without log rotation, 10+ long-running containers can fill the WSL2 virtual disk
-> and make the entire instance unresponsive. Never remove the `logging` block from compose services.
 
 Each container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key` (or
 `openai_api_key`) and exports the value into the environment before handing off
@@ -153,7 +147,27 @@ to the agent. Leave `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` blank in `.env`.
 The `compose/secrets/` directory is gitignored — only the `.gitkeep` placeholder
 is committed.
 
-### Method 2 — Plain environment variables (fallback)
+### Method 2 — Encrypted secrets (SOPS or age)
+
+For teams using secret management tools, use `scripts/load-secrets.sh`:
+
+```bash
+# Decrypt with SOPS (requires encrypted .enc files)
+bash scripts/load-secrets.sh --tool sops
+
+# Decrypt with age (requires ~/.age/key.txt and .enc files)
+bash scripts/load-secrets.sh --tool age
+
+# Load from environment variables
+bash scripts/load-secrets.sh --tool env
+
+# Clean up secrets before shutdown
+bash scripts/load-secrets.sh teardown
+```
+
+See the script for configuration details: `scripts/load-secrets.sh`
+
+### Method 3 — Plain environment variables (fallback)
 
 Set `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` in `compose/.env`. The entrypoint
 falls back to these when the secret files are absent. **Keys will be visible in
@@ -178,6 +192,16 @@ without repeating all keys will silently drop your security settings.
 ```bash
 docker compose -f docker-compose.mesh.yml -f docker-compose.override.yml config | grep -A 2 'security_opt\|cap_drop\|read_only'
 ```
+
+### Logging configuration
+
+```bash
+LOG_MAX_SIZE=50m   # max size of a single log file (default: 10m)
+LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
+```
+
+> **WSL2 note:** Without log rotation, 10+ long-running containers can fill the WSL2 virtual disk
+> and make the entire instance unresponsive. Never remove the `logging` block from compose services.
 
 ## Agamemnon agent sidecar
 
