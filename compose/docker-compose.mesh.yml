@@ -184,24 +184,6 @@ services:
     restart: unless-stopped
     healthcheck: *healthcheck
 
-  hi-vegai:
-    image: ${CLAUDE_IMAGE:-achaean-claude:latest}
-    container_name: hi-vegai
-    hostname: hi-vegai
-    networks: [homeric-mesh]
-    ports: ["23004:23001"]
-    environment:
-      <<: *common-env
-      AGENT_ID: vegai
-      AGENT_PORT: "23001"
-      TMUX_SESSION_NAME: vegai
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-    volumes:
-      - ${WORKSPACE_ROOT:-/home/mvillmow}:/workspace
-    working_dir: /workspace
-    restart: unless-stopped
-    healthcheck: *healthcheck
-
   # -------------------------------------------------------------------------
   # Codex agent (Node base)
   # -------------------------------------------------------------------------
