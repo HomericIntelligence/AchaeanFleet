@@ -81,3 +81,21 @@ repos:
         files: 'Dockerfile'
         types: [file]
         exclude: 'bases/Dockerfile\.(node|python|minimal)|vessels/(goose|opencode)/Dockerfile'
+
+      # Detect stale npm lockfile in dagger/
+      # Fails if package.json is staged but package-lock.json is not, or if dry-run fails
+      - id: detect-stale-npm-lock
+        name: Detect stale npm lockfile
+        entry: bash -c 'cd dagger && npm ci --dry-run'
+        language: system
+        files: 'dagger/package\.json'
+        pass_filenames: false
+
+      # Detect stale pixi lockfile at root
+      # Fails if pixi.toml is staged but pixi.lock is not, or if locked install fails
+      - id: detect-stale-pixi-lock
+        name: Detect stale pixi lockfile
+        entry: pixi install --locked
+        language: system
+        files: 'pixi\.toml'
+        pass_filenames: false
