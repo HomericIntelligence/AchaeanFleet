@@ -27,3 +27,6 @@ USER agent
 
 ENV AGENT_PROGRAM=codex
 ENV AGENT_HEADLESS_FLAG=--yes
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:23010/health 2>/dev/null || exit 1
