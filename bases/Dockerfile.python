@@ -57,17 +57,8 @@ USER agent
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 USER root
 
-# Strip setuid/setgid bits unconditionally at build time.
-# dpkg-statoverride registers overrides so apt upgrades don't re-apply setuid.
-# find strips any additional binaries not tracked by dpkg.
-RUN dpkg-statoverride --update --add root root 0755 /usr/bin/su          2>/dev/null || true && \
-    dpkg-statoverride --update --add root root 0755 /usr/bin/newgrp      2>/dev/null || true && \
-    dpkg-statoverride --update --add root root 0755 /usr/bin/passwd      2>/dev/null || true && \
-    dpkg-statoverride --update --add root root 0755 /usr/bin/chsh        2>/dev/null || true && \
-    dpkg-statoverride --update --add root root 0755 /usr/bin/chfn        2>/dev/null || true && \
-    dpkg-statoverride --update --add root root 0755 /bin/mount           2>/dev/null || true && \
-    dpkg-statoverride --update --add root root 0755 /bin/umount          2>/dev/null || true && \
-    find / -xdev -perm /6000 -type f -exec chmod a-s {} \; 2>/dev/null || true
+COPY bases/scripts/strip-setuid.sh /tmp/strip-setuid.sh
+RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 
 # Upgrade pip (version pinned for reproducibility — issue #2)
 RUN pip install --upgrade "pip==26.0.1"
