@@ -84,6 +84,10 @@ jobs:
       - name: Validate Nomad job spec
         run: |
           for f in nomad/*.hcl; do
+            if ! grep -q '^job ' "$f"; then
+              echo "Skipping $f (not a Nomad job spec)"
+              continue
+            fi
             echo "Validating $f..."
             nomad job validate "$f"
           done

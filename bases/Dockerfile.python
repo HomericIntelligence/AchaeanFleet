@@ -14,7 +14,7 @@ LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/Ac
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \ # curl: required by Oh My Zsh installer (common-setup.sh)
+    curl \
     wget \
     git \
     tmux \
