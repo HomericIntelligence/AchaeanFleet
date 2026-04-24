@@ -86,22 +86,47 @@ service {
 
 ---
 
-## 5. Vault secret injection (Phase 6)
+## 5. Secrets Management (Phase 6 Vault Integration)
 
-Secrets will be injected via the same `template` mechanism using Vault integration:
+**Current state (Phases 1–5):**
+API keys and other secrets are **not yet wired** into the Nomad job spec. When Phase 6
+is implemented, secrets must be injected dynamically from Vault, never stored in HCL
+or passed as plain environment variables.
+
+**When implementing (Phase 6+):**
+
+Use the `template` stanza with Consul Template and Vault backend to fetch secrets at
+allocation time:
 
 ```hcl
-# Phase 6: enable after Vault is wired to the Nomad cluster
-# template {
-#   data = <<EOH
-#   {{ with secret "secret/achaean/claude" }}
-#   ANTHROPIC_API_KEY={{ .Data.api_key }}
-#   {{ end }}
-#   EOH
-#   destination = "secrets/env"
-#   env         = true
-# }
+template {
+  data = <<EOH
+{{ with secret "secret/data/homeric/api-keys" }}
+ANTHROPIC_API_KEY={{ .Data.data.anthropic_api_key }}
+{{ end }}
+EOH
+  destination = "secrets/env"
+  env         = true
+}
 ```
+
+**Key rules:**
+- **Never use inline env vars** for secrets (`env { ANTHROPIC_API_KEY = "sk-..." }`)
+- **Never store secrets in HCL** or `.nomadvar` files
+- **Always use `template` with Vault backend** for dynamic secret injection
+- Vault path format: `secret/data/<mount>/<secret-name>` (the `/data/` segment is required)
+- Retrieve fields via `{{ .Data.data.<field-name> }}` (Consul Template syntax)
+
+**Comparison with Docker Compose:**
+The Compose approach uses `secrets` blocks (Docker Secrets or Swarm) or environment
+files with restricted permissions. The Nomad approach is equivalent: Vault provides the
+secret store, and the `template` stanza injects them into the allocation's environment
+at runtime. Both keep secrets out of the image and configuration-as-code.
+
+**Phases 1–5 workaround (if needed temporarily):**
+For development/testing before Vault is available, you may temporarily pass secrets
+via Nomad variable overrides (e.g., `-var="anthropic_api_key=sk-..."` at `nomad job run`
+time). This is acceptable only for dev/test; **production deployments must use Vault**.
 
 ---
 
