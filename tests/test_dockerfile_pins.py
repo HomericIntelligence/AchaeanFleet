@@ -81,6 +81,9 @@ def check_dockerfile(path: Path) -> list[str]:
             # Ignore requirements file installs: pip install -r <file>
             if re.search(r"-r\s+\S+", args):
                 continue
+            # Skip requirements-file installs: -r <file> pins are in the file itself
+            if re.search(r"\s-r\s", f" {args}"):
+                continue
             # Strip flags like --no-cache-dir
             tokens = [t for t in args.split() if not t.startswith("-")]
             for pkg_raw in tokens:
