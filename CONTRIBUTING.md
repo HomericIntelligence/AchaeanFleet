@@ -334,6 +334,32 @@ ARG GOOSE_ARM64_SHA256=<new-arm64-hash>
 
 4. Test the build on both architectures to verify checksums are correct.
 
+## Security Scanning
+
+### Trivy Vulnerability Scanning
+
+All pull requests that touch `dagger/`, `pixi.toml`, or lock files (e.g., `*.lock`) are automatically scanned for vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy). The `security.yml` workflow runs Trivy with `severity: HIGH,CRITICAL` — any findings in these severity levels will block your PR from merging.
+
+### Running Trivy Locally
+
+To scan for vulnerabilities in your changes before pushing:
+
+```bash
+trivy fs --scanners vuln,secret --severity HIGH,CRITICAL .
+```
+
+This mirrors the CI check and helps catch issues early in your development workflow.
+
+### Addressing CVE Findings
+
+If Trivy finds a HIGH or CRITICAL CVE:
+
+1. Check if upgrading a base image digest or package version resolves it
+2. If a fix is not available upstream, you may suppress the CVE by adding an entry to `.trivyignore`
+3. **Important:** All `.trivyignore` entries must follow the policy in [`SECURITY.md`](SECURITY.md) — each entry requires a structured comment block with category, rationale, exploitability, expiry date, and reviewer approval
+
+For details on the suppression policy and required entry format, see the [CVE Suppression Policy](SECURITY.md#cve-suppression-policy-trivyignore) section in SECURITY.md.
+
 ## Pull Request Process
 
 ### Before You Start
