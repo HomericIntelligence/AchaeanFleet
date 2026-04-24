@@ -101,25 +101,32 @@ services:
   # Claude agent: Eris (port 23002)
   # -------------------------------------------------------------------------
   hi-eris:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-eris
     hostname: hi-eris
     networks:
-      - homeric-mesh
+      - agamemnon-frontend
     ports:
       - "23002:23001"
     environment:
       - AGENT_ID=eris
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=eris
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Eris:/workspace
+      - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
+    read_only: true
+    tmpfs: *tmpfs
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
       timeout: 5s
       start_period: 15s
@@ -198,25 +205,32 @@ services:
   # Claude agent: Pallas (port 23005)
   # -------------------------------------------------------------------------
   hi-pallas:
+    <<: *security
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-pallas
     hostname: hi-pallas
     networks:
-      - homeric-mesh
+      - agamemnon-frontend
     ports:
       - "23005:23001"
     environment:
       - AGENT_ID=pallas
       - AGENT_PORT=23001
       - TMUX_SESSION_NAME=pallas
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AGAMEMNON_URL=${AGAMEMNON_URL:-http://172.20.0.1:8080}
+      # ANTHROPIC_API_KEY is injected by entrypoint from /run/secrets/anthropic_api_key
+    secrets:
+      - anthropic_api_key
     volumes:
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Pallas:/workspace
+      - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
+    read_only: true
+    tmpfs: *tmpfs
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:23001/health"]
+      test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
       interval: 30s
       timeout: 5s
       start_period: 15s
