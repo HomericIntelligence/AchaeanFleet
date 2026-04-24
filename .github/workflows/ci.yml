@@ -744,7 +744,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: achaean-base-minimal:latest
-          outputs: type=oci,dest=/tmp/achaean-base-minimal.tar
+          outputs: type=oci,dest=/tmp/achaean-base-minimal
 
       - name: Build goose vessel (amd64 + arm64)
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -755,7 +755,7 @@ jobs:
           build-args: |
             BASE_IMAGE=achaean-base-minimal:latest
           build-contexts: |
-            achaean-base-minimal:latest=oci-layout:///tmp/achaean-base-minimal.tar
+            achaean-base-minimal:latest=oci-layout:///tmp/achaean-base-minimal
           push: false
           tags: achaean-goose:latest
 
@@ -774,9 +774,9 @@ jobs:
           path: /tmp/${{ matrix.vessel.name }}.tar
           retention-days: 7
 
-      - name: Clean up downloaded base image tarball
+      - name: Clean up OCI layout directory
         if: always()
-        run: rm -f /tmp/${{ matrix.vessel.base }}.tar
+        run: rm -rf /tmp/achaean-base-minimal
 
   push-to-registry:
     name: Push to GHCR
