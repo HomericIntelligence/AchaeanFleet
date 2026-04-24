@@ -10,3 +10,8 @@
 #   CVE-2023-XXXXX  # upstream not yet patched, no fix available in Debian bookworm
 #
 # Keep this list short — if you're adding a CVE here, document why below it.
+
+# Suppress false-positive secret detections for placeholder values in .env.example
+# These are documentation examples, not real credentials
+secret-0-generic-api-key
+secret-0-anthropic-api-key
