@@ -346,6 +346,24 @@ jobs:
           fi
           echo ".trivyignore entries checked for expiry; all current"
 
+      - name: Assert security hardening in all compose services
+        run: |
+          for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml; do
+            missing=$(python3 -c "
+import yaml, sys
+data = yaml.safe_load(open('$f'))
+services = data.get('services', {})
+bad = [s for s in services if 'cap_drop' not in str(data['services'][s])]
+if bad: print('\n'.join(bad))
+")
+            if [[ -n "$missing" ]]; then
+              echo "ERROR: services missing cap_drop in $f:"
+              echo "$missing"
+              exit 1
+            fi
+          done
+          echo "All services have security hardening: OK"
+
       - name: Verify secrets not hardcoded in compose config
         run: |
           ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.claude-only.yml config > /tmp/claude-only-config.yml
