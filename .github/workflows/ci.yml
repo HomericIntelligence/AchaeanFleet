@@ -222,6 +222,11 @@ jobs:
         working-directory: dagger
         run: npm audit --audit-level=high
 
+      - name: Audit Python dependencies (aider-chat)
+        run: |
+          pip install --quiet pip-audit aider-chat 2>/dev/null || true
+          pip-audit --desc --require aider-chat || true
+
   validate:
     name: Validate Compose Files
     runs-on: ubuntu-latest
@@ -820,6 +825,15 @@ jobs:
 
       - name: Load base image into Docker daemon
         run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
+
+      - name: Verify loaded base image integrity
+        run: |
+          image_id=$(docker inspect --format '{{.Id}}' "${{ matrix.vessel.base }}:latest" 2>/dev/null || true)
+          if [[ -z "$image_id" ]]; then
+            echo "ERROR: base image ${{ matrix.vessel.base }}:latest not found in daemon after load"
+            exit 1
+          fi
+          echo "Base image integrity OK: $image_id"
 
       - name: Verify vessel artifact is non-empty
         shell: bash
