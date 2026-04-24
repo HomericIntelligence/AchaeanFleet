@@ -325,6 +325,27 @@ gh pr create --title "[Type] Brief description" --body "Closes #<issue-number>"
 - PR title should be clear and descriptive
 - Images must build successfully
 
+### Required Status Checks
+
+To ensure quality and security standards are enforced before merging, certain CI jobs must be configured as **required status checks** in GitHub branch protection rules. This is a **manual configuration step** — it is not automated by the workflow files.
+
+**Jobs to configure as required status checks:**
+
+- `Lint Dockerfiles and YAML` — Enforces Dockerfile and YAML syntax rules
+- `Validate Nomad Job HCL` — Validates Nomad job specification syntax
+- `Smoke Test Worker Vessel` — Runs integration tests on worker containers
+- `Trivy filesystem scan (deps + secrets)` — Scans dependencies and secrets for vulnerabilities
+
+**How to configure:**
+
+1. Go to **Settings** → **Branches** → **Branch protection rules**
+2. Select or create a rule for `main`
+3. Scroll to **Require status checks to pass before merging**
+4. Search for and enable each required check listed above
+5. Save the rule
+
+These checks prevent merging code that fails security or quality gates and ensure all artifacts meet the project's standards.
+
 ### Never Push Directly to Main
 
 The `main` branch is protected. All changes must go through pull requests.
