@@ -9,6 +9,9 @@ ARG BASE_IMAGE=achaean-base-minimal:latest
 # Builder stage: download and extract the OpenCode binary
 FROM debian:bookworm-slim AS builder
 
+# Ensure pipefail for piped RUN commands
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
