@@ -97,6 +97,9 @@ services:
   # -------------------------------------------------------------------------
   hi-aindrea:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-aindrea
     hostname: hi-aindrea
@@ -122,6 +125,9 @@ services:
 
   hi-eris:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-eris
     hostname: hi-eris
@@ -147,6 +153,9 @@ services:
 
   hi-baird:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-baird
     hostname: hi-baird
@@ -172,6 +181,9 @@ services:
 
   hi-vegai:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-vegai
     hostname: hi-vegai
@@ -197,6 +209,9 @@ services:
 
   hi-pallas:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-pallas
     hostname: hi-pallas
@@ -225,6 +240,9 @@ services:
   # -------------------------------------------------------------------------
   hi-codex-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CODEX_IMAGE:-achaean-codex:latest}
     container_name: hi-codex-1
     hostname: hi-codex-1
@@ -252,6 +270,9 @@ services:
   # -------------------------------------------------------------------------
   hi-aider-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${AIDER_IMAGE:-achaean-aider:latest}
     container_name: hi-aider-1
     hostname: hi-aider-1
@@ -280,6 +301,9 @@ services:
   # -------------------------------------------------------------------------
   hi-goose-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${GOOSE_IMAGE:-achaean-goose:latest}
     container_name: hi-goose-1
     hostname: hi-goose-1
@@ -307,6 +331,9 @@ services:
   # -------------------------------------------------------------------------
   hi-cline-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLINE_IMAGE:-achaean-cline:latest}
     container_name: hi-cline-1
     hostname: hi-cline-1
@@ -335,6 +362,9 @@ services:
   # -------------------------------------------------------------------------
   hi-opencode-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${OPENCODE_IMAGE:-achaean-opencode:latest}
     container_name: hi-opencode-1
     hostname: hi-opencode-1
@@ -363,6 +393,9 @@ services:
   # -------------------------------------------------------------------------
   hi-codebuff-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CODEBUFF_IMAGE:-achaean-codebuff:latest}
     container_name: hi-codebuff-1
     hostname: hi-codebuff-1
@@ -391,6 +424,9 @@ services:
   # -------------------------------------------------------------------------
   hi-ampcode-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${AMPCODE_IMAGE:-achaean-ampcode:latest}
     container_name: hi-ampcode-1
     hostname: hi-ampcode-1
@@ -421,6 +457,9 @@ services:
   # -------------------------------------------------------------------------
   hi-worker-1:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${WORKER_IMAGE:-achaean-worker:latest}
     container_name: hi-worker-1
     hostname: hi-worker-1
