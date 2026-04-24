@@ -26,47 +26,102 @@ compose_cmd := `which podman-compose 2>/dev/null && echo podman-compose || echo 
 # Bootstrap
 # =============================================================================
 
-# One-command developer setup: install dependencies, build all images, verify
+# One-command environment setup for new developers
 bootstrap:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "=== AchaeanFleet bootstrap ==="
     echo ""
 
-    # 1. Ensure pixi env is installed (provides 'just')
-    if command -v pixi &>/dev/null; then
-        echo "→ Installing pixi environment..."
-        pixi install
+    # --- Minimum version checks (#158) ---
+    check_version() {
+        local tool="$1" actual_ver="$2" min_major="$3" min_minor="$4"
+        local actual_major actual_minor
+        actual_major="$(echo "$actual_ver" | cut -d. -f1)"
+        actual_minor="$(echo "$actual_ver" | cut -d. -f2)"
+        if [ "$actual_major" -lt "$min_major" ] || \
+           { [ "$actual_major" -eq "$min_major" ] && [ "$actual_minor" -lt "$min_minor" ]; }; then
+            echo "  WARNING: $tool $actual_ver is below minimum $min_major.$min_minor — upgrade recommended"
+        else
+            echo "  OK: $tool $actual_ver (>= $min_major.$min_minor)"
+        fi
+    }
+
+    echo "→ Checking tool versions..."
+
+    # node >= 18
+    if command -v node &>/dev/null; then
+        node_ver="$(node --version | sed 's/^v//')"
+        check_version "node" "$node_ver" 18 0
     else
-        echo "  pixi not found — skipping pixi install (install from https://pixi.sh)"
+        echo "  WARNING: node not found — required for Dagger pipeline"
     fi
 
-    # 2. Install Dagger SDK deps
-    echo "→ Installing Dagger npm dependencies..."
-    npm install --prefix dagger
+    # npm >= 8
+    if command -v npm &>/dev/null; then
+        npm_ver="$(npm --version)"
+        check_version "npm" "$npm_ver" 8 0
+    else
+        echo "  WARNING: npm not found — required for Dagger pipeline"
+    fi
 
-    # 3. Build all images
-    echo "→ Building all base and vessel images..."
-    just build-all
-
-    # 4. Verify images
-    echo "→ Verifying images..."
-    just verify
+    # docker or podman must be present
+    if command -v podman &>/dev/null; then
+        podman_ver="$(podman version --format '{{`{{.Client.Version}}`}}' 2>/dev/null || podman --version | awk '{print $3}')"
+        echo "  OK: podman $podman_ver"
+    elif command -v docker &>/dev/null; then
+        docker_ver="$(docker version --format '{{`{{.Client.Version}}`}}' 2>/dev/null || docker --version | awk '{print $3}' | tr -d ',')"
+        echo "  OK: docker $docker_ver"
+    else
+        echo "  WARNING: neither docker nor podman found — required to build images"
+    fi
 
     echo ""
-    echo "=== Bootstrap complete. Run 'just compose-up' to start the Claude-only mesh. ==="
+
+    # --- Set up .env (#157) ---
+    echo "→ Setting up compose/.env..."
+    if [ ! -f compose/.env ]; then
+        cp compose/.env.example compose/.env
+        echo "  Created compose/.env from .env.example — edit your API keys before running"
+    else
+        echo "  compose/.env already exists — skipping copy"
+    fi
+
+    # Warn if any API key looks like a placeholder
+    placeholder_keys=()
+    if grep -qE '^ANTHROPIC_API_KEY=($|your_key_here|<.*>|PLACEHOLDER|changeme)' compose/.env 2>/dev/null; then
+        placeholder_keys+=("ANTHROPIC_API_KEY")
+    fi
+    if grep -qE '^OPENAI_API_KEY=($|your_key_here|<.*>|PLACEHOLDER|changeme)' compose/.env 2>/dev/null; then
+        placeholder_keys+=("OPENAI_API_KEY")
+    fi
+    if [ ${#placeholder_keys[@]} -gt 0 ]; then
+        echo ""
+        echo "  WARNING: the following keys in compose/.env still have placeholder values:"
+        for k in "${placeholder_keys[@]}"; do
+            echo "    - $k"
+        done
+        echo "  Edit compose/.env and set real values before running 'just compose-up'."
+    fi
+
+    echo ""
+
+    # --- Install Dagger npm dependencies ---
+    echo "→ Installing Dagger npm dependencies..."
+    cd dagger && npm install
+    cd ..
+
+    echo ""
+
+    # --- Show active container runtime ---
+    just runtime
+
+    echo ""
+    echo "=== Ready. Edit compose/.env then run: just build-all ==="
 
 # =============================================================================
 # Build
 # =============================================================================
-
-# One-command environment setup for new developers
-bootstrap:
-    @echo "=== AchaeanFleet bootstrap ==="
-    @test -f compose/.env || cp compose/.env.example compose/.env && echo "Created compose/.env -- edit API keys"
-    @cd dagger && npm install
-    @just runtime
-    @echo "=== Ready. Edit compose/.env then run: just build-all ==="
 
 # Show which container runtime is active
 runtime:
