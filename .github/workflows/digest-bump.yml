@@ -1,0 +1,152 @@
+name: Monthly Digest Bump
+
+on:
+  schedule:
+    # First of every month at 4 AM UTC
+    - cron: '0 4 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-digests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo (fetch-depth 0 for full history)
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git identity
+        run: |
+          git config user.name "HomericIntelligence[bot]"
+          git config user.email "bot@HomericIntelligence.ai"
+
+      - name: Fetch and extract base image digests
+        id: digests
+        run: |
+          set -euo pipefail
+
+          # Arrays to store image tags and their digests
+          declare -a IMAGES=("node:25-slim" "python:3.12-slim" "debian:bookworm-slim")
+
+          # Pull images and extract digests
+          for image in "${IMAGES[@]}"; do
+            echo "Pulling ${image} ..."
+            docker pull --quiet "${image}"
+          done
+
+          # Create a temporary file to hold the digest mapping
+          digest_file=$(mktemp)
+
+          for image in "${IMAGES[@]}"; do
+            digest=$(docker inspect --format='{{index .RepoDigests 0}}' "${image}")
+            # Extract just the sha256 portion and reformat as image:tag@sha256:...
+            full_digest="${image}@${digest#*@}"
+            echo "${image}=${full_digest}" >> "$digest_file"
+            echo "Mapped: ${image} => ${full_digest}"
+          done
+
+          # Store the digest file path for later steps
+          echo "digest_file=${digest_file}" >> "$GITHUB_OUTPUT"
+
+      - name: Update Dockerfiles with new digests
+        id: update_files
+        run: |
+          set -euo pipefail
+          digest_file="${{ steps.digests.outputs.digest_file }}"
+          files_changed=0
+
+          # Source the digest mappings
+          declare -A digest_map
+          while IFS='=' read -r key value; do
+            digest_map["${key}"]="${value}"
+          done < "$digest_file"
+
+          # Update each Dockerfile with the corresponding digest
+          # Dockerfile.node uses node:25-slim
+          old_digest_node=$(grep "^FROM node:25-slim@" bases/Dockerfile.node | head -1)
+          new_digest_node="FROM ${digest_map['node:25-slim']}"
+          if [ "$old_digest_node" != "$new_digest_node" ]; then
+            sed -i "s|^FROM node:25-slim@.*|$new_digest_node|" bases/Dockerfile.node
+            echo "Updated bases/Dockerfile.node"
+            ((files_changed++))
+          fi
+
+          # Dockerfile.python uses python:3.12-slim (first FROM line)
+          old_digest_python=$(grep "^FROM python:3.12-slim" bases/Dockerfile.python | head -1)
+          new_digest_python="FROM ${digest_map['python:3.12-slim']}"
+          if [ "$old_digest_python" != "$new_digest_python" ]; then
+            # Use a more specific pattern to avoid matching the node-source stage
+            sed -i "/^FROM python:3.12-slim/s|.*|${new_digest_python}|" bases/Dockerfile.python
+            echo "Updated bases/Dockerfile.python"
+            ((files_changed++))
+          fi
+
+          # Dockerfile.minimal uses debian:bookworm-slim
+          old_digest_minimal=$(grep "^FROM debian:bookworm-slim" bases/Dockerfile.minimal | head -1)
+          new_digest_minimal="FROM ${digest_map['debian:bookworm-slim']}"
+          if [ "$old_digest_minimal" != "$new_digest_minimal" ]; then
+            sed -i "s|^FROM debian:bookworm-slim|${new_digest_minimal}|" bases/Dockerfile.minimal
+            echo "Updated bases/Dockerfile.minimal"
+            ((files_changed++))
+          fi
+
+          echo "files_changed=${files_changed}" >> "$GITHUB_OUTPUT"
+
+          # Clean up temp file
+          rm "$digest_file"
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet bases/Dockerfile.*; then
+            echo "no_changes=true" >> "$GITHUB_OUTPUT"
+            echo "No changes detected; digests are already current."
+          else
+            echo "no_changes=false" >> "$GITHUB_OUTPUT"
+            echo "Changes detected in Dockerfiles; will create PR."
+          fi
+
+      - name: Create branch and commit changes
+        if: steps.check_changes.outputs.no_changes == 'false'
+        run: |
+          set -euo pipefail
+          branch_name="auto/digest-bump-$(date +%Y-%m)"
+
+          git checkout -b "$branch_name"
+          git add bases/Dockerfile.node bases/Dockerfile.python bases/Dockerfile.minimal
+          git commit -m "chore: monthly base image digest bump"
+
+          echo "BRANCH_NAME=${branch_name}" >> $GITHUB_ENV
+
+      - name: Push branch
+        if: steps.check_changes.outputs.no_changes == 'false'
+        run: |
+          git push -u origin "$BRANCH_NAME"
+
+      - name: Create pull request
+        if: steps.check_changes.outputs.no_changes == 'false'
+        run: |
+          gh pr create \
+            --title "chore: monthly base image digest bump" \
+            --body "Automated monthly digest bump for base images.
+
+Updates pinned digests in:
+- bases/Dockerfile.node
+- bases/Dockerfile.python
+- bases/Dockerfile.minimal
+
+Closes #128" \
+            --head "$BRANCH_NAME" \
+            --base main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Exit successfully
+        if: steps.check_changes.outputs.no_changes == 'true'
+        run: |
+          echo "No digest changes required; workflow completed successfully."
+          exit 0
