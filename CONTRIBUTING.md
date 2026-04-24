@@ -37,7 +37,19 @@ cd AchaeanFleet
 # Activate the Pixi environment
 pixi shell
 
-# List available recipes
+# Bootstrap your development environment (recommended)
+just bootstrap
+```
+
+The `bootstrap` recipe sets up your environment in one command:
+- Creates `compose/.env` from the template (you'll edit it to add API keys)
+- Installs Dagger TypeScript dependencies
+- Displays the active container runtime (Podman or Docker)
+- Instructs you to run `just build-all` next
+
+For a full list of available recipes, run:
+
+```bash
 just --list
 ```
 

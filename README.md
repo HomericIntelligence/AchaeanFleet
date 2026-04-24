@@ -32,21 +32,28 @@ Agent provisioning lives in [Myrmidons](../Myrmidons).
 
 ## Quick start
 
+**For new developers, start with:**
+
 ```bash
-# 1. Clone and set up environment
 git clone https://github.com/HomericIntelligence/AchaeanFleet
 cd AchaeanFleet
+just bootstrap   # Sets up environment: .env, Dagger dependencies, shows container runtime
+```
+
+Then edit `compose/.env` to add your API keys, and continue:
+
+```bash
+just build-all   # Build all base and vessel images
+just compose-up  # Run Claude-only fleet (Phase 3)
+# OR
+just mesh-up     # Run full heterogeneous mesh (Phase 4)
+```
+
+**Manual setup (if you prefer):**
+
+```bash
 cp compose/.env.example compose/.env
 nano compose/.env   # set ANTHROPIC_API_KEY, verify AGAMEMNON_URL
-
-# 2. Build all images
-just build-all
-
-# 3a. Run Claude-only fleet (Phase 3)
-just compose-up
-
-# 3b. Run full heterogeneous mesh (Phase 4)
-just mesh-up
 ```
 
 ## Host requirements
