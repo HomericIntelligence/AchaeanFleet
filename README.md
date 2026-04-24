@@ -167,6 +167,18 @@ The key will still appear in the child process environment after `exec` in
 `entrypoint.sh`. True process-environment isolation requires each agent tool's
 CLI to read the secret file directly — that is outside the scope of this repo.
 
+### Compose file security overrides
+
+If you use `docker-compose.override.yml` or stack multiple compose files with `-f`,
+be aware that YAML merge anchors (like `<<: *security`) are **not preserved** across
+file boundaries. Override files that redefine `security_opt`, `cap_drop`, or `read_only`
+without repeating all keys will silently drop your security settings.
+
+**Always verify the final config before deploying:**
+```bash
+docker compose -f docker-compose.mesh.yml -f docker-compose.override.yml config | grep -A 2 'security_opt\|cap_drop\|read_only'
+```
+
 ## Agamemnon agent sidecar
 
 All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.
