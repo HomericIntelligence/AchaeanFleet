@@ -10,6 +10,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/claude"
@@ -20,6 +22,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/codex"
@@ -30,6 +34,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/cline"
@@ -40,6 +46,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/codebuff"
@@ -50,6 +58,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/ampcode"
@@ -60,6 +70,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/aider"
@@ -70,6 +82,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/goose"
@@ -80,6 +94,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   - package-ecosystem: "docker"
     directory: "/vessels/opencode"
@@ -90,6 +106,8 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(docker)"
+    reviewers:
+      - "mvillmow"
 
   # GitHub Actions version bumps
   - package-ecosystem: "github-actions"
@@ -101,3 +119,5 @@ updates:
       - "automated"
     commit-message:
       prefix: "chore(ci)"
+    reviewers:
+      - "mvillmow"
