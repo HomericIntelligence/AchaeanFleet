@@ -53,6 +53,23 @@ docker compose -f docker-compose.claude-only.yml up -d
 docker compose -f docker-compose.mesh.yml up -d
 ```
 
+## Initial Setup
+
+Before running the compose stack, you must create the required agent workspace directories on the host. These directories are bind-mounted into containers at runtime for agents to read and write project files.
+
+**Create all agent directories:**
+
+```bash
+mkdir -p ~/Agents/{Aindrea,Eris,Baird,Vegai,Codex-1,Aider-1,Goose-1,Cline-1,OpenCode-1,Codebuff-1,AmpCode-1,Worker-1}
+```
+
+This creates subdirectories for:
+- **Claude agents**: Aindrea, Eris, Baird, Vegai, Pallas
+- **Non-Claude agents**: Codex-1, Aider-1, Goose-1, Cline-1, OpenCode-1, Codebuff-1, AmpCode-1
+- **Utility**: Worker-1
+
+Each agent is mounted to `~/Agents/<name>` and can read/write files within its directory. See `compose/.env.example` for per-agent workspace scope configuration (e.g., `VEGAI_PROJECT`, `CODEX_PROJECT`) to restrict which projects each agent can access.
+
 ## Agamemnon agent sidecar integration
 
 The base images are designed to work with the Agamemnon agent sidecar. The binary is mounted at runtime:
