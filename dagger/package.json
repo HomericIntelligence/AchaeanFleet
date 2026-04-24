@@ -2,6 +2,7 @@
   "name": "achaean-fleet-pipeline",
   "version": "1.0.0",
   "description": "Dagger CI/CD pipeline for AchaeanFleet container images",
+  "type": "module",
   "main": "pipeline.ts",
   "scripts": {
     "build": "ts-node pipeline.ts build",
