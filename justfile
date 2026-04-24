@@ -321,6 +321,25 @@ compose-down:
 certs-check:
     @test -d tls/certs && test -f tls/certs/ca.crt || (echo "TLS certs not found — running generate-certs.sh…" && bash tls/generate-certs.sh)
 
+# Check TLS certificate expiry; warn if any cert expires within 30 days
+check-cert-expiry:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    certs=($(find tls/ -name "*.crt" 2>/dev/null || true))
+    if [ ${#certs[@]} -eq 0 ]; then
+        echo "No TLS certs found in tls/ directory."
+        exit 0
+    fi
+    exit_code=0
+    for cert in "${certs[@]}"; do
+        if ! openssl x509 -checkend 2592000 -noout -in "$cert" 2>/dev/null; then
+            expiry=$(openssl x509 -noout -enddate -in "$cert" 2>/dev/null | cut -d= -f2)
+            echo "WARNING: Certificate $cert expires within 30 days on $expiry"
+            exit_code=1
+        fi
+    done
+    exit $exit_code
+
 # Start full mesh compose (Phase 4)
 mesh-up: (certs-check)
     {{compose_cmd}} -f compose/docker-compose.mesh.yml up -d
