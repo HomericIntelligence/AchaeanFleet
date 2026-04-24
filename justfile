@@ -441,6 +441,93 @@ init-workspaces:
     done
     echo "=== All workspace directories initialized ==="
 
+# Validate all *_PROJECT paths exist and are not bare home directories
+# Reads from compose/.env if it exists, otherwise uses environment variables
+validate-workspaces:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Validating workspace paths ==="
+
+    # Source .env if it exists, otherwise rely on environment
+    env_file="compose/.env"
+    if [ -f "$env_file" ]; then
+        # Load .env into environment, but don't override existing vars
+        set +o nounset
+        set -a
+        source "$env_file"
+        set +a
+        set -o nounset
+    else
+        echo "  Note: compose/.env not found; using environment variables"
+    fi
+
+    # Track failures
+    failed=0
+
+    # Home directory patterns to reject
+    home_patterns=("$HOME" "/root" "/home/mvillmow")
+
+    # Helper function to check if a path is a bare home directory
+    is_home_dir() {
+        local path="$1"
+        for pattern in "${home_patterns[@]}"; do
+            if [ "$path" = "$pattern" ]; then
+                return 0  # true — it is a home dir
+            fi
+        done
+        return 1  # false — it is not a home dir
+    }
+
+    # Check WORKSPACE_ROOT
+    workspace_root="${WORKSPACE_ROOT:-}"
+    if [ -z "$workspace_root" ]; then
+        echo "  ERROR: WORKSPACE_ROOT not set"
+        failed=$((failed + 1))
+    elif ! [ -d "$workspace_root" ]; then
+        echo "  ERROR: WORKSPACE_ROOT does not exist: $workspace_root"
+        failed=$((failed + 1))
+    elif is_home_dir "$workspace_root"; then
+        echo "  ERROR: WORKSPACE_ROOT is a bare home directory: $workspace_root"
+        failed=$((failed + 1))
+    else
+        echo "  OK: WORKSPACE_ROOT=$workspace_root"
+    fi
+
+    # Check each *_PROJECT path
+    project_vars=(VEGAI_PROJECT CODEX_PROJECT AIDER_PROJECT GOOSE_PROJECT CLINE_PROJECT OPENCODE_PROJECT CODEBUFF_PROJECT AMPCODE_PROJECT)
+    for var in "${project_vars[@]}"; do
+        path="${!var:-}"
+
+        if [ -z "$path" ]; then
+            echo "  WARNING: $var not set (will use defaults at runtime)"
+            continue
+        fi
+
+        if ! [ -d "$path" ]; then
+            echo "  ERROR: $var path does not exist: $path"
+            failed=$((failed + 1))
+        elif is_home_dir "$path"; then
+            echo "  ERROR: $var is a bare home directory: $path"
+            failed=$((failed + 1))
+        else
+            echo "  OK: $var=$path"
+        fi
+    done
+
+    # If no env file and no vars are set, that's OK (not configured yet)
+    if [ ! -f "$env_file" ] && [ ${#project_vars[@]} -eq 0 ]; then
+        echo "  Note: No configuration detected; skipping validation"
+        echo "=== Validation complete ==="
+        exit 0
+    fi
+
+    echo "=== Validation complete ==="
+    if [ $failed -gt 0 ]; then
+        echo "FAIL: $failed check(s) failed"
+        exit 1
+    fi
+    exit 0
+
 # =============================================================================
 # Cleanup
 # =============================================================================
