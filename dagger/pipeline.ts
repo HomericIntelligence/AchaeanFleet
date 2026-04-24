@@ -15,7 +15,7 @@
  */
 
 import { connect, Client, Container } from "@dagger.io/dagger";
-import { execFileSync } from "child_process";
+import { execFileSync, execSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -104,12 +104,24 @@ async function buildBases(client: Client): Promise<Map<string, Container>> {
 
   const builtBases = new Map<string, Container>();
 
+  // OCI label build args
+  const buildDate = new Date().toISOString();
+  const vcsRef = execSync("git rev-parse --short HEAD").toString().trim();
+  const version = process.env.VERSION || vcsRef;
+
   for (const base of BASES) {
     console.log(`Building base: ${base.name}`);
     const image = client
       .container()
       // @ts-ignore - Dagger SDK method exists at runtime
-      .build(src, { dockerfile: base.dockerfile });
+      .build(src, {
+        dockerfile: base.dockerfile,
+        buildArgs: [
+          { name: "BUILD_DATE", value: buildDate },
+          { name: "VCS_REF", value: vcsRef },
+          { name: "VERSION", value: version },
+        ],
+      });
 
     await exportToLocalDaemon(image, base.name);
     builtBases.set(base.name, image);
@@ -129,6 +141,11 @@ async function buildVessels(
 
   // Base images exported and loaded into daemon by buildBases().
 
+  // OCI label build args
+  const buildDate = new Date().toISOString();
+  const vcsRef = execSync("git rev-parse --short HEAD").toString().trim();
+  const version = process.env.VERSION || vcsRef;
+
   const buildPromises = VESSELS.map(async (vessel) => {
     console.log(`Building vessel: ${vessel.name}`);
 
@@ -136,7 +153,12 @@ async function buildVessels(
     // @ts-ignore - Dagger SDK method exists at runtime
     const image = client.container().build(src, {
       dockerfile: vessel.dockerfile,
-      buildArgs: [{ name: "BASE_IMAGE", value: baseTag }],
+      buildArgs: [
+        { name: "BASE_IMAGE", value: baseTag },
+        { name: "BUILD_DATE", value: buildDate },
+        { name: "VCS_REF", value: vcsRef },
+        { name: "VERSION", value: version },
+      ],
     });
 
     if (registry) {
@@ -176,6 +198,11 @@ async function testImages(client: Client): Promise<void> {
     exclude: [".git", "node_modules", ".env"],
   });
 
+  // OCI label build args
+  const buildDate = new Date().toISOString();
+  const vcsRef = execSync("git rev-parse --short HEAD").toString().trim();
+  const version = process.env.VERSION || vcsRef;
+
   // Test each vessel: ensure it starts and /health responds
   const testPromises = VESSELS.map(async (vessel) => {
     console.log(`Testing: ${vessel.name}`);
@@ -183,7 +210,12 @@ async function testImages(client: Client): Promise<void> {
     // @ts-ignore - Dagger SDK method exists at runtime
     const image = client.container().build(src, {
       dockerfile: vessel.dockerfile,
-      buildArgs: [{ name: "BASE_IMAGE", value: `${vessel.base}:latest` }],
+      buildArgs: [
+        { name: "BASE_IMAGE", value: `${vessel.base}:latest` },
+        { name: "BUILD_DATE", value: buildDate },
+        { name: "VCS_REF", value: vcsRef },
+        { name: "VERSION", value: version },
+      ],
     });
 
     // Basic smoke test: check binaries guaranteed by each base type
