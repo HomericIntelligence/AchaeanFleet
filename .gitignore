@@ -44,9 +44,3 @@ __pycache__/
 
 # Local test outputs
 /tmp/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.pytest_cache/
