@@ -41,6 +41,10 @@ on:
         type: boolean
         default: false
         description: "Force push-to-registry on non-main branches (for integration testing)"
+  workflow_run:
+    workflows: ["Security Scanning"]
+    types: [completed]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
@@ -767,7 +771,10 @@ jobs:
     name: Push to GHCR
     runs-on: ubuntu-latest
     needs: [build-vessels]
-    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.inputs.force_push == 'true'
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      github.event.inputs.force_push == 'true' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     permissions:
       packages: write
       contents: read
