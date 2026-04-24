@@ -264,6 +264,33 @@ and GitHub Actions version bumps. npm tool package versions require manual revie
 Dependabot cannot update inline `ENV` pins in Dockerfiles — bump these by following the steps
 above when a new release of a tool is available.
 
+**Updating pinned binary checksums (ARG-based)**
+
+Some vessel Dockerfiles install pre-built binaries (Goose, OpenCode) via GitHub releases and verify
+them with SHA256 checksums to ensure reproducibility and security. When updating these tools:
+
+1. **Compute the new SHA256** for each architecture:
+
+```bash
+# For AMD64
+curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_64-unknown-linux-gnu.tar.gz" | sha256sum
+
+# For ARM64
+curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-aarch64-unknown-linux-gnu.tar.gz" | sha256sum
+```
+
+2. **Update the ARG values** in the relevant Dockerfile:
+
+```dockerfile
+ARG GOOSE_VERSION=1.32.0
+ARG GOOSE_AMD64_SHA256=<new-amd64-hash>
+ARG GOOSE_ARM64_SHA256=<new-arm64-hash>
+```
+
+3. **Important**: Both `AMD64` and `ARM64` checksums must be updated together to support multi-arch builds.
+
+4. Test the build on both architectures to verify checksums are correct.
+
 ## Pull Request Process
 
 ### Before You Start
