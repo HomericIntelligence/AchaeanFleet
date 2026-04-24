@@ -30,12 +30,14 @@ networks:
 # /tmp        - general temp files and tmux sockets (/tmp/tmux-*)
 # /run        - runtime PID files and sockets
 # /home/agent/.cache  - tool caches (npm, Claude Code, etc.)
+# /home/agent/.npm    - npm global cache (Node-based vessels)
 # /home/agent/.config - runtime config writes
 # /home/agent/.local  - Python user installs and local state
 x-tmpfs: &tmpfs
   - /tmp
   - /run
   - /home/agent/.cache
+  - /home/agent/.npm
   - /home/agent/.config
   - /home/agent/.local
 
