@@ -1,0 +1,61 @@
+name: Verify Checksums
+
+on:
+  schedule:
+    # Run weekly on Monday at 6:00 AM UTC
+    - cron: '0 6 * * 1'
+  pull_request:
+    paths:
+      - 'scripts/checksums/**'
+  workflow_dispatch:
+
+jobs:
+  verify-checksums:
+    runs-on: ubuntu-latest
+    name: Verify checksum integrity
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify goose checksum
+        run: |
+          echo "Verifying goose-1.30.0-linux-x86_64.sha256..."
+          EXPECTED_HASH=$(cat scripts/checksums/goose-1.30.0-linux-x86_64.sha256 | tr -d ' ')
+          curl -fsSL "https://github.com/block/goose/releases/download/v1.30.0/goose-x86_64-unknown-linux-gnu.tar.gz" \
+            -o /tmp/goose.tar.gz
+          ACTUAL_HASH=$(sha256sum /tmp/goose.tar.gz | awk '{print $1}')
+          echo "Expected: $EXPECTED_HASH"
+          echo "Actual:   $ACTUAL_HASH"
+          if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
+            echo "ERROR: Goose checksum mismatch!"
+            exit 1
+          fi
+          echo "✓ Goose checksum verified"
+          rm /tmp/goose.tar.gz
+
+      - name: Verify opencode checksum
+        run: |
+          echo "Verifying opencode-1.4.3-linux-x64.sha256..."
+          EXPECTED_HASH=$(cat scripts/checksums/opencode-1.4.3-linux-x64.sha256 | tr -d ' ')
+          curl -fsSL "https://github.com/sst/opencode/releases/download/v1.4.3/opencode_linux_amd64.tar.gz" \
+            -o /tmp/opencode.tar.gz
+          ACTUAL_HASH=$(sha256sum /tmp/opencode.tar.gz | awk '{print $1}')
+          echo "Expected: $EXPECTED_HASH"
+          echo "Actual:   $ACTUAL_HASH"
+          if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
+            echo "ERROR: OpenCode checksum mismatch!"
+            exit 1
+          fi
+          echo "✓ OpenCode checksum verified"
+          rm /tmp/opencode.tar.gz
+
+      - name: Skip nodesource-setup checksum (dynamic script)
+        run: |
+          echo "Skipping nodesource-setup-20.x.sha256: NodeSource setup scripts are dynamically generated and difficult to mirror."
+          echo "This checksum would need to be manually verified by running the script locally."
+
+      - name: Skip ohmyzsh checksum (git commit)
+        run: |
+          echo "Skipping ohmyzsh-7c10d98.sha256: This is a git commit hash, not a downloadable artifact."
+          echo "Integrity is guaranteed by git's cryptographic commit hash."
