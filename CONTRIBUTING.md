@@ -82,6 +82,37 @@ just lint
 
 Hooks run automatically on `git commit` after installation.
 
+### Repository Secrets
+
+The AchaeanFleet CI/CD pipeline uses the following GitHub repository secrets, which must be configured in the repository settings before certain CI jobs will function:
+
+#### DISPATCH_TOKEN
+
+**Required for:** The `notify-proteus` step in the push-to-registry CI job
+
+**What it is:** A personal access token (PAT) with `repo` scope on the [ProjectProteus](https://github.com/HomericIntelligence/ProjectProteus) repository
+
+**Why it's needed:** When AchaeanFleet images are successfully pushed to the registry, the CI pipeline notifies ProjectProteus of the new image versions so the orchestration system can deploy them. Without this token, the notify step silently skips (exits with code 0), giving the false appearance of success while the notification never reaches ProjectProteus.
+
+**How to configure:**
+
+1. Generate a new personal access token on GitHub:
+   - Go to **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+   - Click **Generate new token (classic)**
+   - Give it a descriptive name (e.g., "AchaeanFleet Proteus Notify")
+   - Select the `repo` scope
+   - Copy the token value
+
+2. Add it to AchaeanFleet repository settings:
+   - Go to the [AchaeanFleet repository](https://github.com/HomericIntelligence/AchaeanFleet)
+   - Click **Settings** → **Secrets and variables** → **Actions**
+   - Click **New repository secret**
+   - Name: `DISPATCH_TOKEN`
+   - Value: [paste the token]
+   - Click **Add secret**
+
+**Security note:** This token grants write access to ProjectProteus. Store it securely and never commit it to version control.
+
 ### Container runtime selection
 
 The justfile auto-detects `podman` if available, otherwise falls back to `docker`.
