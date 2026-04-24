@@ -1,0 +1,2 @@
+# Nomad variable files — may contain secrets
+*.nomadvar
