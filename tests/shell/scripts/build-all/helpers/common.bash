@@ -2,6 +2,8 @@ MOCKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../mocks" && pwd)"
 
 setup_mocks() {
     export PATH="${MOCKS_DIR}:${PATH}"
+    export BUILD_DATE=""
+    export VCS_REF=""
 }
 
 clean_state() {

@@ -28,3 +28,11 @@ setup() {
     run bash "$SCRIPT"
     [ "$status" -eq 1 ]
 }
+
+@test "TAG env var overrides default image tag" {
+    export TAG="v1.2.3"
+    run bash "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"achaean-base-node:v1.2.3"* ]]
+    [[ "$output" == *"achaean-claude:v1.2.3"* ]]
+}
