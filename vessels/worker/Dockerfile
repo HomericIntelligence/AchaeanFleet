@@ -24,12 +24,16 @@ LABEL git-sha=${GIT_SHA}
 
 USER root
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG TARGETARCH=amd64
+
 # Install required tools — failures here are fatal
 RUN apt-get update && \
     apt-get install -y jq make && \
     rm -rf /var/lib/apt/lists/* && \
     ( which yq || ( \
-        curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" \
+        curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${TARGETARCH}" \
             -o /usr/local/bin/yq && \
         chmod +x /usr/local/bin/yq ) )
 
