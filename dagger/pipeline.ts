@@ -186,6 +186,10 @@ const registry =
 const shortSha = (process.env.SHORT_SHA ?? "local").slice(0, 7);
 const dateTag = process.env.DATE_TAG ?? `local-${shortSha}`;
 
+if (!/^\d{4}-\d{2}-\d{2}-[0-9a-f]{7}$/.test(dateTag)) {
+  console.warn(`Warning: DATE_TAG "${dateTag}" does not match expected format YYYY-MM-DD-<7hex>. Tag may be non-reproducible.`);
+}
+
 connect(
   async (client) => {
     switch (command) {
