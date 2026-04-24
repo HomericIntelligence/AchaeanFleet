@@ -260,6 +260,8 @@ EOT
   #       devices = [{
   #         Name = "nvidia"
   #       }]
+  #       cap_drop     = ["ALL"]
+  #       no_new_privs = true
   #     }
   #     resources {
   #       device "nvidia/gpu" {
