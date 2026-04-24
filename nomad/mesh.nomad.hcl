@@ -107,8 +107,8 @@ EOT
       # }
 
       resources {
-        cpu    = 500   # MHz
-        memory = 2048  # MB
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
       }
 
       service {
@@ -165,8 +165,8 @@ EOT
       }
 
       resources {
-        cpu    = 500
-        memory = 2048
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
       }
 
       service {
@@ -223,8 +223,8 @@ EOT
       }
 
       resources {
-        cpu    = 250
-        memory = 512
+        cpu    = 1000  # MHz
+        memory = 1024  # MB
       }
 
       service {
