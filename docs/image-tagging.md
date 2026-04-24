@@ -61,3 +61,42 @@ The `push-to-registry` job in `.github/workflows/ci.yml`:
 3. The Dagger pipeline (`dagger/pipeline.ts`) reads those env vars and publishes all three tags in a loop — images are built **once** and pushed with multiple tags.
 
 Local builds (no env vars set) fall back to `:latest` and `:local-<local>` tags so development workflows are unaffected.
+
+## Tag Retention and Cleanup
+
+### Tag mutability
+
+- **`:latest`** — Mutable. Overwritten on every push to `main`. Do not rely on it for reproducible deployments.
+- **`:git-<sha>` and `:YYYY-MM-DD-<sha>`** — Immutable once created. These tags accumulate indefinitely in GHCR, as new commits and days produce new tags.
+
+### Cleanup policy
+
+With three tags per push, untagged manifests and old tags can accumulate in GHCR over time. We recommend:
+
+1. **Untagged manifests**: Delete all manifests older than 90 days. These accumulate when tags are pruned but the underlying layers remain.
+2. **Tagged historical images**: Set a retention window (e.g., keep all tags from the last 180 days, prune older ones).
+3. **Automation**: Enable "Delete untagged versions" in the GHCR package settings for each agent image.
+
+### Listing and managing tags
+
+**List all tags for an image:**
+```bash
+gh api /orgs/HomericIntelligence/packages/container/achaean-claude/versions \
+  --jq '.[] | .metadata.container.tags[]'
+```
+
+**Find old tags (example: tags older than 90 days):**
+```bash
+gh api /orgs/HomericIntelligence/packages/container/achaean-claude/versions \
+  --jq '.[] | select(.created_at < now - 7776000) | {id, created_at, tags: .metadata.container.tags[]}'
+```
+
+### GHCR configuration
+
+GHCR does not have built-in automatic pruning. To reduce accumulation:
+
+1. In the GitHub UI, navigate to **Settings → Packages and registries → Package settings** for each agent image.
+2. Enable **"Delete untagged versions"** to remove orphaned manifests automatically.
+3. Set a retention policy for tagged versions manually or via scheduled GitHub Actions, if needed.
+
+For production deployments, pin to immutable tags (`:git-<sha>` or `:YYYY-MM-DD-<sha>`) and monitor the package registry periodically for cleanup.
