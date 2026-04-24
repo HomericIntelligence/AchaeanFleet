@@ -6,7 +6,7 @@
 # Node.js 20 source stage — binary copied into runtime, no external scripts
 FROM node:25-slim@sha256:e49fd70491eb042270f974167c874d6245287263ffc16422fcf93b3c150409d8 AS node-source
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:f9c6a2fd2ddbc23e336b6257a5245e31f996953ef06cd13a59fa0a1df2d5c252
 
 LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
