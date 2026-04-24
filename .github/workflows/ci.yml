@@ -486,6 +486,15 @@ jobs:
           docker run --rm ${{ matrix.base.name }}:latest test -d /home/agent/.oh-my-zsh
           echo "Base image smoke tests passed."
 
+      - name: Verify node binary shared-lib compatibility
+        run: |
+          docker run --rm --entrypoint sh "${{ matrix.base.name }}:latest" \
+            -c "ldd /usr/local/bin/node" || {
+            echo "ERROR: node binary has missing shared libraries in ${{ matrix.base.name }}"
+            exit 1
+          }
+          echo "node ldd check passed: OK"
+
       - name: Validate base image name is safe
         shell: bash
         run: |
