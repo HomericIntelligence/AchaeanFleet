@@ -197,6 +197,24 @@ just test
 just verify
 ```
 
+### Python Tests
+
+The Python test suite validates Dockerfile structure (version pins, expected files) and can be run locally:
+
+```bash
+# Run Python tests
+pixi run test-python
+
+# Run with coverage
+pixi run pytest
+```
+
+The `tests/` directory contains:
+- `test_dockerfile_pins.py` — asserts all `npm install -g` and `pip install` commands specify exact versions
+- `test_dockerfile_version_pins.py` — asserts binary curl-installer vessels declare `ENV <TOOL>_VERSION`
+
+Add new tests here when introducing new version-pinning requirements or Dockerfile patterns.
+
 ### Run Locally
 
 ```bash
