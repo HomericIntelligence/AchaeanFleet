@@ -5,6 +5,7 @@
 # Based on the minimal Debian base image.
 
 ARG BASE_IMAGE=achaean-base-minimal:latest
+# hadolint ignore=DL3006
 FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="achaean-worker"
