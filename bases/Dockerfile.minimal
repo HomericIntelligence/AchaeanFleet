@@ -36,7 +36,7 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
              /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
 # Install Yarn
-RUN npm install -g yarn
+RUN npm install -g yarn@1.22.22
 
 # Create non-root user
 ARG USER_ID=1000

@@ -78,6 +78,9 @@ def check_dockerfile(path: Path) -> list[str]:
             # Ignore pure pip self-upgrade: pip install --upgrade pip
             if re.fullmatch(r"--upgrade\s+pip", args):
                 continue
+            # Ignore requirements file installs: pip install -r <file>
+            if re.search(r"-r\s+\S+", args):
+                continue
             # Strip flags like --no-cache-dir
             tokens = [t for t in args.split() if not t.startswith("-")]
             for pkg_raw in tokens:
