@@ -6,6 +6,9 @@
 #
 # Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
+#
+# Build context: must be run from the repo root (not from bases/)
+# Example: docker build -f bases/Dockerfile.node -t achaean-base-node:latest .
 FROM node:25-slim@sha256:435f3537a088a01fd208bb629a4b69c28d85deb9a60af8a710cafc3befd6e3be
 
 LABEL org.opencontainers.image.title="achaean-base-node"
