@@ -423,6 +423,131 @@ check-versions:
     fi
     exit $exit_code
 
+# Rotate checksum for a tool when updating to a new version
+# Usage: just rotate-checksum goose 1.32.0
+# Supports: goose, opencode, yq
+rotate-checksum TOOL VERSION:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    tool="{{TOOL}}"
+    version="{{VERSION}}"
+
+    case "$tool" in
+        goose)
+            echo "=== Rotating checksum for goose v${version} ==="
+
+            # Find and remove old checksum files
+            old_files=$(find scripts/checksums -name "goose-*-linux-x86_64.sha256" -o -name "goose-*-linux-aarch64.sha256" 2>/dev/null || true)
+
+            # Download and compute checksums for both architectures
+            echo "Computing SHA256 for amd64..."
+            amd64_sha=$(curl -fsSL "https://github.com/block/goose/releases/download/v${version}/goose-x86_64-unknown-linux-gnu.tar.gz" | sha256sum | awk '{print $1}')
+            echo "  AMD64: $amd64_sha"
+
+            echo "Computing SHA256 for arm64..."
+            arm64_sha=$(curl -fsSL "https://github.com/block/goose/releases/download/v${version}/goose-aarch64-unknown-linux-gnu.tar.gz" | sha256sum | awk '{print $1}')
+            echo "  ARM64: $arm64_sha"
+
+            # Write new checksum files (version-in-filename format for reference)
+            echo "$amd64_sha" > "scripts/checksums/goose-${version}-linux-x86_64.sha256"
+            echo "$arm64_sha" > "scripts/checksums/goose-${version}-linux-aarch64.sha256"
+            echo "Wrote: scripts/checksums/goose-${version}-linux-x86_64.sha256"
+            echo "Wrote: scripts/checksums/goose-${version}-linux-aarch64.sha256"
+
+            # Update the Dockerfile ARG
+            sed -i "s/ARG GOOSE_VERSION=.*/ARG GOOSE_VERSION=${version}/" vessels/goose/Dockerfile
+            sed -i "s/ARG GOOSE_AMD64_SHA256=.*/ARG GOOSE_AMD64_SHA256=${amd64_sha}/" vessels/goose/Dockerfile
+            sed -i "s/ARG GOOSE_ARM64_SHA256=.*/ARG GOOSE_ARM64_SHA256=${arm64_sha}/" vessels/goose/Dockerfile
+            echo "Updated: vessels/goose/Dockerfile"
+
+            # Remove old checksum files
+            if [ -n "$old_files" ]; then
+                echo "$old_files" | xargs rm -f
+                echo "Removed old checksum files"
+            fi
+
+            echo ""
+            echo "=== Checksum rotation complete for goose ==="
+            echo "Next steps:"
+            echo "  1. Review changes: git diff vessels/goose/Dockerfile scripts/checksums/"
+            echo "  2. Test the build: just build-vessel goose"
+            echo "  3. Commit: git commit -m 'chore(goose): bump to v${version}'"
+            ;;
+
+        opencode)
+            echo "=== Rotating checksum for opencode ${version} ==="
+
+            # Find and remove old checksum files
+            old_files=$(find scripts/checksums -name "opencode-*-linux-x64.sha256" 2>/dev/null || true)
+
+            # Download and compute checksum
+            echo "Computing SHA256 for opencode..."
+            sha=$(curl -fsSL "https://github.com/sst/opencode/releases/download/${version}/opencode_linux_amd64.tar.gz" | sha256sum | awk '{print $1}')
+            echo "  SHA256: $sha"
+
+            # Write new checksum file (version-in-filename format for reference)
+            echo "$sha" > "scripts/checksums/opencode-${version}-linux-x64.sha256"
+            echo "Wrote: scripts/checksums/opencode-${version}-linux-x64.sha256"
+
+            # Update the Dockerfile ENV
+            sed -i "s/ENV OPENCODE_VERSION=.*/ENV OPENCODE_VERSION=${version}/" vessels/opencode/Dockerfile
+            echo "Updated: vessels/opencode/Dockerfile"
+
+            # Remove old checksum files
+            if [ -n "$old_files" ]; then
+                echo "$old_files" | xargs rm -f
+                echo "Removed old checksum files"
+            fi
+
+            echo ""
+            echo "=== Checksum rotation complete for opencode ==="
+            echo "Next steps:"
+            echo "  1. Review changes: git diff vessels/opencode/Dockerfile scripts/checksums/"
+            echo "  2. Test the build: just build-vessel opencode"
+            echo "  3. Commit: git commit -m 'chore(opencode): bump to ${version}'"
+            ;;
+
+        yq)
+            echo "=== Rotating checksum for yq ${version} ==="
+
+            # Find and remove old checksum files
+            old_files=$(find scripts/checksums -name "yq-*-linux-x64.sha256" 2>/dev/null || true)
+
+            # Download and compute checksum
+            echo "Computing SHA256 for yq..."
+            sha=$(curl -fsSL "https://github.com/mikefarah/yq/releases/download/${version}/yq_linux_amd64" | sha256sum | awk '{print $1}')
+            echo "  SHA256: $sha"
+
+            # Write new checksum file (version-in-filename format for reference)
+            echo "$sha" > "scripts/checksums/yq-${version}-linux-x64.sha256"
+            echo "Wrote: scripts/checksums/yq-${version}-linux-x64.sha256"
+
+            # Update the Dockerfile ARG
+            sed -i "s/ARG YQ_VERSION=.*/ARG YQ_VERSION=${version}/" vessels/worker/Dockerfile
+            echo "Updated: vessels/worker/Dockerfile"
+
+            # Remove old checksum files
+            if [ -n "$old_files" ]; then
+                echo "$old_files" | xargs rm -f
+                echo "Removed old checksum files"
+            fi
+
+            echo ""
+            echo "=== Checksum rotation complete for yq ==="
+            echo "Next steps:"
+            echo "  1. Review changes: git diff vessels/worker/Dockerfile scripts/checksums/"
+            echo "  2. Test the build: just build-vessel worker"
+            echo "  3. Commit: git commit -m 'chore(yq): bump to ${version}'"
+            ;;
+
+        *)
+            echo "ERROR: Unknown tool: $tool"
+            echo "Supported tools: goose, opencode, yq"
+            exit 1
+            ;;
+    esac
+
 # =============================================================================
 # Workspace
 # =============================================================================

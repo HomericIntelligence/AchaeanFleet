@@ -334,6 +334,68 @@ ARG GOOSE_ARM64_SHA256=<new-arm64-hash>
 
 4. Test the build on both architectures to verify checksums are correct.
 
+## Checksum Rotation
+
+For tools installed via binary downloads (Goose, OpenCode, YQ), AchaeanFleet provides an automated recipe to handle version bumps and checksum updates atomically.
+
+### Using `just rotate-checksum`
+
+Instead of manually computing hashes and updating multiple files, use:
+
+```bash
+just rotate-checksum <tool> <version>
+```
+
+Supported tools:
+- `goose` — Block's Goose AI coding agent
+- `opencode` — SST's OpenCode agent
+- `yq` — YAML query processor
+
+#### Example: Bump Goose to v1.32.0
+
+```bash
+just rotate-checksum goose 1.32.0
+```
+
+This recipe will:
+1. Download the new binary artifacts from GitHub releases
+2. Compute SHA256 checksums for both AMD64 and ARM64 architectures
+3. Write new checksum files to `scripts/checksums/` (version-in-filename format for reference)
+4. Update `ARG <TOOL>_VERSION` and corresponding `ARG <TOOL>_*_SHA256` in the relevant Dockerfile
+5. Remove old checksum files from previous versions
+6. Print instructions for manual verification steps
+
+#### Verification Steps
+
+After running `rotate-checksum`, the recipe will print:
+
+```
+Next steps:
+  1. Review changes: git diff vessels/<tool>/Dockerfile scripts/checksums/
+  2. Test the build: just build-vessel <tool>
+  3. Commit: git commit -m 'chore(<tool>): bump to <version>'
+```
+
+Follow these steps to verify the changes:
+
+```bash
+# Inspect the diffs
+git diff vessels/goose/Dockerfile scripts/checksums/
+
+# Build the updated image
+just build-vessel goose
+
+# If the build succeeds, commit
+git add vessels/goose/Dockerfile scripts/checksums/
+git commit -m 'chore(goose): bump to 1.32.0'
+```
+
+If the build fails, the checksums may be incorrect — verify by downloading the artifact manually:
+
+```bash
+curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_64-unknown-linux-gnu.tar.gz" | sha256sum
+```
+
 ## Security Scanning
 
 ### Trivy Vulnerability Scanning
