@@ -360,6 +360,87 @@ lint-install:
 lint:
     pre-commit run --all-files
 
+# Check pinned tool versions against latest available releases
+check-versions:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Checking pinned tool versions ==="
+    exit_code=0
+
+    # Goose (GitHub releases API)
+    echo ""
+    echo "Checking GOOSE_VERSION..."
+    goose_pinned="1.31.1"
+    goose_latest=$(curl -s https://api.github.com/repos/block/goose/releases/latest \
+        | grep -oP '"tag_name":\s*"v\K[^"]+' | head -1 || echo "unknown")
+    if [ "$goose_latest" = "unknown" ]; then
+        echo "  GOOSE: pinned=$goose_pinned latest=unknown [ERROR: API call failed]"
+        exit_code=1
+    elif [ "$goose_pinned" = "$goose_latest" ]; then
+        echo "  GOOSE: pinned=$goose_pinned latest=$goose_latest [UP-TO-DATE]"
+    else
+        echo "  GOOSE: pinned=$goose_pinned latest=$goose_latest [OUTDATED]"
+        exit_code=1
+    fi
+
+    # OpenCode (GitHub releases API)
+    echo ""
+    echo "Checking OPENCODE_VERSION..."
+    opencode_pinned="v1.4.3"
+    opencode_latest=$(curl -s https://api.github.com/repos/sst/opencode/releases/latest \
+        | grep -oP '"tag_name":\s*"\K[^"]+' | head -1 || echo "unknown")
+    if [ "$opencode_latest" = "unknown" ]; then
+        echo "  OPENCODE: pinned=$opencode_pinned latest=unknown [ERROR: API call failed]"
+        exit_code=1
+    elif [ "$opencode_pinned" = "$opencode_latest" ]; then
+        echo "  OPENCODE: pinned=$opencode_pinned latest=$opencode_latest [UP-TO-DATE]"
+    else
+        echo "  OPENCODE: pinned=$opencode_pinned latest=$opencode_latest [OUTDATED]"
+        exit_code=1
+    fi
+
+    # YQ (GitHub releases API)
+    echo ""
+    echo "Checking YQ_VERSION..."
+    yq_pinned="v4.53.2"
+    yq_latest=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest \
+        | grep -oP '"tag_name":\s*"\K[^"]+' | head -1 || echo "unknown")
+    if [ "$yq_latest" = "unknown" ]; then
+        echo "  YQ: pinned=$yq_pinned latest=unknown [ERROR: API call failed]"
+        exit_code=1
+    elif [ "$yq_pinned" = "$yq_latest" ]; then
+        echo "  YQ: pinned=$yq_pinned latest=$yq_latest [UP-TO-DATE]"
+    else
+        echo "  YQ: pinned=$yq_pinned latest=$yq_latest [OUTDATED]"
+        exit_code=1
+    fi
+
+    echo ""
+    if [ $exit_code -eq 0 ]; then
+        echo "=== All versions up-to-date ==="
+    else
+        echo "=== Some versions are outdated or API calls failed ==="
+    fi
+    exit $exit_code
+
+# =============================================================================
+# Workspace
+# =============================================================================
+
+# Create all required agent workspace directories in ~/Agents/
+# Safe to run multiple times (mkdir -p is idempotent)
+init-workspaces:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Creating agent workspace directories ==="
+    base_dir="${HOME}/Agents"
+    agents=(Aindrea Eris Baird Vegai Pallas Codex-1 Aider-1 Goose-1 Cline-1 Opencode-1 Codebuff-1 Ampcode-1 Worker-1)
+    for agent in "${agents[@]}"; do
+        mkdir -p "${base_dir}/${agent}"
+        echo "  Created: ${base_dir}/${agent}"
+    done
+    echo "=== All workspace directories initialized ==="
+
 # =============================================================================
 # Cleanup
 # =============================================================================
