@@ -28,5 +28,11 @@ if [ -f /run/secrets/openai_api_key ]; then
     export OPENAI_API_KEY
 fi
 
+# If the command is bash but bash is not available, fall back to sh
+if [ "$1" = "bash" ] && ! command -v bash >/dev/null 2>&1; then
+    shift
+    exec sh "$@"
+fi
+
 # Hand off to the container's CMD (or any arguments passed to docker run)
 exec "$@"
