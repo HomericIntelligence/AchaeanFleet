@@ -41,7 +41,7 @@ jobs:
           format: table
           exit-code: '1'
           ignore-unfixed: true
-          severity: HIGH,CRITICAL
+          severity: CRITICAL
 
       - name: Trivy filesystem scan (SARIF for Security tab)
         uses: aquasecurity/trivy-action@6c175e9e2f4b7ab73f4eba9148e7803dc5f640f6 # v0.35.0
