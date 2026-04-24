@@ -20,6 +20,9 @@ LABEL git-sha=${GIT_SHA}
 
 USER root
 
+# Ensure pipefail for piped RUN commands
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install Claude Code CLI (version pinned for reproducibility — issue #2)
 RUN npm install -g @anthropic-ai/claude-code@2.1.101
 
