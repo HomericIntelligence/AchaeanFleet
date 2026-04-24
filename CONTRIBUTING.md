@@ -469,6 +469,35 @@ These checks prevent merging code that fails security or quality gates and ensur
 
 The `main` branch is protected. All changes must go through pull requests.
 
+## Versioning and Releases
+
+AchaeanFleet uses [Calendar Versioning (CalVer)](https://calver.org/) with the format `YYYY.MM.DD` to anchor releases to real-world deployment dates.
+
+### Version Format
+
+All release tags follow the pattern `v2026.04.23` (example: release on April 23, 2026).
+
+### Creating a Release
+
+When preparing a release (typically before major deployments or after significant updates):
+
+1. **Create and push the version tag:**
+
+```bash
+git tag -a v2026.04.23 -m "Release 2026.04.23"
+git push origin v2026.04.23
+```
+
+2. **Automated CHANGELOG updates:** The [git-cliff](https://git-cliff.org/) tool (configured via `cliff.toml`) automatically groups commit history under the version tag in `CHANGELOG.md`, replacing commit SHA and date anchors with semantic version references.
+
+3. **Release triggers:** The monthly digest-bump workflow and Dependabot PRs should trigger a release tag before major deployments to keep version history clean and deployments traceable.
+
+### Why CalVer for AchaeanFleet?
+
+- **Date-bound deployments**: Container images are tied to specific deployment dates, making incident investigation and rollback more intuitive
+- **No artificial versioning**: We don't manufacture semantic version increments; the calendar is the source of truth
+- **Simplifies CI/CD**: Release automation can key off git tags without managing version files or complex version-bump logic
+
 ## Code Review
 
 ### What Reviewers Look For
