@@ -1,0 +1,5 @@
+# Goose v1.31.1 release checksums
+# Source: https://github.com/block/goose/releases/tag/v1.31.1
+# Verify: sha256sum --check checksums.txt
+61c072e843428310abc9751abb4bab097ce2721e519539fb22f0a4a29c8d02da  goose-x86_64-unknown-linux-gnu.tar.gz
+1903a5ab266e6c59ae98636e45e80e9e63dd96fd5cd03787fe617252b5bda161  goose-aarch64-unknown-linux-gnu.tar.gz
