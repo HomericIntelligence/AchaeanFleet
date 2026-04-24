@@ -32,6 +32,12 @@ jobs:
       - name: Run notify-proteus BATS tests
         run: bats tests/notify-proteus.bats
 
+      - name: Run build-all BATS tests
+        run: bats tests/build-all.bats
+
+      - name: Run entrypoint BATS tests
+        run: bats tests/entrypoint.bats
+
       - name: Run shell tests
         run: bats -r tests/shell/
 
