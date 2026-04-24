@@ -110,6 +110,10 @@ EOT
         cpu    = 500   # MHz
         memory = 2048  # MB
       }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
 
       service {
         name = "achaean-claude-${NOMAD_ALLOC_INDEX}"
@@ -168,6 +172,10 @@ EOT
         cpu    = 500
         memory = 2048
       }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
 
       service {
         name = "achaean-aider-${NOMAD_ALLOC_INDEX}"
@@ -225,6 +233,10 @@ EOT
       resources {
         cpu    = 250
         memory = 512
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
       }
 
       service {
