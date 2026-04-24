@@ -114,6 +114,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aindrea:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
@@ -142,6 +143,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Eris:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
@@ -170,6 +172,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/ProjectScylla:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
@@ -198,6 +201,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Vegai:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
@@ -226,6 +230,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Pallas:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
@@ -257,6 +262,7 @@ services:
     secrets:
       - openai_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codex-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -288,6 +294,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Aider-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -318,6 +325,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Goose-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -349,6 +357,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Cline-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -380,6 +389,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Opencode-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -411,6 +421,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Codebuff-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -442,6 +453,7 @@ services:
     secrets:
       - anthropic_api_key
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/Ampcode-1:/workspace
     working_dir: /workspace
     read_only: true
@@ -475,6 +487,7 @@ services:
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: worker-1
     volumes:
+      - ${SIDECAR_PATH:-/home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar}:/app/agent-sidecar:ro
       - /tmp/ci-workspace:/workspace
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
     working_dir: /workspace
