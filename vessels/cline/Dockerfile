@@ -11,9 +11,11 @@ LABEL org.opencontainers.image.description="Cline AI coding agent vessel"
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
+ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.created=${BUILD_DATE}
 LABEL org.opencontainers.image.revision=${VCS_REF}
 LABEL org.opencontainers.image.version=${VERSION}
+LABEL git-sha=${GIT_SHA}
 
 USER root
 
