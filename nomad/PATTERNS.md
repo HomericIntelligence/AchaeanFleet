@@ -105,6 +105,45 @@ Secrets will be injected via the same `template` mechanism using Vault integrati
 
 ---
 
+## 6. Overriding container ENTRYPOINT and command in Nomad
+
+When you need to override a Docker image's `ENTRYPOINT` or `CMD` in Nomad, use the
+`config` stanza in the task. This is useful for injecting custom startup scripts,
+debugging, or running alternative entry points.
+
+**Key fields:**
+- `entrypoint` — array replacing the image's `ENTRYPOINT` instruction
+- `args` — array replacing the image's `CMD` instruction
+- `command` — NOT the same as `cmd`; use `entrypoint` + `args` instead
+
+```hcl
+task "claude" {
+  driver = "docker"
+  config {
+    image      = "achaean-claude:latest"
+    # Override ENTRYPOINT — use this to inject a custom startup script
+    entrypoint = ["/bin/sh", "/tmp/custom-init.sh"]
+    args       = []
+  }
+}
+```
+
+To run a shell command interactively (useful for debugging), use:
+
+```hcl
+config {
+  image      = "achaean-claude:latest"
+  entrypoint = ["/bin/sh", "-c"]
+  args       = ["echo 'Debug mode' && exec /app/start.sh"]
+}
+```
+
+**Note:** Do not use bare `command` in the `config` stanza — the Docker driver
+interprets `config { command }` as a shorthand for `entrypoint + args` concatenation,
+which is often not what you intend. Always use `entrypoint` and `args` separately for clarity.
+
+---
+
 ## Quick reference — commonly needed Nomad runtime variables
 
 | Variable | Description |
