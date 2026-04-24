@@ -585,6 +585,15 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ env.SHORT_SHA }}
 
+      - name: Verify goose version in built image
+        if: matrix.vessel.name == 'achaean-goose'
+        run: |
+          goose_ver=$(docker run --rm --entrypoint="" ${{ matrix.vessel.name }}:latest goose --version 2>&1 || true)
+          echo "Goose version in image: $goose_ver"
+          if ! echo "$goose_ver" | grep -q "1.31.1"; then
+            echo "WARNING: Expected goose 1.31.1 but got: $goose_ver"
+          fi
+
       - name: Verify ENTRYPOINT is set
         run: |
           entrypoint=$(docker inspect "${{ matrix.vessel.name }}:latest" --format '{{json .Config.Entrypoint}}')
