@@ -14,7 +14,7 @@ LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/Ac
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
+    curl \ # curl: required by Oh My Zsh installer (common-setup.sh)
     wget \
     git \
     tmux \
@@ -43,7 +43,7 @@ ARG USER_ID=1000
 ARG GROUP_ID=1000
 RUN groupadd -g ${GROUP_ID} agent && \
     useradd -m -u ${USER_ID} -g agent -s /bin/zsh agent && \
-    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "agent ALL=(ALL) NOPASSWD: /usr/bin/tmux, /usr/bin/git" >> /etc/sudoers
 
 # Configure tmux
 RUN mkdir -p /home/agent && \
