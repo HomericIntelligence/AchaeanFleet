@@ -12,6 +12,12 @@
 #   mkdir -p secrets && echo -n "sk-ant-..." > secrets/anthropic_api_key && chmod 600 secrets/anthropic_api_key
 #   (set SECRETS_DIR in .env if your secrets dir lives elsewhere)
 
+# SECURITY NOTE: If using docker-compose.override.yml or -f stacking, override
+# files must explicitly repeat cap_drop, security_opt, and read_only from the
+# x-security anchor — YAML merge anchors (<<: *security) are not preserved
+# through file-level overrides. Run `docker compose config` to verify security
+# options are present in the final rendered config before deploying.
+
 # Shared security hardening applied to all services
 x-security: &security
   security_opt:
