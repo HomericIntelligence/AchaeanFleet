@@ -45,7 +45,7 @@ teardown() {
     run env GITHUB_TOKEN=test-token GITHUB_ORG=myorg bash "$SCRIPT"
     [ "$status" -eq 0 ]
     grep -q "myorg" "$CURL_ARGS_FILE"
-    ! grep -q "homeric-intelligence" "$CURL_ARGS_FILE"
+    ! grep -q "HomericIntelligence" "$CURL_ARGS_FILE"
 }
 
 @test "HTTP 204 response exits 0" {
