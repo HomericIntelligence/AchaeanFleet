@@ -41,7 +41,7 @@ spec:
         - name: AGENT_MODE
           value: "headless"
         - name: AGENT_PORT
-          value: "23080"
+          value: "23001"
       volumeMounts:
         - name: agent-sidecar
           mountPath: /app/agent-sidecar
