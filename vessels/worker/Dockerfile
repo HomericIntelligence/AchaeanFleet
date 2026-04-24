@@ -37,6 +37,8 @@ USER agent
 ENV AGENT_PROGRAM=none
 ENV AGENT_HEADLESS_FLAG=""
 
+EXPOSE 23001
+
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:23001/health 2>/dev/null || exit 1
 
