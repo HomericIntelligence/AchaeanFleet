@@ -325,6 +325,39 @@ jobs:
           fi
           echo ".trivyignore entries checked for expiry; all current"
 
+      - name: Verify secrets not hardcoded in compose config
+        run: |
+          ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.claude-only.yml config > /tmp/claude-only-config.yml
+          ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.mesh.yml config > /tmp/mesh-config.yml
+
+          # Check for hardcoded dummy values (would mean the keys were embedded in env blocks)
+          if grep -q "ANTHROPIC_API_KEY: dummy" /tmp/claude-only-config.yml || grep -q "OPENAI_API_KEY: dummy" /tmp/claude-only-config.yml; then
+            echo "ERROR: Secret key(s) appear hardcoded in docker-compose.claude-only.yml"
+            exit 1
+          fi
+          if grep -q "ANTHROPIC_API_KEY: dummy" /tmp/mesh-config.yml || grep -q "OPENAI_API_KEY: dummy" /tmp/mesh-config.yml; then
+            echo "ERROR: Secret key(s) appear hardcoded in docker-compose.mesh.yml"
+            exit 1
+          fi
+          echo "Secret keys verified absent from hardcoded env blocks: OK"
+
+      - name: Validate negative test case for bad compose YAML
+        run: |
+          bad_file="/tmp/test-bad-compose.yml"
+          echo "services:" > "$bad_file"
+          echo "  bad_service: {: not_valid yaml" >> "$bad_file"
+
+          # This should fail
+          if docker compose -f "$bad_file" config >/dev/null 2>&1; then
+            echo "ERROR: docker compose should have failed on bad YAML"
+            rm -f "$bad_file"
+            exit 1
+          fi
+
+          # Clean up
+          rm -f "$bad_file"
+          echo "Negative compose test passed (bad YAML correctly rejected)"
+
   build-bases:
     name: Build Base Images
     runs-on: ubuntu-24.04
@@ -383,6 +416,8 @@ jobs:
           tags: ${{ matrix.base.name }}:latest
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Verify ENTRYPOINT is set
         run: |
@@ -575,6 +610,7 @@ jobs:
   test-smoke:
     name: Smoke Test Worker Vessel
     runs-on: ubuntu-latest
+    # Required check — add to branch protection required status checks in GitHub settings
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
