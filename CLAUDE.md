@@ -118,5 +118,6 @@ for alloc-scoped values — Nomad does not interpolate them at runtime.
 1. Choose a base image (`node`, `python`, or `minimal`)
 2. Create `vessels/<agentname>/Dockerfile` with `ARG BASE_IMAGE` + install step
 3. Add an entry to `compose/docker-compose.mesh.yml`. By default, attach to the `agamemnon-frontend` network only. Add the agent to `agent-backend` network only if the agent needs direct container-to-container communication with other agents.
-4. Add to the matrix in `.github/workflows/ci.yml`
-5. Add vessel entry in `dagger/pipeline.ts`
+4. Add `<AGENTNAME>_PROJECT=/path/to/project` to `compose/.env.example` with a comment describing the workspace scope this agent requires
+5. Add to the matrix in `.github/workflows/ci.yml`
+6. Add vessel entry in `dagger/pipeline.ts`
