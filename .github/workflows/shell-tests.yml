@@ -9,10 +9,6 @@ on:
       - 'tests/**'
   pull_request:
     branches: [main]
-    paths:
-      - '**/*.sh'
-      - 'scripts/**'
-      - 'tests/**'
 
 jobs:
   shell-tests:
@@ -24,6 +20,12 @@ jobs:
       - name: Install bats-core
         run: sudo apt-get install -y bats
 
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: shellcheck scripts/*.sh
+
       - name: Verify notify-proteus.sh default org (fast grep check)
         run: grep -q 'HomericIntelligence' scripts/notify-proteus.sh
 
@@ -32,3 +34,17 @@ jobs:
 
       - name: Run shell tests
         run: bats -r tests/shell/
+
+      - name: Check shell script test coverage
+        run: |
+          missing=0
+          for f in scripts/*.sh; do
+            base=$(basename "$f" .sh)
+            if ! ls tests/**/*"${base}"* 2>/dev/null | grep -q .; then
+              echo "WARNING: No test found for $f"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo "::warning::$missing shell script(s) have no corresponding test file"
+          fi
