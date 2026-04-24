@@ -170,14 +170,13 @@ Configure its path via `AGAMEMNON_URL` in `compose/.env`.
 
 ```bash
 # Validate all compose YAML files parse without errors (no images needed)
-## Adding a new agent type
+just test-compose
 
-1. Pick a base: `node`, `python`, or `minimal`
-2. Create `vessels/<name>/Dockerfile` with `ARG BASE_IMAGE`
-3. Add entries to `compose/docker-compose.mesh.yml` and `dagger/pipeline.ts`
-4. Add `<NAME>_PROJECT=/path/to/project` to `compose/.env.example` (defines the workspace this agent mounts)
-5. Add to the build matrix in `.github/workflows/ci.yml`
-6. Run `just build-vessel <name>` to verify
+# Build the worker vessel, start it, probe /health on port 23080, then tear down
+just test-smoke
+```
+
+`test-compose` runs `docker compose config` against each compose file and exits non-zero on any parse error.
 No images are required — just Docker Compose and the repo checkout.
 
 `test-smoke` builds `achaean-base-minimal` and `achaean-worker` locally, starts the worker via
