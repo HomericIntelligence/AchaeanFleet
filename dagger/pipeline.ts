@@ -97,7 +97,7 @@ async function exportToLocalDaemon(container: Container, name: string): Promise<
   }
 }
 
-async function buildBases(client: Client): Promise<Map<string, Container>> {
+async function buildBases(client: Client, registry?: string): Promise<Map<string, Container>> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
@@ -123,7 +123,20 @@ async function buildBases(client: Client): Promise<Map<string, Container>> {
         ],
       });
 
-    await exportToLocalDaemon(image, base.name);
+    if (registry) {
+      const tags = [
+        `${registry}/${base.name}:latest`,
+        `${registry}/${base.name}:git-${shortSha}`,
+        `${registry}/${base.name}:${dateTag}`,
+      ];
+      for (const tag of tags) {
+        console.log(`Pushing: ${tag}`);
+        await image.publish(tag);
+      }
+    } else {
+      await exportToLocalDaemon(image, base.name);
+    }
+
     builtBases.set(base.name, image);
   }
 
@@ -231,6 +244,18 @@ async function testImages(client: Client): Promise<void> {
       .stdout();
 
     console.log(`  ${vessel.name} smoke test passed:\n  ${result.trim()}`);
+
+    // Verify Oh My Zsh directory exists
+    const ohMyZshCheckCmd = "[ -d /home/agent/.oh-my-zsh ] && echo 'Oh My Zsh: OK' || echo 'Oh My Zsh: MISSING'";
+    const ohMyZshResult = await image
+      .withExec(["sh", "-c", ohMyZshCheckCmd])
+      .stdout();
+
+    const trimmedOhMyZsh = ohMyZshResult.trim();
+    if (!trimmedOhMyZsh.includes("OK")) {
+      throw new Error(`  ${vessel.name} Oh My Zsh verification failed: ${trimmedOhMyZsh}`);
+    }
+    console.log(`  ${vessel.name} Oh My Zsh verification passed: ${trimmedOhMyZsh}`);
   });
 
   await Promise.all(testPromises);
@@ -271,7 +296,7 @@ connect(
           console.error("--registry <url> required for push");
           process.exit(1);
         }
-        const basesForPush = await buildBases(client);
+        const basesForPush = await buildBases(client, registry);
         await buildVessels(client, basesForPush, registry);
         console.log(`All images pushed to ${registry} (tags: latest, git-${shortSha}, ${dateTag})`);
         break;
