@@ -46,14 +46,12 @@ variable "anthropic_api_key" {
   description = "Anthropic API key (for claude, aider, goose, cline, opencode, codebuff, ampcode)"
   type        = string
   default     = ""
-  sensitive   = true
 }
 
 variable "openai_api_key" {
   description = "OpenAI API key (for codex)"
   type        = string
   default     = ""
-  sensitive   = true
 }
 
 # =============================================================================

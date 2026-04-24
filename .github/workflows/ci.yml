@@ -364,6 +364,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: achaean-base-minimal:latest
+          outputs: type=oci,dest=/tmp/achaean-base-minimal.tar
 
       - name: Build goose vessel (amd64 + arm64)
         uses: docker/build-push-action@v5
@@ -373,6 +374,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           build-args: |
             BASE_IMAGE=achaean-base-minimal:latest
+          build-contexts: |
+            achaean-base-minimal:latest=oci-layout:///tmp/achaean-base-minimal.tar
           push: false
           tags: achaean-goose:latest
 
@@ -485,4 +488,3 @@ jobs:
           echo "| Digest | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Commit | \`${COMMIT_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "::notice title=Image Digest::${IMAGE_NAME}:latest -> ${DIGEST}"
-
