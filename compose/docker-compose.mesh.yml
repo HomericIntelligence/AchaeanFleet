@@ -56,6 +56,13 @@ x-logging: &default-logging
     max-file: "${LOG_MAX_FILES:-3}"
 
 # Shared healthcheck
+# This health endpoint goes through Caddy (https://caddy:8443/health) because all
+# containers are expected to be behind the Caddy TLS proxy in production.
+# Note: Individual vessel Dockerfiles also have their own HEALTHCHECK directives
+# that test localhost:23001 (the internal app port). These serve different purposes:
+# - Dockerfile HEALTHCHECK: validates the application is responsive on its internal port
+# - Compose healthcheck: validates the full TLS proxy integration (Caddy → app)
+# Both are needed to ensure complete system health from app startup to TLS termination.
 x-healthcheck: &healthcheck
   test: ["CMD", "curl", "-f", "--cacert", "/certs/ca.crt", "https://caddy:8443/health"]
   interval: 30s
@@ -67,12 +74,14 @@ x-healthcheck: &healthcheck
 # /tmp        - general temp files and tmux sockets (/tmp/tmux-*)
 # /run        - runtime PID files and sockets
 # /home/agent/.cache  - tool caches (npm, Claude Code, pip, etc.)
+# /home/agent/.npm    - npm global cache (Node-based vessels)
 # /home/agent/.config - runtime config writes
 # /home/agent/.local  - Python user installs and local state
 x-tmpfs: &tmpfs
   - /tmp
   - /run
   - /home/agent/.cache
+  - /home/agent/.npm
   - /home/agent/.config
   - /home/agent/.local
 
