@@ -22,6 +22,8 @@ cd "${REPO_ROOT}"
 
 VERSION=$(cat VERSION 2>/dev/null || echo "unknown")
 GIT_SHA="${GIT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")}"
+BUILD_DATE="${BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+VCS_REF="${VCS_REF:-${GIT_SHA}}"
 
 # Counters
 built=0

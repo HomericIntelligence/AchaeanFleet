@@ -33,11 +33,11 @@ teardown() {
     [[ "$output" == *"GITHUB_TOKEN not set"* ]]
 }
 
-@test "default org is homeric-intelligence" {
+@test "default org is HomericIntelligence" {
     setup_mock_curl 204
     run env GITHUB_TOKEN=test-token bash "$SCRIPT"
     [ "$status" -eq 0 ]
-    grep -q "homeric-intelligence" "$CURL_ARGS_FILE"
+    grep -q "HomericIntelligence" "$CURL_ARGS_FILE"
 }
 
 @test "GITHUB_ORG override replaces default org in URL" {
