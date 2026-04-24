@@ -4,7 +4,7 @@
 # Binary-based agent vessels (Goose, OpenCode, Worker) FROM this.
 
 # Node.js 20 source stage — binary copied into runtime, no external scripts
-FROM node:20-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0 AS node-source
+FROM node:25-slim@sha256:e49fd70491eb042270f974167c874d6245287263ffc16422fcf93b3c150409d8 AS node-source
 
 FROM debian:bookworm-slim
 
