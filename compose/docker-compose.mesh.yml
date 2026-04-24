@@ -311,6 +311,7 @@ services:
       AGENT_ID: cline-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: cline-1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
     secrets:
       - anthropic_api_key
@@ -338,6 +339,7 @@ services:
       AGENT_ID: opencode-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: opencode-1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
     secrets:
       - anthropic_api_key
@@ -365,6 +367,7 @@ services:
       AGENT_ID: codebuff-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: codebuff-1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
     secrets:
       - anthropic_api_key
@@ -392,6 +395,7 @@ services:
       AGENT_ID: ampcode-1
       AGENT_PORT: "23001"
       TMUX_SESSION_NAME: ampcode-1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       # ANTHROPIC_API_KEY injected by entrypoint from /run/secrets/anthropic_api_key
     secrets:
       - anthropic_api_key
