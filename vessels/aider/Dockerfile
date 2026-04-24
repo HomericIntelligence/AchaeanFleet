@@ -18,8 +18,11 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
+# Copy requirements.txt for reproducible dependency management
+COPY requirements.txt /tmp/requirements.txt
+
 # Install aider-chat (version pinned for reproducibility — issue #2)
-RUN pip install --no-cache-dir "aider-chat==0.82.3"
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Verify installation
 RUN aider --version
