@@ -302,21 +302,22 @@ jobs:
 
       - name: Validate compose services have logging configured
         run: |
-          # Check claude-only: expect 7 services with max-size configured
+          # Verify all services have logging configured (count should equal service count)
+          claude_services=$(docker compose -f compose/docker-compose.claude-only.yml config --services | wc -l | tr -d ' ')
           claude_count=$(docker compose -f compose/docker-compose.claude-only.yml config | grep -c "max-size" || true)
-          if [[ $claude_count -ne 7 ]]; then
-            echo "ERROR: claude-only expected 7 services with logging, found $claude_count"
+          if [[ $claude_count -lt $claude_services ]]; then
+            echo "ERROR: claude-only has $claude_services services but only $claude_count have logging configured"
             exit 1
           fi
 
-          # Check mesh: expect 9 services with max-size configured
+          mesh_services=$(docker compose -f compose/docker-compose.mesh.yml config --services | wc -l | tr -d ' ')
           mesh_count=$(docker compose -f compose/docker-compose.mesh.yml config | grep -c "max-size" || true)
-          if [[ $mesh_count -ne 9 ]]; then
-            echo "ERROR: mesh expected 9 services with logging, found $mesh_count"
+          if [[ $mesh_count -lt $mesh_services ]]; then
+            echo "ERROR: mesh has $mesh_services services but only $mesh_count have logging configured"
             exit 1
           fi
 
-          echo "Logging configuration verified: claude-only=$claude_count, mesh=$mesh_count"
+          echo "Logging configuration verified: claude-only=$claude_count/$claude_services, mesh=$mesh_count/$mesh_services"
 
       - name: Check for expired .trivyignore entries
         run: |
