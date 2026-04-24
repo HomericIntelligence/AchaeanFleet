@@ -300,7 +300,8 @@ jobs:
         run: |
           echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
           echo "vcs_ref=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-          echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          version=$(git describe --tags --exact-match 2>/dev/null || echo "${GITHUB_SHA::7}")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Build base image
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -317,6 +318,35 @@ jobs:
           tags: ${{ matrix.base.name }}:latest
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Verify ENTRYPOINT is set
+        run: |
+          entrypoint=$(docker inspect "${{ matrix.base.name }}:latest" --format '{{json .Config.Entrypoint}}')
+          if [[ "$entrypoint" == "null" || -z "$entrypoint" ]]; then
+            echo "ERROR: ENTRYPOINT not set on ${{ matrix.base.name }}:latest"
+            exit 1
+          fi
+          echo "ENTRYPOINT: $entrypoint"
+
+      - name: Verify OCI labels are present
+        run: |
+          labels=$(docker inspect "${{ matrix.base.name }}:latest" --format '{{json .Config.Labels}}')
+          if ! echo "$labels" | grep -q "org.opencontainers.image.created"; then
+            echo "ERROR: OCI labels missing from ${{ matrix.base.name }}:latest"
+            exit 1
+          fi
+          echo "OCI labels present: OK"
+
+      - name: Assert no setuid binaries remain
+        run: |
+          setuid=$(docker run --rm --entrypoint sh "${{ matrix.base.name }}:latest" \
+            -c "find / -xdev -perm /6000 -type f 2>/dev/null" || true)
+          if [[ -n "$setuid" ]]; then
+            echo "ERROR: setuid/setgid binaries found:"
+            echo "$setuid"
+            exit 1
+          fi
+          echo "No setuid/setgid binaries found: OK"
 
       - name: Scan base image for HIGH/CRITICAL CVEs
         uses: aquasecurity/trivy-action@0.35.0
@@ -432,7 +462,8 @@ jobs:
         run: |
           echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
           echo "vcs_ref=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-          echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          version=$(git describe --tags --exact-match 2>/dev/null || echo "${GITHUB_SHA::7}")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Build vessel image
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -447,6 +478,15 @@ jobs:
           tags: ${{ matrix.vessel.name }}:latest
           labels: |
             org.opencontainers.image.revision=${{ env.SHORT_SHA }}
+
+      - name: Verify ENTRYPOINT is set
+        run: |
+          entrypoint=$(docker inspect "${{ matrix.vessel.name }}:latest" --format '{{json .Config.Entrypoint}}')
+          if [[ "$entrypoint" == "null" || -z "$entrypoint" ]]; then
+            echo "ERROR: ENTRYPOINT not set on ${{ matrix.vessel.name }}:latest"
+            exit 1
+          fi
+          echo "ENTRYPOINT: $entrypoint"
 
   test-smoke:
     name: Smoke Test Worker Vessel
@@ -549,7 +589,7 @@ jobs:
             { echo "ERROR: /tmp/${{ matrix.vessel.name }}.tar is empty or missing"; exit 1; }
 
       - name: Upload vessel image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.5.0
         with:
           name: vessel-image-${{ matrix.vessel.name }}
           path: /tmp/${{ matrix.vessel.name }}.tar
