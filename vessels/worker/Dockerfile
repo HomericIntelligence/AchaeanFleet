@@ -14,9 +14,11 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
 ARG YQ_VERSION=v4.53.2
+ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.created=${BUILD_DATE}
 LABEL org.opencontainers.image.revision=${VCS_REF}
 LABEL org.opencontainers.image.version=${VERSION}
+LABEL git-sha=${GIT_SHA}
 
 USER root
 

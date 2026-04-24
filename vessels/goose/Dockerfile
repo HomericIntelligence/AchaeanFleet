@@ -9,6 +9,9 @@ FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.title="achaean-goose"
 LABEL org.opencontainers.image.description="Goose (Block) AI agent vessel"
 
+ARG GIT_SHA=unknown
+LABEL git-sha=${GIT_SHA}
+
 USER root
 
 ARG TARGETARCH=amd64
