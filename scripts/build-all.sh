@@ -13,6 +13,7 @@ set -euo pipefail
 
 TAG="${TAG:-latest}"
 CONTAINER_CMD="${CONTAINER_CMD:-docker}"
+echo "Container runtime: ${CONTAINER_CMD}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
