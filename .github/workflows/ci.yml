@@ -53,7 +53,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Nomad binary
+        id: cache-nomad
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/nomad
+          key: nomad-${{ env.NOMAD_VERSION }}
+
       - name: Install Nomad
+        if: steps.cache-nomad.outputs.cache-hit != 'true'
         env:
           NOMAD_VERSION: "1.9.7"
         run: |
@@ -64,7 +72,11 @@ jobs:
           nomad version
 
       - name: Validate Nomad job spec
-        run: nomad job validate nomad/mesh.nomad.hcl
+        run: |
+          for f in nomad/*.hcl; do
+            echo "Validating $f..."
+            nomad job validate "$f"
+          done
 
   lint:
     name: Lint Dockerfiles and YAML
@@ -166,7 +178,7 @@ jobs:
           restore-keys: pixi-${{ runner.os }}-
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@v0.8.0
+        uses: prefix-dev/setup-pixi@2058dcd92f5dbe3befd7379ec6a3022bb746bdfd # v0.8.0
         with:
           cache: false
 
