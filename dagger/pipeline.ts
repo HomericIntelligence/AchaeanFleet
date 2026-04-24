@@ -16,6 +16,7 @@
 
 import { connect, Client } from "@dagger.io/dagger";
 import { execFileSync } from "child_process";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
@@ -87,7 +88,13 @@ async function exportToLocalDaemon(container: any, name: string): Promise<void> 
   console.log(`Exporting ${name} → ${tarPath}`);
   await container.export(tarPath);
   console.log(`Loading ${name} into local daemon`);
-  execFileSync("docker", ["load", "-i", tarPath], { stdio: "inherit" });
+  try {
+    execFileSync("docker", ["load", "-i", tarPath], { stdio: "inherit" });
+  } finally {
+    if (fs.existsSync(tarPath)) {
+      fs.unlinkSync(tarPath);
+    }
+  }
 }
 
 async function buildBases(client: Client): Promise<Map<string, any>> {
