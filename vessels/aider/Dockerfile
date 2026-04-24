@@ -31,3 +31,6 @@ USER agent
 
 ENV AGENT_PROGRAM=aider
 ENV AGENT_HEADLESS_FLAG="--yes --message"
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:23020/health 2>/dev/null || exit 1

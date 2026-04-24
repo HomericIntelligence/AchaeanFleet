@@ -27,3 +27,6 @@ USER agent
 
 ENV AGENT_PROGRAM=cline
 ENV AGENT_HEADLESS_FLAG=-y
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:23040/health 2>/dev/null || exit 1
