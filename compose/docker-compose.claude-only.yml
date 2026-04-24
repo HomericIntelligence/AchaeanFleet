@@ -74,6 +74,9 @@ services:
   # -------------------------------------------------------------------------
   hi-aindrea:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-aindrea
     hostname: hi-aindrea
@@ -110,6 +113,9 @@ services:
   # -------------------------------------------------------------------------
   hi-eris:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-eris
     hostname: hi-eris
@@ -145,6 +151,9 @@ services:
   # -------------------------------------------------------------------------
   hi-baird:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-baird
     hostname: hi-baird
@@ -180,6 +189,9 @@ services:
   # -------------------------------------------------------------------------
   hi-vegai:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-vegai
     hostname: hi-vegai
@@ -214,6 +226,9 @@ services:
   # -------------------------------------------------------------------------
   hi-pallas:
     <<: *security
+    depends_on:
+      caddy:
+        condition: service_healthy
     image: ${CLAUDE_IMAGE:-achaean-claude:latest}
     container_name: hi-pallas
     hostname: hi-pallas
