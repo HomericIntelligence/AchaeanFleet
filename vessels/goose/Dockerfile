@@ -36,7 +36,7 @@ RUN case "${TARGETARCH}" in \
     rm /tmp/goose.tar.gz
 
 # Verify installation
-RUN goose --version || true
+RUN goose --version
 
 USER agent
 
