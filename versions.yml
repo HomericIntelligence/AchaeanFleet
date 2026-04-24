@@ -1,0 +1,89 @@
+# AchaeanFleet — Centralized Tool Versions Manifest
+#
+# Single source of truth for all pinned tool versions and checksums across
+# base images and vessel Dockerfiles.  When upgrading a tool, update this
+# file and mirror the change into the relevant Dockerfile(s).
+#
+# SHA256 checksums are provided where available (i.e. where the Dockerfile
+# already verifies them at build time).  For tools without checksum
+# verification, add them as part of the next version bump.
+
+# ---------------------------------------------------------------------------
+# Base image digests (updated weekly by .github/workflows/digest-bump.yml)
+# ---------------------------------------------------------------------------
+base_images:
+  node:
+    tag: "25-slim"
+    digest: "sha256:e49fd70491eb042270f974167c874d6245287263ffc16422fcf93b3c150409d8"
+    used_by:
+      - bases/Dockerfile.node
+      - bases/Dockerfile.minimal
+  python:
+    tag: "3.12-slim"
+    digest: "sha256:9e1985bbb7f0028d6bef4d07dbc1a39e94e694879bd9d0a09d68c9bf40af49ca"
+    used_by:
+      - bases/Dockerfile.python
+  debian:
+    tag: "bookworm-slim"
+    digest: "sha256:f9c6a2fd2ddbc23e336b6257a5245e31f996953ef06cd13a59fa0a1df2d5c252"
+    used_by:
+      - bases/Dockerfile.minimal
+
+# ---------------------------------------------------------------------------
+# Vessel tool versions
+# ---------------------------------------------------------------------------
+tools:
+
+  goose:
+    version: "1.31.1"
+    source: "https://github.com/block/goose/releases/tag/v1.31.1"
+    used_by:
+      - vessels/goose/Dockerfile
+    checksums:
+      amd64:
+        asset: "goose-x86_64-unknown-linux-gnu.tar.gz"
+        sha256: "61c072e843428310abc9751abb4bab097ce2721e519539fb22f0a4a29c8d02da"
+      arm64:
+        asset: "goose-aarch64-unknown-linux-gnu.tar.gz"
+        sha256: "1903a5ab266e6c59ae98636e45e80e9e63dd96fd5cd03787fe617252b5bda161"
+
+  opencode:
+    version: "v1.4.3"
+    source: "https://github.com/sst/opencode/releases/tag/v1.4.3"
+    used_by:
+      - vessels/opencode/Dockerfile
+    checksums:
+      amd64:
+        asset: "opencode-linux-x64.tar.gz"
+        sha256: null  # TODO: add checksum verification to Dockerfile (see issue #210)
+      arm64:
+        asset: "opencode-linux-arm64.tar.gz"
+        sha256: null
+
+  yq:
+    version: "v4.53.2"
+    source: "https://github.com/mikefarah/yq/releases/tag/v4.53.2"
+    used_by:
+      - vessels/worker/Dockerfile
+    checksums:
+      amd64:
+        asset: "yq_linux_amd64"
+        sha256: null  # TODO: add checksum verification to Dockerfile
+      arm64:
+        asset: "yq_linux_arm64"
+        sha256: null
+
+  yarn:
+    version: "1.22.22"
+    source: "https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz"
+    used_by:
+      - bases/Dockerfile.minimal
+      - bases/Dockerfile.node
+    checksums: null  # installed via npm; integrity enforced by npm registry
+
+  aider-chat:
+    version: "0.82.3"
+    source: "https://pypi.org/project/aider-chat/0.82.3/"
+    used_by:
+      - vessels/aider/Dockerfile
+    checksums: null  # installed via pip; integrity enforced by PyPI
