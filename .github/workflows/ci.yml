@@ -468,7 +468,7 @@ jobs:
           echo "No setuid/setgid binaries found: OK"
 
       - name: Scan base image for HIGH/CRITICAL CVEs
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ matrix.base.name }}:latest
           format: table
@@ -626,7 +626,7 @@ jobs:
           echo "HEALTHCHECK: $healthcheck"
 
       - name: Trivy scan vessel image
-        uses: aquasecurity/trivy-action@6c175e9e2f4b7ab73f4eba9148e7803dc5f640f6 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.35.0
         with:
           scan-type: image
           image-ref: ${{ matrix.vessel.name }}:latest
