@@ -719,6 +719,13 @@ if bad: print('\n'.join(bad))
           ignore-unfixed: true
           severity: HIGH,CRITICAL
 
+  distribute-certs:
+    name: Distribute TLS certs (main only)
+    needs: [build-vessels]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/certs.yml
+    secrets: inherit
+
   test-smoke:
     name: Smoke Test Worker Vessel
     runs-on: ubuntu-latest
