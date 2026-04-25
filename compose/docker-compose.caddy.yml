@@ -41,6 +41,10 @@ services:
       - ${TLS_CERT_DIR:-../tls/certs}:/certs:ro
       # Caddy data dir for internal state (ephemeral — ok for self-signed CA use)
       - caddy_data:/data
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:2019/config || exit 1"]

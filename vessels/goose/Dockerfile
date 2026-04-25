@@ -35,8 +35,9 @@ RUN case "${TARGETARCH}" in \
     chmod +x /usr/local/bin/goose && \
     rm /tmp/goose.tar.gz
 
-# Verify installation
-RUN goose --version
+# Verify installation (native arch only — cross-arch QEMU emulation cannot execute arm64 binaries)
+ARG BUILDARCH=amd64
+RUN if [ "${TARGETARCH}" = "${BUILDARCH}" ]; then goose --version; else echo "Skipping goose --version: cross-arch build (${BUILDARCH} → ${TARGETARCH})"; fi
 
 USER agent
 
