@@ -114,7 +114,7 @@ jobs:
           done
           $all_ok
 
-  security/dependency-scan:
+  security-dependency-scan:
     name: security/dependency-scan
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -130,7 +130,7 @@ jobs:
           format: table
           ignore-unfixed: true
 
-  security/secrets-scan:
+  security-secrets-scan:
     name: security/secrets-scan
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -228,7 +228,7 @@ jobs:
             --schemafile https://json.schemastore.org/github-workflow \
             "${workflow_files[@]}"
 
-  deps/version-sync:
+  deps-version-sync:
     name: deps/version-sync
     runs-on: ubuntu-24.04
     timeout-minutes: 5
