@@ -17,7 +17,7 @@ USER root
 # Ensure pipefail for piped RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 ARG GOOSE_VERSION=1.31.1
 ENV GOOSE_VERSION=1.31.1
 ARG GOOSE_AMD64_SHA256=61c072e843428310abc9751abb4bab097ce2721e519539fb22f0a4a29c8d02da
