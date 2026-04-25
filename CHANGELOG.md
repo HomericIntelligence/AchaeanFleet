@@ -140,6 +140,7 @@ All notable changes to AchaeanFleet are documented here.
 - Add versioning strategy and release tagging instructions
 - Add checksums.txt for Goose v1.31.1 release artifacts
 - Document DISPATCH_TOKEN required repository secret
+- Update CHANGELOG.md [skip ci]
 
 ### Fixed
 
@@ -240,6 +241,8 @@ All notable changes to AchaeanFleet are documented here.
 - Fix YAML parse error in validate job (python3 -c indent)
 - Fix YAML parse error in digest-bump workflow (--body indent)
 - Changelog workflow opens a PR instead of pushing directly to main
+- Fix yamllint line-length and goose multi-arch OCI lock error
+- Fix OCI dest trailing slash and compose validate caddy overlay
 
 ### Maintenance
 
