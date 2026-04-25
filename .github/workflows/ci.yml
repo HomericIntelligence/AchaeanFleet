@@ -348,8 +348,16 @@ jobs:
 
       - name: Assert security hardening in all compose services
         run: |
+          printf '%s\n' \
+            'import yaml,os,sys' \
+            'f=os.environ["CF"]' \
+            'd=yaml.safe_load(open(f))' \
+            's=d.get("services",{})' \
+            'bad=[k for k in s if "cap_drop" not in str(s[k])]' \
+            'print("\n".join(bad))' \
+            > /tmp/cap_drop_check.py
           for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml; do
-            missing=$(python3 -c "import yaml,sys; d=yaml.safe_load(open('${f}')); s=d.get('services',{}); bad=[k for k in s if 'cap_drop' not in str(s[k])]; print('\n'.join(bad))")
+            missing=$(CF="$f" python3 /tmp/cap_drop_check.py)
             if [[ -n "$missing" ]]; then
               echo "ERROR: services missing cap_drop in $f:"
               echo "$missing"
@@ -816,6 +824,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v3.3.0
+
+      - name: Clean OCI output directory before build
+        run: rm -rf /tmp/achaean-base-minimal
 
       - name: Build minimal base (amd64 + arm64)
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
