@@ -244,7 +244,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Validate claude-only compose
-        run: docker compose -f compose/docker-compose.claude-only.yml config --quiet
+        run: |
+          docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.claude-only.yml \
+            config --quiet
 
       - name: Validate mesh compose
         run: docker compose -f compose/docker-compose.mesh.yml config --quiet
@@ -836,7 +840,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: achaean-base-minimal:latest
-          outputs: type=oci,dest=/tmp/achaean-base-minimal
+          outputs: type=oci,dest=/tmp/achaean-base-minimal/
 
       - name: Build goose vessel (amd64 + arm64)
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -868,7 +872,7 @@ jobs:
 
       - name: Clean up OCI layout directory
         if: always()
-        run: rm -rf /tmp/achaean-base-minimal
+        run: rm -rf /tmp/achaean-base-minimal/
 
   push-to-registry:
     name: Push to GHCR
