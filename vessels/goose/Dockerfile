@@ -37,7 +37,7 @@ RUN case "${TARGETARCH}" in \
 
 # Verify installation (native arch only — cross-arch QEMU emulation cannot execute arm64 binaries)
 ARG BUILDARCH
-RUN if [ "${TARGETARCH}" = "${BUILDARCH}" ]; then goose --version; else echo "Skipping goose --version: cross-arch build (${BUILDARCH} -> ${TARGETARCH})"; fi
+RUN if [ -z "${BUILDARCH}" ] || [ "${TARGETARCH}" = "${BUILDARCH}" ]; then goose --version; else echo "Skipping goose --version: cross-arch build (${BUILDARCH} -> ${TARGETARCH})"; fi
 
 USER agent
 
