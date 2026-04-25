@@ -1,91 +1,290 @@
 # Changelog
 
 All notable changes to AchaeanFleet are documented here.
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-No version tags exist yet; sections are anchored to commit SHAs and dates.
 
----
-
-## [2026-04-05] — `20b70bc`
+## [unreleased]
 
 ### Added
 
-- GitHub CLI (`gh`) pre-installed in the base node image for CI/CD workflows
+- Auto-detect container runtime, add pod YAML specs, push-and-notify recipe
+- Aimaestro-mesh → homeric-mesh, AIM_HOST → AGAMEMNON_URL, replace agent-server.js (ADR-006)
+- Add github cli
+- Add bootstrap recipe for one-command environment setup
+- Add .editorconfig for consistent formatting across editors
+- Add pre-commit hooks for Dockerfile, YAML, and shell linting
+- Add dual-tag image versioning strategy (SHA + semver)
+- Encrypt inter-service communication with TLS via Caddy
+- Add resource limits and reservations to all services
+- Multi-stage builds for goose and opencode to reduce image size
+- Add no-new-privileges and cap_drop: ALL to all compose services
+- Add OCI image labels for build metadata to all Dockerfiles
+- Add missing 6 of 9 vessel job groups to mesh.nomad.hcl
+- Add clean-dangling and clean-all recipes
+- Add Dependabot config for automated dependency updates
+- Add shared entrypoint.sh to all base images
+- Add Trivy vulnerability scanning to CI
+- Add HEALTHCHECK to all base Dockerfiles
+- Add frontend/backend network segmentation
+- Add read-only root filesystem to all compose services
+- Implement versioned image tagging strategy
+- Add log rotation to all compose services
+- Add hadolint Dockerfile linting job before build matrix
+- Add lint, validate, and security-scan pipeline stages
+- Use Docker secrets instead of inline API keys
+- Add compose validation and build smoke tests
+- Add digest verification step in push-to-registry job
+- Add goose vessel to multi-arch CI matrix
+- Add cap_drop=ALL and no_new_privs to Docker driver configs
+- Pin base image digests and GitHub Actions to SHA256/commit SHAs
+- Add hi-eris (23002) and hi-pallas (23005) Claude agent slots
+- Replace curl|bash NodeSource install with multi-stage COPY
+- Add validate-nomad job to catch HCL syntax errors early
+- Add YYYY-MM-DD-SHA collision guard for multi-push-per-day
+- Add python/pytest deps and wire pixi run pytest task
+- Add post-push GHCR tag verification and multi-tag push
+- Sync hi-vegai into docker-compose.mesh.yml
+- Add Trivy filesystem scan for dependency manifests
+- Add Trivy scan for HIGH/CRITICAL CVEs after base image builds
+- Add requirements.txt for aider-chat to enable Dependabot tracking
+- Add EXPOSE instructions to vessel Dockerfiles for port documentation
+- Add cap_drop/no_new_privs to commented gpu-agents block
+- Add log rotation stanzas to all tasks in mesh.nomad.hcl
+- Update resource limits to match compose defaults
+- Consolidate bootstrap recipe and add API key + version checks
+- Print active container runtime at start of build-all.sh
+- Warn on malformed DATE_TAG format
+- Add pytest-cov dependency and test-python task
+- Propagate BUILD_DATE/VCS_REF/VERSION build args for OCI labels
+- Wire OPENAI_API_KEY into opencode, codebuff, ampcode, cline vessels
+- Add check-cert-expiry recipe for TLS certificate monitoring
+- Add init-workspaces and check-versions recipes
+- Add validate-workspaces recipe for PROJECT path preflight
+- Multi-tag push for base images; add Oh My Zsh verification to tests
+- Include base images in push-to-registry STEP_SUMMARY
+- Add load-secrets.sh for SOPS/age/env secret backends
+- Add rotate-checksum recipe for atomic version bumps
+- Include vessel digest in notify-proteus dispatch payload
+- Add centralized versions manifest (versions.yml)
+- Add TLS cert distribution to Nomad client hosts
 
----
+### CI
 
-## [2026-04-03] — `309f75e`
-
-### Added
-
-- `CONTRIBUTING.md` with Dockerfile conventions, PR process, and branch strategy
-- `SECURITY.md` with responsible disclosure process
-- `CODE_OF_CONDUCT.md` (Contributor Covenant)
-- `LICENSE` (MIT)
-
----
-
-## [2026-03-31] — `a04f395`, `8b5212b`
-
-### Fixed
-
-- CI: use `docker` driver for buildx so daemon images are shared across build steps
-- CI: load base images from build artifacts before vessel builds so `FROM` references resolve
-
----
-
-## [2026-03-28] — `23bc589`
+- Switch from self-hosted to ubuntu-latest runners
+- Add .github/workflows/** and tests/** to paths trigger
+- Add pre-commit hook to detect stale lockfiles
+- Remove PR path filter, add shellcheck, add coverage check
+- Pin trivy-action to SHA and add SARIF upload
+- Increase artifact retention from 1 day to 7 days
+- Add npm audit, node_modules cache, workspace mount check, base smoke tests
+- Add shell:bash checks, safe-name guard, artifact guard, pin runners
+- Add sha256 format validation to image digest check
+- Add tarball guards, disk logging, multi-line load fix, base image verify
+- Add job summary to verify-registry and PR paths trigger
+- Pin artifact SHAs, verify ENTRYPOINT/labels, git-tag VERSION, setuid check
+- Add scan-bases job, check vessel Trivy coverage
+- Add retry, .env check, logging count, healthcheck, trivyignore expiry checks
+- Add secret-absent check, negative YAML test, GHA cache, smoke test note
+- Add workflow_dispatch force_push input for integration testing push path
+- Add goose --version verification step to build-vessels matrix job
+- Add pip-audit advisory check and vessel image integrity verification
+- Add weekly verify-checksums workflow to detect artifact tampering
+- Narrow blocking Trivy severity to CRITICAL to prevent unfixable HIGH blocks
+- Gate push-to-registry on security scan completion via workflow_run
+- Add git-cliff config and automated CHANGELOG update workflow
+- Verify AI tool binary installed in each vessel
+- Pass explicit vessel tool versions in matrix build-args; add broken-build smoke test
+- Add monthly scheduled digest-bump workflow
+- Add node binary ldd compatibility check for all base images
+- Add security hardening, secret env var, and logging checks to validate job
+- Pin all GitHub Actions to full SHA hashes (supply-chain hardening)
 
 ### Changed
 
-- **Breaking:** Migrated mesh namespace from `aimaestro-mesh` → `homeric-mesh` (ADR-006)
-- **Breaking:** Renamed environment variable `AIM_HOST` → `AGAMEMNON_URL`
-- Replaced `agent-server.js` shim with the new Agamemnon agent sidecar entrypoint
+- Extract duplicate agent-user setup into shared script
+- Extract setuid-strip RUN layer to shared script
 
----
+### Documentation
 
-## [2026-03-27] — `3ff5967`
-
-### Added
-
-- Enabled `hephaestus@ProjectHephaestus` plugin for CI tooling integration
-
----
-
-## [2026-03-23] — `1da1354`
-
-### Changed
-
-- CI runners switched from self-hosted to `ubuntu-latest` for improved reliability
-
----
-
-## [2026-03-15] — `5794587`, `d72575c`, `d584b71`
-
-### Added
-
-- Podman support: auto-detect container runtime (Docker vs Podman) in scripts
-- Pod YAML specs in `pods/` for rootless Podman deployments
-- `push-and-notify` recipe in `justfile`
+- Add LICENSE, SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
+- Add CHANGELOG.md and reference contributing docs in README
+- Expand SECURITY.md with full vulnerability reporting policy
+- Document API key injection workflow, add variable blocks
+- Document template stanza pattern for runtime variable interpolation
+- Document CONTAINER_CMD env var for Podman users
+- Document .trivyignore CVE review process
+- Add VERSIONING.md documenting the image tagging strategy
+- Add vault policy HCL snippet and example file
+- Add README with version upgrade procedure
+- Add host memory sizing guide for full mesh to README
+- Document read-only root filesystem exceptions and tmpfs mounts
+- Add binary checksum update procedure to CONTRIBUTING.md
+- Document *_PROJECT env vars in CLAUDE.md agent addition checklist
+- Clarify network selection when adding a new agent type
+- Document read-only root filesystem exceptions and tmpfs mounts
+- Document *_PROJECT env vars in agent addition checklist
+- Document *_PROJECT env vars in agent addition checklist
+- Document CONTAINER_CMD, bridge subnet note, complete workspace dirs
+- Add tag retention and cleanup policy section
+- Document healthcheck behavior and vessel override pattern
+- Document required branch protection status checks
+- Document ENTRYPOINT override pattern for Nomad job specs
+- Add image size tracking document
+- Document CI docker load tagging convention
+- Document pixi test-python task and Python test suite
+- Add Docker Compose v2 requirement note for IMAGE_TAG interpolation
+- Document security scanning workflow and trivyignore policy
+- Add initial setup section with workspace directory layout
+- Note that private vulnerability reporting requires admin enablement
+- Warn that security anchors are not preserved through override files
+- Add secrets management guidance for Phase 6 Vault integration
+- Add versioning strategy and release tagging instructions
+- Add checksums.txt for Goose v1.31.1 release artifacts
+- Document DISPATCH_TOKEN required repository secret
 
 ### Fixed
 
-- `bases/Dockerfile.node`: renamed `node` user to `agent` for Podman rootless compatibility
-- Simplified runtime version display in build output
+- Simplify runtime version display
+- Dockerfile.node - rename node user to agent, fix Podman rootless compatibility
+- Load base images via artifacts so vessel builds can resolve them
+- Use docker driver for buildx so daemon images are shared
+- Eliminate curl-pipe-bash supply chain risk in all Dockerfiles
+- Set containerPort to 23001 in worker-pod.yaml
+- Restrict agent workspace mounts to dedicated subdirectories
+- Add .pixi/ entry to prevent committing pixi env cache
+- Route notify-proteus.sh through ProjectProteus, add host field
+- Use CONTAINER_CMD env var in build-all.sh instead of hardcoding docker
+- Replace curl|bash with pinned, SHA256-verified downloads
+- Commit lockfiles and harden CI to use frozen installs
+- Apply pre-commit auto-fixes after rebase
+- Restore missing resource YAML anchors lost during conflict resolution
+- Add --no-install-recommends to all apt-get install commands
+- Remediate D+ audit findings — CRITICAL/MAJOR/MINOR fixes
+- Remove || true from installation and verification steps
+- Remove duplicate x-security YAML key introduced during rebase
+- Merge duplicate build-args YAML keys in ci.yml after rebase
+- Correct agent count and unassigned port labels
+- Prefix entrypoint.sh COPY path with bases/ for repo-root build context
+- Remove NOPASSWD:ALL sudo from all base Dockerfiles
+- Install sudo in python and minimal base Dockerfiles
+- Correct GitHub org name in notify-proteus.sh
+- Honor CONTAINER_CMD in build-all.sh
+- Remove deprecated version key from compose files
+- Wrap tarball fallback in subshell to fix OR/AND precedence
+- Make apt failures fatal for required packages
+- Correct yq fallback shell grouping in Dockerfile
+- Update trivy-action from 0.30.0 to 0.35.0
+- Export base images to local daemon before building vessels
+- Pin base image digests for reproducible builds
+- Use template stanza for NOMAD_ALLOC_INDEX interpolation
+- Pin all npm/pip package versions for reproducible builds
+- Correct docker/setup-buildx-action SHA to valid v3.10.0 commit
+- Pin agent tool versions in all vessel and base Dockerfiles
+- Add missing hadolint suppressions for DL3006, DL4006, DL3015, SC2015
+- Add .hadolint.yaml to suppress intentional lint patterns
+- Correct yq fallback shell grouping in Dockerfile
+- Repair duplicate YAML keys and broken job references in ci.yml
+- Wire hadolint config and pin YQ_VERSION in worker Dockerfile
+- Strip setuid/setgid bits from all base images at build time
+- Add missing YAML anchors and remove duplicate merge keys
+- Add explicit AGENT_PORT env var to worker-pod.yaml
+- Export vessel and base images to local daemon on build
+- Remove inline comments from FROM lines, raise hadolint threshold
+- Yamllint trailing blank, nomad sensitive attr, goose multiarch base
+- Fix shell-tests grep case and broaden workflow path filters
+- Replace bats-core/bats-action@2 with apt-get install bats
+- Correct containerPort in worker-pod.yaml to use AGENT_PORT
+- Use per-base-type smoke commands in testImages()
+- Add docker save + non-empty size check for vessel artifacts
+- Clean up /tmp tarballs after each pipeline job
+- Robust docker load tagging via IMAGE_ID capture
+- Add moduleResolution: node16 to fix @dagger.io/dagger type errors
+- Restore Testing section and remove duplicate Adding new agent type heading
+- Remove duplicate hi-vegai service in docker-compose.mesh.yml
+- Document curl dep and narrow sudoers in python+minimal
+- Merge consecutive RUN blocks to reduce layers
+- Default TARGETARCH=amd64 for plain docker build
+- Set AGENT_PORT=23001 in worker and claude pod specs
+- Apply security hardening to hi-eris, hi-vegai, hi-pallas
+- Add per-port HEALTHCHECK overrides for non-23001 vessels
+- Clean up /tmp/*.tar files after docker load in try/finally
+- Add GIT_SHA arg and git-sha label to all vessel Dockerfiles
+- Add SHELL pipefail before piped RUN commands
+- Fix TypeScript moduleResolution errors and add image verification test
+- Add /home/agent/.npm to tmpfs, document healthcheck layers
+- Export base images to daemon on push path before vessel builds
+- Add bash-to-sh fallback guard for slim base images
+- Restore nomad job guard and remove invalid inline Dockerfile comments
+- Define BUILD_DATE/VCS_REF in build-all.sh and fix bats org assertion
+- Resolve shellcheck SC2129 and suppress intentional SC2016
+- Resolve pytest pin-enforcement failures
+- Use Agents/Vegai subdirectory mount for hi-vegai workspace
+- Update logging validation to check all services dynamically
+- Only check ANTHROPIC_API_KEY in secrets hardcode test
+- Pin runtime base images to sha256 digests
+- Add QEMU setup for goose multi-arch build job
+- Use OCI layout directory (not tarball) for goose multi-arch build context
+- Pin both trivy-action uses to SHA v0.36.0
+- Remove dead builder stage fetching unpinned latest
+- Add depends_on caddy to all agent services
+- Remove || true from version check
+- Add entrypoint.sh to python and minimal base images
+- Fix inline Dockerfile comments and shellcheck severity
+- Correct trivy-action SHA and fix BATS org name test
+- Suppress DL3006 on parameterized FROM and update pixi.lock
+- Skip non-job HCL files in nomad validation, suppress npm CVEs in trivyignore
+- Add /home/agent/.npm to tmpfs for npm cache writability
+- Add agent-sidecar read-only mount to all vessel services
+- Use TARGETARCH for dynamic arch URL in opencode and worker
+- Mark entrypoint.sh as executable
+- Stop changelog and security-scan from failing on branch protection
+- Fix YAML parse error in validate job (python3 -c indent)
+- Fix YAML parse error in digest-bump workflow (--body indent)
+- Changelog workflow opens a PR instead of pushing directly to main
+- Fix yamllint line-length and goose multi-arch OCI lock error
 
----
+### Maintenance
 
-## [2026-03-15] — `5d6377a`
+- Enable hephaestus@ProjectHephaestus plugin
+- Bump the base-images group in /bases with 2 updates
+- Bump the dagger-deps group in /dagger with 3 updates
+- Bump the github-actions group with 8 updates
+- Bump docker/setup-buildx-action from 3 to 4
+- Bump github/codeql-action from 3 to 4
+- Bump actions/checkout from 4 to 6
+- Bump docker/build-push-action from 5 to 7
+- Bump python from 3.12-slim to 3.14-slim in /bases
+- Bump node from 20-slim to 25-slim in /bases
+- Add Python pycache to .gitignore
+- Ignore Python __pycache__ and .pytest_cache
+- Ignore Python bytecode and cache directories
+- Migrate [project] to [workspace] to fix deprecation warning
+- Add .gitignore to catch *.nomadvar secrets files
+- Deduplicate and verify __pycache__ entries in .gitignore
+- Remove obsolete version: key from compose files
+- Add pre-commit as a managed dependency
+- Add reviewers to all Dependabot update configurations
+- Certs check, runtime detection, cleanup improvements, docs
+- Add .trivyignore for known false-positive secret patterns in env examples
+- Add npm ecosystem entry for dagger/ directory
+- Bump actions/upload-artifact from 4.5.0 to 7.0.1
+- Bump docker/setup-buildx-action from 3.12.0 to 4.0.0
+- Bump aquasecurity/trivy-action from 0.35.0 to 0.36.0
+- Bump docker/build-push-action from 5.4.0 to 7.1.0
+- Bump node from 20-slim to 25-slim in /bases
+- Update pixi.lock to match current workspace
+- Bump hadolint/hadolint-action from 3.1.0 to 3.3.0
 
-### Added
+### Testing
 
-- Repository scaffold: `justfile`, `pixi.toml`, `build-all.sh`, initial `README.md`
+- Add BATS smoke tests for notify-proteus.sh org name correctness
+- Add BATS tests for build-all.sh CONTAINER_CMD behavior
+- Add TAG env var test case to build-all BATS suite
+- Add read-only root smoke test for worker vessel
+- Add smoke tests for CONTAINER_CMD passthrough in build-all.sh
+- Add BATS tests for build-all.sh and entrypoint.sh
 
----
+### Security
 
-## [2026-03-14] — `5bbac20`
+- Scope container volume mounts to least-privilege paths
+- Remove passwordless sudo from base images
 
-### Added
-
-- Initial commit: base Dockerfiles (`node`, `python`, `minimal`), vessel Dockerfiles for all
-  supported agent types, Docker Compose files, and Dagger CI pipeline scaffold
