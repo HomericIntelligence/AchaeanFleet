@@ -37,6 +37,12 @@ variable "workspace_root" {
   default     = "/home/mvillmow"
 }
 
+variable "tls_cert_dir" {
+  description = "Absolute path to TLS certificate directory on Nomad client hosts (populated by .github/workflows/certs.yml)"
+  type        = string
+  default     = "/etc/achaean/certs"
+}
+
 
 # =============================================================================
 # Job
@@ -82,6 +88,7 @@ job "achaean-mesh" {
 
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
         ]
       }
 
@@ -154,6 +161,7 @@ EOT
         no_new_privs = true
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
         ]
       }
 
@@ -217,6 +225,7 @@ EOT
         volumes = [
           "/tmp/ci-workspace:/workspace",
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
         ]
       }
 

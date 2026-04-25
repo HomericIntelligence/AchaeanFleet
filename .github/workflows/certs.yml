@@ -1,0 +1,56 @@
+name: Distribute TLS certs to Nomad clients
+
+# Required secrets (configure in repo settings before this workflow runs):
+#   NOMAD_SSH_DEPLOY_KEY     — base64-encoded ed25519 private key (nomad user on each client)
+#   NOMAD_CLIENT_KNOWN_HOSTS — base64-encoded ssh known_hosts file covering all client hosts
+#   NOMAD_CLIENT_HOSTS       — space-separated list of Nomad client hostnames or IPs
+#
+# See tls/README.md for setup instructions.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  distribute:
+    name: Generate and distribute TLS certs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.1.7
+
+      - name: Decode SSH credentials
+        env:
+          DEPLOY_KEY_B64: ${{ secrets.NOMAD_SSH_DEPLOY_KEY }}
+          KNOWN_HOSTS_B64: ${{ secrets.NOMAD_CLIENT_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          mkdir -p /tmp/sshcreds
+          printf '%s' "$DEPLOY_KEY_B64" | base64 -d > /tmp/sshcreds/deploy_key
+          printf '%s' "$KNOWN_HOSTS_B64" | base64 -d > /tmp/sshcreds/known_hosts
+          chmod 600 /tmp/sshcreds/deploy_key
+
+      - name: Generate TLS certs
+        run: bash tls/generate-certs.sh
+
+      - name: Distribute certs to Nomad client hosts
+        env:
+          NOMAD_CLIENT_HOSTS: ${{ secrets.NOMAD_CLIENT_HOSTS }}
+          CERT_SRC_DIR: ${{ github.workspace }}/tls/certs
+          CERT_DEST_DIR: /etc/achaean/certs
+          SSH_KEY_FILE: /tmp/sshcreds/deploy_key
+          SSH_KNOWN_HOSTS_FILE: /tmp/sshcreds/known_hosts
+        run: bash scripts/distribute-certs.sh
+
+      - name: Scrub credentials and private keys
+        if: always()
+        run: |
+          rm -rf /tmp/sshcreds
+          rm -f tls/certs/ca.key tls/certs/caddy.key tls/certs/nats.key

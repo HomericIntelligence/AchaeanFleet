@@ -130,6 +130,45 @@ nats pub -s "tls://localhost:4222" \
   test.subject "hello"
 ```
 
+## CI distribution to Nomad client hosts
+
+Certs generated locally with `bash tls/generate-certs.sh` are for development. In CI,
+`.github/workflows/certs.yml` regenerates and distributes them on every push to `main`
+via `scripts/distribute-certs.sh`.
+
+Required GitHub Actions secrets:
+
+| Secret | Format | Purpose |
+|---|---|---|
+| `NOMAD_SSH_DEPLOY_KEY` | base64 of an ed25519 private key | Authenticates to each Nomad client host as the `nomad` user |
+| `NOMAD_CLIENT_KNOWN_HOSTS` | base64 of an ssh `known_hosts` file | Pre-enrolls host fingerprints; avoids `StrictHostKeyChecking=no` |
+| `NOMAD_CLIENT_HOSTS` | space-separated hostnames or IPs | Targets for cert distribution |
+
+Generate the deploy key and encode secrets:
+
+```bash
+# Generate a new deploy key
+ssh-keygen -t ed25519 -a 64 -f ~/.ssh/nomad_deploy -N ""
+
+# Base64-encode for GitHub secrets
+base64 -w0 ~/.ssh/nomad_deploy        # → NOMAD_SSH_DEPLOY_KEY
+ssh-keyscan -t ed25519 host1 host2 ... | base64 -w0  # → NOMAD_CLIENT_KNOWN_HOSTS
+```
+
+Set via GitHub CLI:
+
+```bash
+gh secret set NOMAD_SSH_DEPLOY_KEY     --body "$(base64 -w0 ~/.ssh/nomad_deploy)"
+gh secret set NOMAD_CLIENT_KNOWN_HOSTS --body "$(ssh-keyscan -t ed25519 host1 host2 | base64 -w0)"
+gh secret set NOMAD_CLIENT_HOSTS       --body "host1 host2 host3"
+```
+
+Once secrets are provisioned, manually trigger a test run:
+
+```bash
+gh workflow run certs.yml
+```
+
 ## Tailscale Alternative
 
 If the homeric-mesh runs entirely on Tailscale-connected hosts, WireGuard provides
