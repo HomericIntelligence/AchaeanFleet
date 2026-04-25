@@ -251,7 +251,11 @@ jobs:
             config --quiet
 
       - name: Validate mesh compose
-        run: docker compose -f compose/docker-compose.mesh.yml config --quiet
+        run: |
+          docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.mesh.yml \
+            config --quiet
 
       - name: Reject bare WORKSPACE_ROOT workspace mounts
         run: |
@@ -308,15 +312,27 @@ jobs:
       - name: Validate compose services have logging configured
         run: |
           # Verify all services have logging configured (count should equal service count)
-          claude_services=$(docker compose -f compose/docker-compose.claude-only.yml config --services | wc -l | tr -d ' ')
-          claude_count=$(docker compose -f compose/docker-compose.claude-only.yml config | grep -c "max-size" || true)
+          claude_services=$(docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.claude-only.yml \
+            config --services | wc -l | tr -d ' ')
+          claude_count=$(docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.claude-only.yml \
+            config | grep -c "max-size" || true)
           if [[ $claude_count -lt $claude_services ]]; then
             echo "ERROR: claude-only has $claude_services services but only $claude_count have logging configured"
             exit 1
           fi
 
-          mesh_services=$(docker compose -f compose/docker-compose.mesh.yml config --services | wc -l | tr -d ' ')
-          mesh_count=$(docker compose -f compose/docker-compose.mesh.yml config | grep -c "max-size" || true)
+          mesh_services=$(docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.mesh.yml \
+            config --services | wc -l | tr -d ' ')
+          mesh_count=$(docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.mesh.yml \
+            config | grep -c "max-size" || true)
           if [[ $mesh_count -lt $mesh_services ]]; then
             echo "ERROR: mesh has $mesh_services services but only $mesh_count have logging configured"
             exit 1
@@ -353,17 +369,24 @@ jobs:
       - name: Assert security hardening in all compose services
         run: |
           printf '%s\n' \
-            'import yaml,os,sys' \
-            'f=os.environ["CF"]' \
-            'd=yaml.safe_load(open(f))' \
+            'import yaml,sys' \
+            'd=yaml.safe_load(sys.stdin)' \
             's=d.get("services",{})' \
             'bad=[k for k in s if "cap_drop" not in str(s[k])]' \
             'print("\n".join(bad))' \
             > /tmp/cap_drop_check.py
-          for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml; do
-            missing=$(CF="$f" python3 /tmp/cap_drop_check.py)
+          declare -A LABELS=(
+            ["claude-only"]="compose/docker-compose.claude-only.yml"
+            ["mesh"]="compose/docker-compose.mesh.yml"
+          )
+          for label in claude-only mesh; do
+            f="${LABELS[$label]}"
+            missing=$(docker compose \
+              -f compose/docker-compose.caddy.yml \
+              -f "$f" \
+              config | python3 /tmp/cap_drop_check.py)
             if [[ -n "$missing" ]]; then
-              echo "ERROR: services missing cap_drop in $f:"
+              echo "ERROR: services missing cap_drop in $label:"
               echo "$missing"
               exit 1
             fi
@@ -372,8 +395,14 @@ jobs:
 
       - name: Verify secrets not hardcoded in compose config
         run: |
-          ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.claude-only.yml config > /tmp/claude-only-config.yml
-          ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose -f compose/docker-compose.mesh.yml config > /tmp/mesh-config.yml
+          ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.claude-only.yml \
+            config > /tmp/claude-only-config.yml
+          ANTHROPIC_API_KEY=dummy OPENAI_API_KEY=dummy docker compose \
+            -f compose/docker-compose.caddy.yml \
+            -f compose/docker-compose.mesh.yml \
+            config > /tmp/mesh-config.yml
 
           # ANTHROPIC_API_KEY must come from Docker secrets (not env), so it should
           # never appear as a literal value in the expanded config. OPENAI_API_KEY is
