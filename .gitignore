@@ -44,3 +44,12 @@ __pycache__/
 
 # Local test outputs
 /tmp/
+
+# Coverage reports
+.coverage
+.coverage.*
+
+# Claude worktree and session artifacts
+.worktrees/
+.claude/worktrees/
+.claude/scheduled_tasks.lock
