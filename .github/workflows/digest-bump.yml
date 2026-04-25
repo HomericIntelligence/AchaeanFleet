@@ -129,21 +129,24 @@ jobs:
 
       - name: Create pull request
         if: steps.check_changes.outputs.no_changes == 'false'
-        run: |
-          gh pr create \
-            --title "chore: monthly base image digest bump" \
-            --body "Automated monthly digest bump for base images.
-
-Updates pinned digests in:
-- bases/Dockerfile.node
-- bases/Dockerfile.python
-- bases/Dockerfile.minimal
-
-Closes #128" \
-            --head "$BRANCH_NAME" \
-            --base main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' \
+            "Automated monthly digest bump for base images." \
+            "" \
+            "Updates pinned digests in:" \
+            "- bases/Dockerfile.node" \
+            "- bases/Dockerfile.python" \
+            "- bases/Dockerfile.minimal" \
+            "" \
+            "Closes #128" \
+            > /tmp/pr-body.txt
+          gh pr create \
+            --title "chore: monthly base image digest bump" \
+            --body-file /tmp/pr-body.txt \
+            --head "$BRANCH_NAME" \
+            --base main
 
       - name: Exit successfully
         if: steps.check_changes.outputs.no_changes == 'true'
