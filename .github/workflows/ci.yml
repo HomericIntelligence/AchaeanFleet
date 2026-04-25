@@ -349,13 +349,7 @@ jobs:
       - name: Assert security hardening in all compose services
         run: |
           for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml; do
-            missing=$(python3 -c "
-import yaml, sys
-data = yaml.safe_load(open('$f'))
-services = data.get('services', {})
-bad = [s for s in services if 'cap_drop' not in str(data['services'][s])]
-if bad: print('\n'.join(bad))
-")
+            missing=$(python3 -c "import yaml,sys; d=yaml.safe_load(open('${f}')); s=d.get('services',{}); bad=[k for k in s if 'cap_drop' not in str(s[k])]; print('\n'.join(bad))")
             if [[ -n "$missing" ]]; then
               echo "ERROR: services missing cap_drop in $f:"
               echo "$missing"
