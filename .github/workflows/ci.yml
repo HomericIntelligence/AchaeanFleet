@@ -858,8 +858,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v3.3.0
 
-      - name: Clean OCI output directory before build
-        run: rm -rf /tmp/achaean-base-minimal
+      - name: Clean OCI output paths before build
+        run: rm -rf /tmp/achaean-base-minimal.tar /tmp/achaean-base-minimal
 
       - name: Build minimal base (amd64 + arm64)
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -869,7 +869,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: achaean-base-minimal:latest
-          outputs: type=oci,dest=/tmp/achaean-base-minimal/
+          outputs: type=oci,dest=/tmp/achaean-base-minimal.tar
+
+      - name: Extract OCI tarball to layout directory
+        run: |
+          mkdir -p /tmp/achaean-base-minimal
+          tar -xf /tmp/achaean-base-minimal.tar -C /tmp/achaean-base-minimal
 
       - name: Build goose vessel (amd64 + arm64)
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -884,24 +889,9 @@ jobs:
           push: false
           tags: achaean-goose:latest
 
-      - name: Export vessel image to tarball
-        run: docker save ${{ matrix.vessel.name }}:latest -o /tmp/${{ matrix.vessel.name }}.tar
-
-      - name: Verify tarball is non-empty
-        run: |
-          [ -s /tmp/${{ matrix.vessel.name }}.tar ] || \
-            { echo "ERROR: /tmp/${{ matrix.vessel.name }}.tar is empty or missing"; exit 1; }
-
-      - name: Upload vessel image artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          name: vessel-image-${{ matrix.vessel.name }}
-          path: /tmp/${{ matrix.vessel.name }}.tar
-          retention-days: 7
-
       - name: Clean up OCI layout directory
         if: always()
-        run: rm -rf /tmp/achaean-base-minimal/
+        run: rm -rf /tmp/achaean-base-minimal.tar /tmp/achaean-base-minimal
 
   push-to-registry:
     name: Push to GHCR
