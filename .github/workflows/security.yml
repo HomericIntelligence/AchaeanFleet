@@ -70,14 +70,25 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.1.7
-      - name: Pull and scan base images
+      - name: Pull base images
+        id: pull_images
         run: |
+          available=""
           for img in achaean-base-node achaean-base-python achaean-base-minimal; do
             echo "Pulling ghcr.io/homericintelligence/${img}:latest..."
-            docker pull "ghcr.io/homericintelligence/${img}:latest" 2>/dev/null || \
+            if docker pull "ghcr.io/homericintelligence/${img}:latest" 2>/dev/null; then
+              available="${available} ${img}"
+            else
               echo "WARNING: ${img} not found in GHCR, skipping"
+            fi
           done
+          if [ -z "$available" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Trivy image scan
+        if: steps.pull_images.outputs.available == 'true'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
         with:
           scan-type: image

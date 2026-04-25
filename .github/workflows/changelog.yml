@@ -34,6 +34,7 @@ jobs:
 
       - name: Commit and push CHANGELOG updates
         if: steps.check_changes.outputs.changed == 'true'
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
