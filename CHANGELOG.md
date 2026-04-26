@@ -141,6 +141,7 @@ All notable changes to AchaeanFleet are documented here.
 - Add checksums.txt for Goose v1.31.1 release artifacts
 - Document DISPATCH_TOKEN required repository secret
 - Update CHANGELOG.md [skip ci]
+- Update CHANGELOG.md [skip ci]
 
 ### Fixed
 
@@ -281,6 +282,7 @@ All notable changes to AchaeanFleet are documented here.
 - Bump node from 20-slim to 25-slim in /bases
 - Update pixi.lock to match current workspace
 - Bump hadolint/hadolint-action from 3.1.0 to 3.3.0
+- Add unified required-checks workflow
 
 ### Testing
 
