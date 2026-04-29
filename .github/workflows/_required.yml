@@ -16,7 +16,6 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write  # needed by gitleaks-action
 
 jobs:
   lint:
@@ -122,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy filesystem scan (advisory)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.30.0
         with:
           scan-type: fs
           scan-ref: .
@@ -139,10 +138,15 @@ jobs:
         with:
           fetch-depth: 0        # gitleaks needs full history
 
-      - name: Gitleaks secrets scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install gitleaks
+        run: |
+          GITLEAKS_VERSION="8.21.2"
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar xz -C /usr/local/bin gitleaks
+
+      - name: Run gitleaks
+        run: gitleaks detect --source . --verbose
 
   build:
     name: build
