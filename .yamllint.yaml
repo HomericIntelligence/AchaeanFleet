@@ -6,3 +6,4 @@ rules:
     level: warning
   document-start: disable
   new-line-at-end-of-file: disable
+  empty-lines: disable
