@@ -39,7 +39,7 @@ RUN gh --version
 
 USER agent
 
-ENV AGENT_PROGRAM=claude-code
+ENV AGENT_PROGRAM=claude
 ENV AGENT_HEADLESS_FLAG=-p
 
 # Runtime: Agamemnon agent sidecar starts claude with -p flag in tmux
