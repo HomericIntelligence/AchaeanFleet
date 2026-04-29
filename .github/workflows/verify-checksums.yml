@@ -38,7 +38,7 @@ jobs:
         run: |
           echo "Verifying opencode-1.4.3-linux-x64.sha256..."
           EXPECTED_HASH=$(cat scripts/checksums/opencode-1.4.3-linux-x64.sha256 | tr -d ' ')
-          curl -fsSL "https://github.com/sst/opencode/releases/download/v1.4.3/opencode_linux_amd64.tar.gz" \
+          curl -fsSL "https://github.com/sst/opencode/releases/download/v1.4.3/opencode-linux-x64.tar.gz" \
             -o /tmp/opencode.tar.gz
           ACTUAL_HASH=$(sha256sum /tmp/opencode.tar.gz | awk '{print $1}')
           echo "Expected: $EXPECTED_HASH"
