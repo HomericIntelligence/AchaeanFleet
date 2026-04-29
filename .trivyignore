@@ -24,3 +24,21 @@ CVE-2026-26996  # minimatch DoS — transitive dep in claude-code, upstream fix 
 CVE-2026-27903  # minimatch DoS — transitive dep in claude-code, upstream fix pending
 CVE-2026-27904  # minimatch DoS — transitive dep in claude-code, upstream fix pending
 CVE-2026-23745  # node-tar arbitrary file overwrite — in npm bundled tar, no user input path
+
+# aider-chat==0.82.3 pins exact transitive dep versions that contain known CVEs.
+# aider-chat itself pins these as exact requirements (==) so they cannot be upgraded
+# without breaking the package. No newer aider-chat release available as of 2026-04-29.
+CVE-2026-35030       # litellm@1.68.0 CRITICAL auth bypass — fixed in 1.83.0, pinned by aider-chat
+CVE-2026-35029       # litellm@1.68.0 HIGH RCE — fixed in 1.83.0, pinned by aider-chat
+GHSA-69x8-hrgq-fjj8 # litellm@1.68.0 HIGH password hash exposure — fixed in 1.83.0, pinned by aider-chat
+CVE-2025-69223       # aiohttp@3.11.18 HIGH HTTP parser — fixed in 3.13.3, pinned by aider-chat
+CVE-2025-48379       # pillow@11.2.1 DDS heap buffer overflow — fixed in 11.3.0, pinned by aider-chat
+CVE-2026-25990       # pillow@11.2.1 OOB write — fixed in 12.1.1, pinned by aider-chat
+CVE-2026-40192       # pillow@11.2.1 decompression bomb DoS — fixed in 12.2.0, pinned by aider-chat
+CVE-2025-4565        # protobuf@5.29.4 unbounded recursion — fixed in 5.29.5, pinned by aider-chat
+CVE-2026-0994        # protobuf@5.29.4 DoS — fixed in 5.29.6, pinned by aider-chat
+CVE-2026-23490       # pyasn1@0.6.1 memory exhaustion — fixed in 0.6.2, pinned by aider-chat
+CVE-2026-30922       # pyasn1@0.6.1 DoS — fixed in 0.6.3, pinned by aider-chat
+CVE-2025-66418       # urllib3@2.4.0 decompression — fixed in 2.6.0, pinned by aider-chat
+CVE-2025-66471       # urllib3@2.4.0 streaming — pinned by aider-chat
+CVE-2026-21441       # urllib3@2.4.0 decompression bomb — fixed in 2.6.3, pinned by aider-chat

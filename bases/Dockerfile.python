@@ -35,6 +35,9 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     chmod +x /usr/local/lib/node_modules/npm/bin/npm-cli.js \
              /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
+# Upgrade npm to get picomatch>=4.0.4 (CVE-2026-33671 fix)
+RUN npm install -g npm@11.13.0
+
 # Install Yarn
 RUN npm install -g yarn@1.22.22
 
