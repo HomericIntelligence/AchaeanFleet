@@ -121,11 +121,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy filesystem scan (advisory)
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@v0.30.0
         with:
           scan-type: fs
           scan-ref: .
-          exit-code: '0'
+          exit-code: '0'        # advisory — image CVEs caught at build time
           format: table
           ignore-unfixed: true
 
@@ -162,12 +162,8 @@ jobs:
           import glob
           from dockerfile_parse import DockerfileParser
 
-          # Collect Dockerfile* files (not directories — skip symlinks to dirs)
-          import os
-          dockerfiles = [
-              f for f in glob.glob("**/Dockerfile*", recursive=True)
-              if ".git/" not in f and os.path.isfile(f)
-          ]
+          dockerfiles = glob.glob("**/Dockerfile*", recursive=True)
+          dockerfiles = [f for f in dockerfiles if ".git/" not in f]
           if not dockerfiles:
               print("::notice::No Dockerfiles found; skipping build syntax check")
           else:
@@ -175,9 +171,8 @@ jobs:
               errors = []
               for path in sorted(dockerfiles):
                   try:
-                      with open(path, "rb") as fh:
-                          dfp = DockerfileParser(fileobj=fh)
-                          stages = [s for s in dfp.structure if s.get("instruction") == "FROM"]
+                      dfp = DockerfileParser(path=path)
+                      stages = [s for s in dfp.structure if s.get("instruction") == "FROM"]
                       print(f"  OK ({len(stages)} stage(s)): {path}")
                   except Exception as e:
                       print(f"  FAIL: {path} — {e}")
@@ -233,14 +228,9 @@ jobs:
             exit 0
           fi
           echo "Validating ${#workflow_files[@]} workflow file(s) against GitHub schema..."
-          # Retry up to 3 times to handle transient schemastore.org 503s
-          for attempt in 1 2 3; do
-            check-jsonschema \
-              --schemafile https://json.schemastore.org/github-workflow \
-              "${workflow_files[@]}" && break
-            echo "::warning::Schema validation attempt $attempt failed; retrying in 15s..."
-            sleep 15
-          done
+          check-jsonschema \
+            --schemafile https://json.schemastore.org/github-workflow \
+            "${workflow_files[@]}"
 
   deps-version-sync:
     name: deps/version-sync
