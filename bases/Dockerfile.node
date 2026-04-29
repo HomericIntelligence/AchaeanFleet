@@ -24,6 +24,9 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
+# Upgrade npm to get picomatch>=4.0.4 (CVE-2026-33671 fix)
+RUN npm install -g npm@11.13.0
+
 # Install system dependencies and apply security patches
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
