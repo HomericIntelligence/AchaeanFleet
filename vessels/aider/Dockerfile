@@ -21,7 +21,7 @@ LABEL git-sha=${GIT_SHA}
 USER root
 
 # Copy requirements.txt for reproducible dependency management
-COPY requirements.txt /tmp/requirements.txt
+COPY vessels/aider/requirements.txt /tmp/requirements.txt
 
 # Install aider-chat (version pinned for reproducibility — issue #2)
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
