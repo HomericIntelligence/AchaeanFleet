@@ -24,3 +24,10 @@ CVE-2026-26996  # minimatch DoS — transitive dep in claude-code, upstream fix 
 CVE-2026-27903  # minimatch DoS — transitive dep in claude-code, upstream fix pending
 CVE-2026-27904  # minimatch DoS — transitive dep in claude-code, upstream fix pending
 CVE-2026-23745  # node-tar arbitrary file overwrite — in npm bundled tar, no user input path
+
+# aider-chat==0.82.3 pins exact transitive dep versions that contain known CVEs.
+# aider-chat itself pins these as exact requirements (==) so they cannot be upgraded
+# without breaking the package. No newer aider-chat release available as of 2026-04-29.
+CVE-2026-35030  # litellm@1.68.0 CRITICAL auth bypass — fixed in 1.83.0, pinned by aider-chat
+CVE-2026-35029  # litellm@1.68.0 HIGH RCE — fixed in 1.83.0, pinned by aider-chat
+CVE-2025-69223  # aiohttp@3.11.18 HIGH HTTP parser — fixed in 3.13.3, pinned by aider-chat
