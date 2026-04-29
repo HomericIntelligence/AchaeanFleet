@@ -4,3 +4,5 @@ rules:
   line-length:
     max: 200
     level: warning
+  document-start: disable
+  new-line-at-end-of-file: disable
