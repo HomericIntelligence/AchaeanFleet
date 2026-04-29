@@ -120,19 +120,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install trivy
-        run: |
-          TRIVY_VERSION="0.70.0"
-          curl -sSfL \
-            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
-            | tar xz -C /usr/local/bin trivy
-
       - name: Trivy filesystem scan (advisory)
-        run: |
-          trivy fs . \
-            --exit-code 0 \
-            --format table \
-            --ignore-unfixed
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          exit-code: '0'
+          format: table
+          ignore-unfixed: true
 
   security-secrets-scan:
     name: security/secrets-scan
@@ -279,4 +274,6 @@ jobs:
             echo "::warning::The following FROM lines have no version tag or digest (implicitly latest):"
             echo "$untagged"
           fi
+
+
 
