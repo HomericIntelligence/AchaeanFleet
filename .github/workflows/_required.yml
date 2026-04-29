@@ -274,6 +274,3 @@ jobs:
             echo "::warning::The following FROM lines have no version tag or digest (implicitly latest):"
             echo "$untagged"
           fi
-
-
-
