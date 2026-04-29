@@ -16,7 +16,6 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write  # needed by gitleaks-action
 
 jobs:
   lint:
@@ -122,11 +121,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy filesystem scan (advisory)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
-          exit-code: '0'        # advisory — image CVEs caught at build time
+          exit-code: '0'
           format: table
           ignore-unfixed: true
 
@@ -139,10 +138,15 @@ jobs:
         with:
           fetch-depth: 0        # gitleaks needs full history
 
-      - name: Gitleaks secrets scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install gitleaks
+        run: |
+          GITLEAKS_VERSION="8.21.2"
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar xz -C /usr/local/bin gitleaks
+
+      - name: Run gitleaks
+        run: gitleaks detect --source . --verbose
 
   build:
     name: build
@@ -158,8 +162,12 @@ jobs:
           import glob
           from dockerfile_parse import DockerfileParser
 
-          dockerfiles = glob.glob("**/Dockerfile*", recursive=True)
-          dockerfiles = [f for f in dockerfiles if ".git/" not in f]
+          # Collect Dockerfile* files (not directories — skip symlinks to dirs)
+          import os
+          dockerfiles = [
+              f for f in glob.glob("**/Dockerfile*", recursive=True)
+              if ".git/" not in f and os.path.isfile(f)
+          ]
           if not dockerfiles:
               print("::notice::No Dockerfiles found; skipping build syntax check")
           else:
@@ -167,8 +175,9 @@ jobs:
               errors = []
               for path in sorted(dockerfiles):
                   try:
-                      dfp = DockerfileParser(path=path)
-                      stages = [s for s in dfp.structure if s.get("instruction") == "FROM"]
+                      with open(path, "rb") as fh:
+                          dfp = DockerfileParser(fileobj=fh)
+                          stages = [s for s in dfp.structure if s.get("instruction") == "FROM"]
                       print(f"  OK ({len(stages)} stage(s)): {path}")
                   except Exception as e:
                       print(f"  FAIL: {path} — {e}")
@@ -224,9 +233,14 @@ jobs:
             exit 0
           fi
           echo "Validating ${#workflow_files[@]} workflow file(s) against GitHub schema..."
-          check-jsonschema \
-            --schemafile https://json.schemastore.org/github-workflow \
-            "${workflow_files[@]}"
+          # Retry up to 3 times to handle transient schemastore.org 503s
+          for attempt in 1 2 3; do
+            check-jsonschema \
+              --schemafile https://json.schemastore.org/github-workflow \
+              "${workflow_files[@]}" && break
+            echo "::warning::Schema validation attempt $attempt failed; retrying in 15s..."
+            sleep 15
+          done
 
   deps-version-sync:
     name: deps/version-sync
