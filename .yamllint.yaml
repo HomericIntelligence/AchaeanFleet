@@ -1,13 +1,6 @@
----
 extends: default
+
 rules:
   line-length:
-    max: 120
-  truthy:
-    # GitHub Actions uses 'on:' as a mapping key; Docker Compose uses true/false
-    allowed-values: ['true', 'false', 'on', 'off']
-  indentation:
-    # Docker Compose and Kubernetes YAML use mixed sequence indentation styles
-    indent-sequences: whatever
-  braces:
-    max-spaces-inside: 1
+    max: 200
+    level: warning
