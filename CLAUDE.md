@@ -4,7 +4,8 @@ Container infrastructure for the HomericIntelligence agent mesh.
 
 ## What this repo is
 
-AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh. It is **infrastructure only** — no agent logic, no ProjectAgamemnon modifications.
+AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh.
+It is **infrastructure only** — no agent logic, no ProjectAgamemnon modifications.
 
 ## What this repo is NOT
 

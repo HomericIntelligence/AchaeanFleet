@@ -146,7 +146,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy filesystem scan (advisory)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: .
@@ -204,10 +204,11 @@ jobs:
           pip install --quiet dockerfile-parse
           python3 - <<'EOF'
           import glob
+          import os
           from dockerfile_parse import DockerfileParser
 
           dockerfiles = glob.glob("**/Dockerfile*", recursive=True)
-          dockerfiles = [f for f in dockerfiles if ".git/" not in f]
+          dockerfiles = [f for f in dockerfiles if ".git/" not in f and os.path.isfile(f)]
           if not dockerfiles:
               print("::notice::No Dockerfiles found; skipping build syntax check")
           else:
@@ -215,7 +216,7 @@ jobs:
               errors = []
               for path in sorted(dockerfiles):
                   try:
-                      dfp = DockerfileParser(path=path)
+                      dfp = DockerfileParser(path=os.path.dirname(path) or '.', fileobj=os.path.basename(path))
                       stages = [s for s in dfp.structure if s.get("instruction") == "FROM"]
                       print(f"  OK ({len(stages)} stage(s)): {path}")
                   except Exception as e:
