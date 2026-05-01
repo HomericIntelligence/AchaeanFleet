@@ -295,4 +295,3 @@ All notable changes to AchaeanFleet are documented here.
 
 - Scope container volume mounts to least-privilege paths
 - Remove passwordless sudo from base images
-
