@@ -2,7 +2,8 @@
 
 **Status:** Accepted
 **Date:** 2026-04-10
-**Issue:** [#26 — Security: Agent containers use NATS and Agamemnon over unencrypted HTTP](https://github.com/HomericIntelligence/AchaeanFleet/issues/26)
+**Issue:** [#26 — Security: Agent containers use NATS and Agamemnon over unencrypted HTTP](
+https://github.com/HomericIntelligence/AchaeanFleet/issues/26)
 **OWASP:** A02:2021 — Cryptographic Failures
 
 ---
@@ -36,6 +37,7 @@ Key decisions:
 ### 1. Caddy over Traefik/nginx
 
 Caddy was chosen because:
+
 - Zero-config TLS: `tls cert key` in the Caddyfile is sufficient
 - Self-signed CA workflow is first-class (no ACME required)
 - Built-in health endpoint on `:2019` for Docker health checks
@@ -113,6 +115,7 @@ Docker containers without a sidecar, making it unsuitable as a universal solutio
 
 Full mTLS (each agent presents a client cert to Caddy) was considered as a Phase 5/6
 hardening step. Not implemented now because:
+
 - Agent processes (Claude Code, Aider, etc.) don't currently have a mechanism to
   present client certs
 - Server-side TLS (Caddy validates the connection; agents validate Caddy's cert)
@@ -132,6 +135,7 @@ alongside the mesh.
 
 ## Related
 
-- [ADR-006](https://github.com/HomericIntelligence/Odysseus/blob/main/docs/adr/006-decouple-from-ai-maestro.md) — ai-maestro decoupling (renamed `AGAMEMNON_URL`)
+- [ADR-006](https://github.com/HomericIntelligence/Odysseus/blob/main/docs/adr/006-decouple-from-ai-maestro.md) —
+  ai-maestro decoupling (renamed `AGAMEMNON_URL`)
 - [`tls/README.md`](../../tls/README.md) — operational guide (cert generation, rotation, verification)
 - [SECURITY.md](../../SECURITY.md) — security policy and reporting

@@ -111,6 +111,7 @@ EOH
 ```
 
 **Key rules:**
+
 - **Never use inline env vars** for secrets (`env { ANTHROPIC_API_KEY = "sk-..." }`)
 - **Never store secrets in HCL** or `.nomadvar` files
 - **Always use `template` with Vault backend** for dynamic secret injection
@@ -137,6 +138,7 @@ When you need to override a Docker image's `ENTRYPOINT` or `CMD` in Nomad, use t
 debugging, or running alternative entry points.
 
 **Key fields:**
+
 - `entrypoint` — array replacing the image's `ENTRYPOINT` instruction
 - `args` — array replacing the image's `CMD` instruction
 - `command` — NOT the same as `cmd`; use `entrypoint` + `args` instead

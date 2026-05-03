@@ -1,6 +1,7 @@
 # Network Topology
 
-AchaeanFleet uses two named Docker bridge networks to limit the blast radius of a compromised agent container (defense-in-depth, zero-trust principles).
+AchaeanFleet uses two named Docker bridge networks to limit the blast radius of a compromised agent
+container (defense-in-depth, zero-trust principles).
 
 ## Networks
 
@@ -52,19 +53,30 @@ AchaeanFleet uses two named Docker bridge networks to limit the blast radius of 
 ## Design decisions
 
 **Why two networks instead of one?**
-Previously all containers shared a single flat `homeric-mesh` network. Any compromised agent could reach every other agent on any port. Splitting into frontend/backend limits lateral movement: a compromised AI agent on `agamemnon-frontend` cannot directly probe the `agent-backend` subnet.
+Previously all containers shared a single flat `homeric-mesh` network. Any compromised agent could
+reach every other agent on any port. Splitting into frontend/backend limits lateral movement: a
+compromised AI agent on `agamemnon-frontend` cannot directly probe the `agent-backend` subnet.
 
 **Why is `agent-backend` currently sparse?**
-No current agent-to-agent protocol requires direct container-to-container communication. The network exists as infrastructure ready for future use (e.g., a pipeline where one agent hands off work to another). `hi-worker-1` is the natural bridge because it is the orchestration primitive with no AI tool dependency.
+No current agent-to-agent protocol requires direct container-to-container communication. The network
+exists as infrastructure ready for future use (e.g., a pipeline where one agent hands off work to
+another). `hi-worker-1` is the natural bridge because it is the orchestration primitive with no AI
+tool dependency.
 
 **Why are network names hard-coded instead of env-var-driven?**
-The two networks have architectural meaning — `agamemnon-frontend` always connects to Agamemnon, `agent-backend` always carries lateral traffic. Allowing arbitrary runtime renaming would make the topology ambiguous. The former `MESH_NETWORK` env var has been removed.
+The two networks have architectural meaning — `agamemnon-frontend` always connects to Agamemnon,
+`agent-backend` always carries lateral traffic. Allowing arbitrary runtime renaming would make the
+topology ambiguous. The former `MESH_NETWORK` env var has been removed.
 
 **How does ProjectAgamemnon reach agents?**
-ProjectAgamemnon runs on the host (not in a container). It connects to agent HTTP endpoints via the Docker bridge gateway IP `172.20.0.1`, which is the host-side address of the `agamemnon-frontend` bridge. No Compose-internal DNS is needed for host → container communication.
+ProjectAgamemnon runs on the host (not in a container). It connects to agent HTTP endpoints via the
+Docker bridge gateway IP `172.20.0.1`, which is the host-side address of the `agamemnon-frontend`
+bridge. No Compose-internal DNS is needed for host → container communication.
 
 **How do agents resolve each other?**
-Agents on the same network (`agamemnon-frontend`) resolve each other by hostname via Docker's embedded DNS. For example, `hi-aindrea` can reach `hi-baird` at `http://hi-baird:23001`. This is standard Docker Compose DNS — no IP injection needed (that workaround is Podman-specific).
+Agents on the same network (`agamemnon-frontend`) resolve each other by hostname via Docker's
+embedded DNS. For example, `hi-aindrea` can reach `hi-baird` at `http://hi-baird:23001`. This is
+standard Docker Compose DNS — no IP injection needed (that workaround is Podman-specific).
 
 ## Adding a new agent
 

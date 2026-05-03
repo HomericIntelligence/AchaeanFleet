@@ -2,7 +2,8 @@
 
 ## Supported Images
 
-AchaeanFleet builds container images, not versioned software releases. The following image series receive security patches:
+AchaeanFleet builds container images, not versioned software releases. The following image series
+receive security patches:
 
 | Image Series                   | Supported |
 |--------------------------------|-----------|
@@ -10,7 +11,8 @@ AchaeanFleet builds container images, not versioned software releases. The follo
 | `achaean-*:<sha256-digest>`    | Yes (pinned digest builds) |
 | `achaean-*:<old-tag>`          | No — rebuild from `latest` |
 
-**Policy:** Only `latest` and pinned SHA256 digest builds are supported. There are no versioned release branches; rebuild from the current `main` to get security fixes.
+**Policy:** Only `latest` and pinned SHA256 digest builds are supported. There are no versioned
+release branches; rebuild from the current `main` to get security fixes.
 
 ## Reporting Security Vulnerabilities
 
@@ -26,7 +28,8 @@ Use GitHub's private vulnerability reporting:
 
 **[Report a vulnerability](https://github.com/mvillmow/AchaeanFleet/security/advisories/new)**
 
-**⚠️ Admin Setup Required:** Private vulnerability reporting must be enabled by a repo admin. If the link above returns a 404 or permission error, a maintainer needs to enable it first:
+**⚠️ Admin Setup Required:** Private vulnerability reporting must be enabled by a repo admin. If the
+link above returns a 404 or permission error, a maintainer needs to enable it first:
 
 1. Go to the repository's **Settings → Code security and analysis**
 2. Under **Private vulnerability reporting**, click **Enable**
@@ -34,7 +37,8 @@ Use GitHub's private vulnerability reporting:
 
 Until this is enabled, reporters should use the email fallback below.
 
-This is the preferred channel — it keeps the report private, lets us draft a coordinated advisory, and integrates with GitHub's Security tab automatically.
+This is the preferred channel — it keeps the report private, lets us draft a coordinated advisory,
+and integrates with GitHub's Security tab automatically.
 
 ### Email (Fallback)
 
@@ -121,27 +125,34 @@ When you report a vulnerability:
 ### In Scope
 
 **Credential exposure**
-- API keys, tokens, or secrets embedded in Dockerfiles, Compose files, or CI config (`ENV`, `ARG`, `--build-arg`, `.env` files checked in)
-- Home directory mounts (`- /home/...:/home/...`) that expose host credentials or SSH keys to containers
+
+- API keys, tokens, or secrets embedded in Dockerfiles, Compose files, or CI config
+  (`ENV`, `ARG`, `--build-arg`, `.env` files checked in)
+- Home directory mounts (`- /home/...:/home/...`) that expose host credentials or SSH keys to
+  containers
 
 **Privilege escalation**
+
 - Missing `USER` directive — containers running as root by default
 - `NOPASSWD` sudo grants inside images
 - Dangerous Linux capability grants (`--cap-add`, `SYS_ADMIN`, etc.)
 - Writable volume mounts into sensitive host paths
 
 **Config injection**
+
 - Insecure Docker Compose overrides that allow environment variable injection
 - Build arguments that propagate secrets into image layers
 - Writable socket or socket-proxy mounts without authentication
 
 **Supply chain risks**
+
 - Base image CVEs: OS package vulnerabilities introduced via `apt`/`apk` in `bases/` or `vessels/`
 - npm transitive dependency CVEs in Node-based vessels
 - `curl | bash` or `wget | sh` install patterns without checksum verification
 - Mutable image tags (`:latest` used as `FROM` without pinned digest in production)
 
 **Other**
+
 - Dockerfiles (base images and vessel images)
 - Docker Compose files (`compose/`)
 - Dagger CI pipeline scripts (`dagger/`)
@@ -157,7 +168,9 @@ When you report a vulnerability:
 
 ## Automated Detection
 
-AchaeanFleet CI runs [Trivy](https://github.com/aquasecurity/trivy-action) on all images with `severity: HIGH,CRITICAL`. CVEs already detected by Trivy in CI are tracked as issues; you do not need to report these separately unless you have additional exploitation context or a bypass.
+AchaeanFleet CI runs [Trivy](https://github.com/aquasecurity/trivy-action) on all images with
+`severity: HIGH,CRITICAL`. CVEs already detected by Trivy in CI are tracked as issues; you do not
+need to report these separately unless you have additional exploitation context or a bypass.
 
 ## Security Best Practices
 
@@ -173,16 +186,24 @@ When contributing to AchaeanFleet:
 
 ## CVE Suppression Policy (.trivyignore)
 
-The CI workflow uses `ignore-unfixed: true` in `aquasecurity/trivy-action`, which automatically skips CVEs that have no upstream fix. `.trivyignore` is reserved for the remaining edge cases: CVEs where a fix exists upstream but cannot yet be applied in this image, or where the vulnerable code path is provably unreachable.
+The CI workflow uses `ignore-unfixed: true` in `aquasecurity/trivy-action`, which automatically
+skips CVEs that have no upstream fix. `.trivyignore` is reserved for the remaining edge cases: CVEs
+where a fix exists upstream but cannot yet be applied in this image, or where the vulnerable code
+path is provably unreachable.
 
 ### When suppression is appropriate
 
 A CVE may be added to `.trivyignore` only after confirming **all** of the following:
 
-1. `ignore-unfixed: true` in the workflow does not already suppress it — if it does, no `.trivyignore` entry is needed.
-2. The fix is not available in the current base image's OS distribution (verify against the Debian Security Tracker, Alpine secdb, or the relevant upstream advisory).
-3. Bumping the base image digest and running `apt-get upgrade -y` in a local test build does **not** resolve the finding.
-4. Either: (a) no attacker-controlled input path to the vulnerable code exists in this repo's runtime context, or (b) the upstream package maintainer has acknowledged the issue but has not yet released a patched version.
+1. `ignore-unfixed: true` in the workflow does not already suppress it — if it does, no
+   `.trivyignore` entry is needed.
+1. The fix is not available in the current base image's OS distribution (verify against the Debian
+   Security Tracker, Alpine secdb, or the relevant upstream advisory).
+1. Bumping the base image digest and running `apt-get upgrade -y` in a local test build does **not**
+   resolve the finding.
+1. Either: (a) no attacker-controlled input path to the vulnerable code exists in this repo's runtime
+   context, or (b) the upstream package maintainer has acknowledged the issue but has not yet
+   released a patched version.
 
 Suppression is a last resort. Prefer bumping the base image digest first.
 
@@ -211,9 +232,12 @@ All six fields are required. Entries missing any field will be rejected in PR re
 
 ### Expiry and maintenance
 
-- On or before the `Expires` date, the entry must be re-reviewed: either removed (if a fix is now available in the base image) or renewed with an updated `Expires` date via a new PR.
-- When bumping base image digests, re-scan locally and remove any `.trivyignore` entries that are resolved by the new digest.
-- Entries past their expiry date are treated as a policy violation — open a PR to remove or renew them before they block CI.
+- On or before the `Expires` date, the entry must be re-reviewed: either removed (if a fix is now
+  available in the base image) or renewed with an updated `Expires` date via a new PR.
+- When bumping base image digests, re-scan locally and remove any `.trivyignore` entries that are
+  resolved by the new digest.
+- Entries past their expiry date are treated as a policy violation — open a PR to remove or renew
+  them before they block CI.
 
 ### What `.trivyignore` is NOT for
 
