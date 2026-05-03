@@ -70,7 +70,7 @@ All notable changes to AchaeanFleet are documented here.
 ### CI
 
 - Switch from self-hosted to ubuntu-latest runners
-- Add .github/workflows/** and tests/** to paths trigger  <!-- markdownlint-disable MD037 -->
+- Add .github/workflows/** and tests/** to paths trigger
 - Add pre-commit hook to detect stale lockfiles
 - Remove PR path filter, add shellcheck, add coverage check
 - Pin trivy-action to SHA and add SARIF upload
@@ -140,6 +140,7 @@ All notable changes to AchaeanFleet are documented here.
 - Add versioning strategy and release tagging instructions
 - Add checksums.txt for Goose v1.31.1 release artifacts
 - Document DISPATCH_TOKEN required repository secret
+- Update CHANGELOG.md [skip ci]
 - Update CHANGELOG.md [skip ci]
 
 ### Fixed
@@ -249,6 +250,10 @@ All notable changes to AchaeanFleet are documented here.
 - Remove default from BUILDARCH ARG in goose Dockerfile
 - Handle empty BUILDARCH in goose cross-arch check
 - Remove TARGETARCH default so buildx provides correct platform value
+- Use valid job IDs in _required.yml (no slashes in keys)
+- Port required-checks fixes from ProjectScylla (gitleaks, trivy, yamllint) (#619)
+- Correct opencode download URL (linux-x64 not linux_amd64) (#618)
+- Correct docker/metadata-action SHA for v5.7.0 (#622)
 
 ### Maintenance
 
@@ -281,6 +286,14 @@ All notable changes to AchaeanFleet are documented here.
 - Bump node from 20-slim to 25-slim in /bases
 - Update pixi.lock to match current workspace
 - Bump hadolint/hadolint-action from 3.1.0 to 3.3.0
+- Add unified required-checks workflow
+- Gitignore worktrees, coverage, and scheduled task lock
+- Bump prefix-dev/setup-pixi from 0.8.0 to 0.9.5 (#627)
+- Bump docker/login-action from 3.3.0 to 4.1.0 (#628)
+- Bump actions/setup-node from 4.4.0 to 6.4.0 (#629)
+- Bump docker/setup-qemu-action from 3.6.0 to 4.0.0 (#630)
+- Bump docker/metadata-action from 5.7.0 to 6.0.0 (#631)
+- Bump python from 3.12-slim to 3.14-slim in /bases (#632)
 
 ### Testing
 
@@ -295,3 +308,5 @@ All notable changes to AchaeanFleet are documented here.
 
 - Scope container volume mounts to least-privilege paths
 - Remove passwordless sudo from base images
+
+
