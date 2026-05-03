@@ -4,7 +4,8 @@ Container infrastructure for the HomericIntelligence agent mesh.
 
 ## What this repo is
 
-AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh. It is **infrastructure only** — no agent logic, no ProjectAgamemnon modifications.
+AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh.
+It is **infrastructure only** — no agent logic, no ProjectAgamemnon modifications.
 
 ## What this repo is NOT
 
@@ -55,7 +56,8 @@ docker compose -f docker-compose.mesh.yml up -d
 
 ## Initial Setup
 
-Before running the compose stack, you must create the required agent workspace directories on the host. These directories are bind-mounted into containers at runtime for agents to read and write project files.
+Before running the compose stack, you must create the required agent workspace directories on the host.
+These directories are bind-mounted into containers at runtime for agents to read and write project files.
 
 **Create all agent directories:**
 
@@ -64,11 +66,14 @@ mkdir -p ~/Agents/{Aindrea,Eris,Baird,Vegai,Codex-1,Aider-1,Goose-1,Cline-1,Open
 ```
 
 This creates subdirectories for:
+
 - **Claude agents**: Aindrea, Eris, Baird, Vegai, Pallas
 - **Non-Claude agents**: Codex-1, Aider-1, Goose-1, Cline-1, OpenCode-1, Codebuff-1, AmpCode-1
 - **Utility**: Worker-1
 
-Each agent is mounted to `~/Agents/<name>` and can read/write files within its directory. See `compose/.env.example` for per-agent workspace scope configuration (e.g., `VEGAI_PROJECT`, `CODEX_PROJECT`) to restrict which projects each agent can access.
+Each agent is mounted to `~/Agents/<name>` and can read/write files within its directory.
+See `compose/.env.example` for per-agent workspace scope configuration
+(e.g., `VEGAI_PROJECT`, `CODEX_PROJECT`) to restrict which projects each agent can access.
 
 ## Agamemnon agent sidecar integration
 
@@ -79,13 +84,16 @@ volumes:
   - /home/mvillmow/ProjectAgamemnon/agent-sidecar/agent-sidecar:/app/agent-sidecar:ro
 ```
 
-**Never copy the Agamemnon agent sidecar into the image at build time** — this would lock the image to a specific ProjectAgamemnon version.
+**Never copy the Agamemnon agent sidecar into the image at build time** — this would lock the image
+to a specific ProjectAgamemnon version.
 
 ## Read-only root filesystem
 
-All compose services use `read_only: true` for security hardening. Write access is explicitly granted to specific paths via tmpfs mounts and named volumes:
+All compose services use `read_only: true` for security hardening.
+Write access is explicitly granted to specific paths via tmpfs mounts and named volumes:
 
 **tmpfs mounts (ephemeral, cleared on container restart):**
+
 - `/tmp` — temp files and tmux sockets (`/tmp/tmux-*`)
 - `/run` — runtime PID files and socket files
 - `/home/agent/.cache` — tool caches (npm, pip, Claude Code, etc.)
@@ -93,11 +101,15 @@ All compose services use `read_only: true` for security hardening. Write access 
 - `/home/agent/.local` — Python user-site packages and local state
 
 **Named/bind volumes (persistent):**
-- `/workspace` — agent work directory, mounted from `${WORKSPACE_ROOT}` (writable for agents to read/write project files)
+
+- `/workspace` — agent work directory, mounted from `${WORKSPACE_ROOT}`
+  (writable for agents to read/write project files)
 - `/certs` — TLS certificates, mounted read-only (`:ro`)
 
 **Intentionally read-only:**
-- `/app/agent-sidecar` — ProjectAgamemnon sidecar binary, mounted from host at build time with `:ro` flag. Never write here; the sidecar is managed by ProjectAgamemnon lifecycle.
+
+- `/app/agent-sidecar` — ProjectAgamemnon sidecar binary, mounted from host at build time with `:ro`
+  flag. Never write here; the sidecar is managed by ProjectAgamemnon lifecycle.
 
 ## Port mapping convention
 
@@ -120,20 +132,29 @@ All compose services use `read_only: true` for security hardening. Write access 
 
 ## Network
 
-All containers join the `homeric-mesh` bridge network. Containers resolve each other by service name via Docker's internal DNS. ProjectAgamemnon on the host connects via `172.20.0.1` (the Docker bridge gateway).
+All containers join the `homeric-mesh` bridge network. Containers resolve each other by service name
+via Docker's internal DNS. ProjectAgamemnon on the host connects via `172.20.0.1`
+(the Docker bridge gateway).
 
 ## Health Checks
 
-All base images include a `HEALTHCHECK` instruction that polls `http://localhost:23001/health` every 10 seconds. The endpoint is served by `healthcheck-server.js` (Node) or an equivalent inside the vessel.
+All base images include a `HEALTHCHECK` instruction that polls `http://localhost:23001/health`
+every 10 seconds. The endpoint is served by `healthcheck-server.js` (Node) or an equivalent
+inside the vessel.
 
 **Parameters (base image default):**
+
 ```
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3
 ```
 
-**Compose override**: The `x-healthcheck` anchor in `compose/docker-compose.mesh.yml` overrides the Dockerfile default. Compose healthcheck takes precedence — the Dockerfile HEALTHCHECK is only used when running with `docker run` or `podman play kube`.
+**Compose override**: The `x-healthcheck` anchor in `compose/docker-compose.mesh.yml` overrides the
+Dockerfile default. Compose healthcheck takes precedence — the Dockerfile HEALTHCHECK is only used
+when running with `docker run` or `podman play kube`.
 
-**Vessel override for non-default port**: If your vessel uses a port other than 23001, override the HEALTHCHECK in the vessel Dockerfile:
+**Vessel override for non-default port**: If your vessel uses a port other than 23001, override the
+HEALTHCHECK in the vessel Dockerfile:
+
 ```dockerfile
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:<PORT>/health 2>/dev/null || exit 1
@@ -151,7 +172,9 @@ for alloc-scoped values — Nomad does not interpolate them at runtime.
 
 1. Choose a base image (`node`, `python`, or `minimal`)
 2. Create `vessels/<agentname>/Dockerfile` with `ARG BASE_IMAGE` + install step
-3. Add an entry to `compose/docker-compose.mesh.yml`. By default, attach to the `agamemnon-frontend` network only. Add the agent to `agent-backend` network only if the agent needs direct container-to-container communication with other agents.
-4. Add `<AGENTNAME>_PROJECT=/path/to/project` to `compose/.env.example` with a comment describing the workspace scope this agent requires
+3. Add an entry to `compose/docker-compose.mesh.yml`. By default, attach to the `agamemnon-frontend`
+   network only. Add to `agent-backend` only if the agent needs direct container-to-container comms.
+4. Add `<AGENTNAME>_PROJECT=/path/to/project` to `compose/.env.example` with a comment describing
+   the workspace scope this agent requires
 5. Add to the matrix in `.github/workflows/ci.yml`
 6. Add vessel entry in `dagger/pipeline.ts`

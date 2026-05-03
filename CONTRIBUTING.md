@@ -42,6 +42,7 @@ just bootstrap
 ```
 
 The `bootstrap` recipe sets up your environment in one command:
+
 - Creates `compose/.env` from the template (you'll edit it to add API keys)
 - Installs Dagger TypeScript dependencies
 - Displays the active container runtime (Podman or Docker)
@@ -84,15 +85,20 @@ Hooks run automatically on `git commit` after installation.
 
 ### Repository Secrets
 
-The AchaeanFleet CI/CD pipeline uses the following GitHub repository secrets, which must be configured in the repository settings before certain CI jobs will function:
+The AchaeanFleet CI/CD pipeline uses the following GitHub repository secrets, which must be
+configured in the repository settings before certain CI jobs will function:
 
 #### DISPATCH_TOKEN
 
 **Required for:** The `notify-proteus` step in the push-to-registry CI job
 
-**What it is:** A personal access token (PAT) with `repo` scope on the [ProjectProteus](https://github.com/HomericIntelligence/ProjectProteus) repository
+**What it is:** A personal access token (PAT) with `repo` scope on the
+[ProjectProteus](https://github.com/HomericIntelligence/ProjectProteus) repository
 
-**Why it's needed:** When AchaeanFleet images are successfully pushed to the registry, the CI pipeline notifies ProjectProteus of the new image versions so the orchestration system can deploy them. Without this token, the notify step silently skips (exits with code 0), giving the false appearance of success while the notification never reaches ProjectProteus.
+**Why it's needed:** When AchaeanFleet images are successfully pushed to the registry, the CI pipeline
+notifies ProjectProteus of the new image versions so the orchestration system can deploy them.
+Without this token, the notify step silently skips (exits with code 0), giving the false appearance
+of success while the notification never reaches ProjectProteus.
 
 **How to configure:**
 
@@ -241,8 +247,11 @@ pixi run pytest
 ```
 
 The `tests/` directory contains:
-- `test_dockerfile_pins.py` — asserts all `npm install -g` and `pip install` commands specify exact versions
-- `test_dockerfile_version_pins.py` — asserts binary curl-installer vessels declare `ENV <TOOL>_VERSION`
+
+- `test_dockerfile_pins.py` — asserts all `npm install -g` and `pip install` commands specify
+  exact versions
+- `test_dockerfile_version_pins.py` — asserts binary curl-installer vessels declare
+  `ENV <TOOL>_VERSION`
 
 Add new tests here when introducing new version-pinning requirements or Dockerfile patterns.
 
@@ -318,18 +327,18 @@ pip index versions aider-chat
 **Updating a pin**
 
 1. Edit the `ENV <TOOL>_VERSION=<new_version>` line in the relevant Dockerfile.
-2. Run the regression test to confirm all pins are still exact:
+1. Run the regression test to confirm all pins are still exact:
 
-```bash
-python3 -m pytest tests/test_dockerfile_pins.py -v
-```
+   ```bash
+   python3 -m pytest tests/test_dockerfile_pins.py -v
+   ```
 
-3. Rebuild the affected image and verify it starts correctly:
+1. Rebuild the affected image and verify it starts correctly:
 
-```bash
-just build-vessel <name>
-just verify
-```
+   ```bash
+   just build-vessel <name>
+   just verify
+   ```
 
 **Automated Dependabot PRs**
 
@@ -345,25 +354,26 @@ them with SHA256 checksums to ensure reproducibility and security. When updating
 
 1. **Compute the new SHA256** for each architecture:
 
-```bash
-# For AMD64
-curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_64-unknown-linux-gnu.tar.gz" | sha256sum
+   ```bash
+   # For AMD64
+   curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_64-unknown-linux-gnu.tar.gz" | sha256sum
 
-# For ARM64
-curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-aarch64-unknown-linux-gnu.tar.gz" | sha256sum
-```
+   # For ARM64
+   curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-aarch64-unknown-linux-gnu.tar.gz" | sha256sum
+   ```
 
-2. **Update the ARG values** in the relevant Dockerfile:
+1. **Update the ARG values** in the relevant Dockerfile:
 
-```dockerfile
-ARG GOOSE_VERSION=1.32.0
-ARG GOOSE_AMD64_SHA256=<new-amd64-hash>
-ARG GOOSE_ARM64_SHA256=<new-arm64-hash>
-```
+   ```dockerfile
+   ARG GOOSE_VERSION=1.32.0
+   ARG GOOSE_AMD64_SHA256=<new-amd64-hash>
+   ARG GOOSE_ARM64_SHA256=<new-arm64-hash>
+   ```
 
-3. **Important**: Both `AMD64` and `ARM64` checksums must be updated together to support multi-arch builds.
+1. **Important**: Both `AMD64` and `ARM64` checksums must be updated together to support multi-arch
+   builds.
 
-4. Test the build on both architectures to verify checksums are correct.
+1. Test the build on both architectures to verify checksums are correct.
 
 ## Checksum Rotation
 
@@ -378,6 +388,7 @@ just rotate-checksum <tool> <version>
 ```
 
 Supported tools:
+
 - `goose` — Block's Goose AI coding agent
 - `opencode` — SST's OpenCode agent
 - `yq` — YAML query processor
@@ -389,12 +400,13 @@ just rotate-checksum goose 1.32.0
 ```
 
 This recipe will:
+
 1. Download the new binary artifacts from GitHub releases
-2. Compute SHA256 checksums for both AMD64 and ARM64 architectures
-3. Write new checksum files to `scripts/checksums/` (version-in-filename format for reference)
-4. Update `ARG <TOOL>_VERSION` and corresponding `ARG <TOOL>_*_SHA256` in the relevant Dockerfile
-5. Remove old checksum files from previous versions
-6. Print instructions for manual verification steps
+1. Compute SHA256 checksums for both AMD64 and ARM64 architectures
+1. Write new checksum files to `scripts/checksums/` (version-in-filename format for reference)
+1. Update `ARG <TOOL>_VERSION` and corresponding `ARG <TOOL>_*_SHA256` in the relevant Dockerfile
+1. Remove old checksum files from previous versions
+1. Print instructions for manual verification steps
 
 #### Verification Steps
 
@@ -431,7 +443,10 @@ curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_6
 
 ### Trivy Vulnerability Scanning
 
-All pull requests that touch `dagger/`, `pixi.toml`, or lock files (e.g., `*.lock`) are automatically scanned for vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy). The `security.yml` workflow runs Trivy with `severity: HIGH,CRITICAL` — any findings in these severity levels will block your PR from merging.
+All pull requests that touch `dagger/`, `pixi.toml`, or lock files (e.g., `*.lock`) are
+automatically scanned for vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy).
+The `security.yml` workflow runs Trivy with `severity: HIGH,CRITICAL` — any findings in these
+severity levels will block your PR from merging.
 
 ### Running Trivy Locally
 
@@ -448,10 +463,13 @@ This mirrors the CI check and helps catch issues early in your development workf
 If Trivy finds a HIGH or CRITICAL CVE:
 
 1. Check if upgrading a base image digest or package version resolves it
-2. If a fix is not available upstream, you may suppress the CVE by adding an entry to `.trivyignore`
-3. **Important:** All `.trivyignore` entries must follow the policy in [`SECURITY.md`](SECURITY.md) — each entry requires a structured comment block with category, rationale, exploitability, expiry date, and reviewer approval
+1. If a fix is not available upstream, you may suppress the CVE by adding an entry to `.trivyignore`
+1. **Important:** All `.trivyignore` entries must follow the policy in [`SECURITY.md`](SECURITY.md)
+   — each entry requires a structured comment block with category, rationale, exploitability,
+   expiry date, and reviewer approval
 
-For details on the suppression policy and required entry format, see the [CVE Suppression Policy](SECURITY.md#cve-suppression-policy-trivyignore) section in SECURITY.md.
+For details on the suppression policy and required entry format, see the
+[CVE Suppression Policy](SECURITY.md#cve-suppression-policy-trivyignore) section in SECURITY.md.
 
 ## Pull Request Process
 
@@ -477,7 +495,9 @@ gh pr create --title "[Type] Brief description" --body "Closes #<issue-number>"
 
 ### Required Status Checks
 
-To ensure quality and security standards are enforced before merging, certain CI jobs must be configured as **required status checks** in GitHub branch protection rules. This is a **manual configuration step** — it is not automated by the workflow files.
+To ensure quality and security standards are enforced before merging, certain CI jobs must be
+configured as **required status checks** in GitHub branch protection rules.
+This is a **manual configuration step** — it is not automated by the workflow files.
 
 **Jobs to configure as required status checks:**
 
@@ -502,7 +522,8 @@ The `main` branch is protected. All changes must go through pull requests.
 
 ## Versioning and Releases
 
-AchaeanFleet uses [Calendar Versioning (CalVer)](https://calver.org/) with the format `YYYY.MM.DD` to anchor releases to real-world deployment dates.
+AchaeanFleet uses [Calendar Versioning (CalVer)](https://calver.org/) with the format `YYYY.MM.DD`
+to anchor releases to real-world deployment dates.
 
 ### Version Format
 
@@ -514,14 +535,17 @@ When preparing a release (typically before major deployments or after significan
 
 1. **Create and push the version tag:**
 
-```bash
-git tag -a v2026.04.23 -m "Release 2026.04.23"
-git push origin v2026.04.23
-```
+   ```bash
+   git tag -a v2026.04.23 -m "Release 2026.04.23"
+   git push origin v2026.04.23
+   ```
 
-2. **Automated CHANGELOG updates:** The [git-cliff](https://git-cliff.org/) tool (configured via `cliff.toml`) automatically groups commit history under the version tag in `CHANGELOG.md`, replacing commit SHA and date anchors with semantic version references.
+1. **Automated CHANGELOG updates:** The [git-cliff](https://git-cliff.org/) tool (configured via
+   `cliff.toml`) automatically groups commit history under the version tag in `CHANGELOG.md`,
+   replacing commit SHA and date anchors with semantic version references.
 
-3. **Release triggers:** The monthly digest-bump workflow and Dependabot PRs should trigger a release tag before major deployments to keep version history clean and deployments traceable.
+1. **Release triggers:** The monthly digest-bump workflow and Dependabot PRs should trigger a
+   release tag before major deployments to keep version history clean and deployments traceable.
 
 ### Why CalVer for AchaeanFleet?
 
