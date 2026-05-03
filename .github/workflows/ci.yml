@@ -998,6 +998,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push vessel image
+        id: build
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
         with:
           context: .
@@ -1030,12 +1031,13 @@ jobs:
         env:
           VESSEL_NAME: ${{ matrix.vessel.name }}
           COMMIT_SHA: ${{ github.sha }}
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           set -euo pipefail
           IMAGE_NAME=$(echo "$VESSEL_NAME" | tr '[:upper:]' '[:lower:]')
-          DIGEST=$(docker inspect --format '{{.Id}}' "${IMAGE_NAME}:latest")
+          DIGEST="${BUILD_DIGEST}"
           if [[ -z "$DIGEST" ]]; then
-            echo "ERROR: docker inspect returned empty digest for ${IMAGE_NAME}:latest" >&2
+            echo "ERROR: build-push-action returned empty digest for ${IMAGE_NAME}" >&2
             exit 1
           fi
           if [[ ! "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]; then
