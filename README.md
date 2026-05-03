@@ -59,12 +59,15 @@ nano compose/.env   # set ANTHROPIC_API_KEY, verify AGAMEMNON_URL
 ## Host requirements
 
 **Claude-only fleet (Phase 3):**
+
 - Memory: 12 GB minimum (5 Claude agents × 4G limit; practical min ~2.5 GB with reservations)
 - CPU: 2 cores
 - Disk: 5 GB for images
 
 **Full heterogeneous mesh (Phase 4):**
-- Memory: **50 GB hard limit** (8 AI agents × 4G + 1 worker × 1G); **practical minimum 8 GB** with memory reservations
+
+- Memory: **50 GB hard limit** (8 AI agents × 4G + 1 worker × 1G);
+  **practical minimum 8 GB** with memory reservations
 - CPU: 8+ cores recommended
 - Disk: 15 GB for images
 
@@ -140,8 +143,8 @@ echo -n "sk-proj-..."      > compose/secrets/openai_api_key
 chmod 600 compose/secrets/*
 ```
 
-Each container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key` (or
-`openai_api_key`) and exports the value into the environment before handing off
+Each container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key`
+(or `openai_api_key`) and exports the value into the environment before handing off
 to the agent. Leave `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` blank in `.env`.
 
 The `compose/secrets/` directory is gitignored — only the `.gitkeep` placeholder
@@ -189,8 +192,10 @@ file boundaries. Override files that redefine `security_opt`, `cap_drop`, or `re
 without repeating all keys will silently drop your security settings.
 
 **Always verify the final config before deploying:**
+
 ```bash
-docker compose -f docker-compose.mesh.yml -f docker-compose.override.yml config | grep -A 2 'security_opt\|cap_drop\|read_only'
+docker compose -f docker-compose.mesh.yml -f docker-compose.override.yml config \
+  | grep -A 2 'security_opt\|cap_drop\|read_only'
 ```
 
 ### Logging configuration

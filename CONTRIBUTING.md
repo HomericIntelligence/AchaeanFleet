@@ -117,7 +117,8 @@ of success while the notification never reaches ProjectProteus.
    - Value: [paste the token]
    - Click **Add secret**
 
-**Security note:** This token grants write access to ProjectProteus. Store it securely and never commit it to version control.
+**Security note:** This token grants write access to ProjectProteus. Store it securely and never
+commit it to version control.
 
 ### Container runtime selection
 
@@ -356,10 +357,14 @@ them with SHA256 checksums to ensure reproducibility and security. When updating
 
    ```bash
    # For AMD64
-   curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_64-unknown-linux-gnu.tar.gz" | sha256sum
+   curl -fsSL \
+     "https://github.com/block/goose/releases/download/v1.32.0/goose-x86_64-unknown-linux-gnu.tar.gz" \
+     | sha256sum
 
    # For ARM64
-   curl -fsSL "https://github.com/block/goose/releases/download/v1.32.0/goose-aarch64-unknown-linux-gnu.tar.gz" | sha256sum
+   curl -fsSL \
+     "https://github.com/block/goose/releases/download/v1.32.0/goose-aarch64-unknown-linux-gnu.tar.gz" \
+     | sha256sum
    ```
 
 1. **Update the ARG values** in the relevant Dockerfile:
@@ -377,7 +382,8 @@ them with SHA256 checksums to ensure reproducibility and security. When updating
 
 ## Checksum Rotation
 
-For tools installed via binary downloads (Goose, OpenCode, YQ), AchaeanFleet provides an automated recipe to handle version bumps and checksum updates atomically.
+For tools installed via binary downloads (Goose, OpenCode, YQ), AchaeanFleet provides an automated
+recipe to handle version bumps and checksum updates atomically.
 
 ### Using `just rotate-checksum`
 
@@ -514,7 +520,8 @@ This is a **manual configuration step** — it is not automated by the workflow 
 4. Search for and enable each required check listed above
 5. Save the rule
 
-These checks prevent merging code that fails security or quality gates and ensure all artifacts meet the project's standards.
+These checks prevent merging code that fails security or quality gates and ensure all artifacts meet
+the project's standards.
 
 ### Never Push Directly to Main
 
@@ -549,9 +556,11 @@ When preparing a release (typically before major deployments or after significan
 
 ### Why CalVer for AchaeanFleet?
 
-- **Date-bound deployments**: Container images are tied to specific deployment dates, making incident investigation and rollback more intuitive
+- **Date-bound deployments**: Container images are tied to specific deployment dates, making incident
+  investigation and rollback more intuitive
 - **No artificial versioning**: We don't manufacture semantic version increments; the calendar is the source of truth
-- **Simplifies CI/CD**: Release automation can key off git tags without managing version files or complex version-bump logic
+- **Simplifies CI/CD**: Release automation can key off git tags without managing version files or
+  complex version-bump logic
 
 ## Code Review
 

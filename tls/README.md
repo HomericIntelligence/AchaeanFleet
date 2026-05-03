@@ -119,11 +119,13 @@ When Hermes/Keystone are wired into the mesh, NATS must use TLS from day one.
 See `tls/nats/nats-tls.conf` for the server config template.
 
 Agents connect with:
+
 ```
 NATS_URL=tls://nats:4222
 ```
 
 Validate with:
+
 ```bash
 nats pub -s "tls://localhost:4222" \
   --tlscacert tls/certs/ca.crt \

@@ -64,7 +64,7 @@ docker build -f bases/Dockerfile.minimal -t achaean-base-minimal:test .
 docker images --format "{{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep achaean-base-minimal
 ```
 
-### Base Images
+### Base Image Measurements
 
 | Date | Image | Size | Build Context | Notes |
 |------|-------|------|---------------|-------|
@@ -88,10 +88,14 @@ docker images --format "{{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep achaean-bas
 
 ## Notes
 
-- Actual sizes vary by Docker layer cache state and base image updates (e.g., Debian security patches, Node.js/Python point releases).
+- Actual sizes vary by Docker layer cache state and base image updates
+  (e.g., Debian security patches, Node.js/Python point releases).
 - To record a new measurement:
-  1. Build the image locally: `docker build -f <dockerfile> -t achaean-<name>:test .` (or `npx ts-node dagger/pipeline.ts build`)
-  2. Get the size: `docker images achaean-<name> --format "{{.Size}}"`
-  3. Add a dated row to the tables above with the actual size, build date, and any relevant context
-- Size checks are not currently automated in CI. Consider adding a size-gate job (e.g., `dagger/pipeline.ts` size assertion step) to enforce post-refactor targets.
+  1. Build the image locally:
+     `docker build -f <dockerfile> -t achaean-<name>:test .`
+     (or `npx ts-node dagger/pipeline.ts build`)
+  1. Get the size: `docker images achaean-<name> --format "{{.Size}}"`
+  1. Add a dated row to the tables above with the actual size, build date, and any relevant context
+- Size checks are not currently automated in CI. Consider adding a size-gate job
+  (e.g., `dagger/pipeline.ts` size assertion step) to enforce post-refactor targets.
 - Layer analysis: use `docker history <image>` to identify layers contributing most to final size.

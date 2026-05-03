@@ -11,23 +11,23 @@ Versions verified: **2026-04-10**
 
 | Vessel | Package / Binary | Pinned version | Registry / Releases |
 |--------|-----------------|----------------|---------------------|
-| `claude` | `@anthropic-ai/claude-code` | `2.1.101` | https://www.npmjs.com/package/@anthropic-ai/claude-code |
-| `claude` | `gh` (GitHub CLI) | `v2.89.0` | https://github.com/cli/cli/releases |
-| `aider` | `aider-chat` | `0.82.3` | https://pypi.org/project/aider-chat/ |
-| `ampcode` | `@sourcegraph/amp` | `0.0.1775866026-gd3abf3` | https://www.npmjs.com/package/@sourcegraph/amp |
-| `cline` | `cline` | `2.14.0` | https://www.npmjs.com/package/cline |
-| `codebuff` | `codebuff` | `1.0.638` | https://www.npmjs.com/package/codebuff |
-| `codex` | `@openai/codex` | `0.120.0` | https://www.npmjs.com/package/@openai/codex |
-| `goose` | Goose CLI binary | `v1.30.0` | https://github.com/block/goose/releases |
-| `opencode` | OpenCode binary | `v1.4.3` | https://github.com/sst/opencode/releases |
-| `worker` | `yq` binary | `v4.52.5` | https://github.com/mikefarah/yq/releases |
+| `claude` | `@anthropic-ai/claude-code` | `2.1.101` | <https://www.npmjs.com/package/@anthropic-ai/claude-code> |
+| `claude` | `gh` (GitHub CLI) | `v2.89.0` | <https://github.com/cli/cli/releases> |
+| `aider` | `aider-chat` | `0.82.3` | <https://pypi.org/project/aider-chat/> |
+| `ampcode` | `@sourcegraph/amp` | `0.0.1775866026-gd3abf3` | <https://www.npmjs.com/package/@sourcegraph/amp> |
+| `cline` | `cline` | `2.14.0` | <https://www.npmjs.com/package/cline> |
+| `codebuff` | `codebuff` | `1.0.638` | <https://www.npmjs.com/package/codebuff> |
+| `codex` | `@openai/codex` | `0.120.0` | <https://www.npmjs.com/package/@openai/codex> |
+| `goose` | Goose CLI binary | `v1.30.0` | <https://github.com/block/goose/releases> |
+| `opencode` | OpenCode binary | `v1.4.3` | <https://github.com/sst/opencode/releases> |
+| `worker` | `yq` binary | `v4.52.5` | <https://github.com/mikefarah/yq/releases> |
 
 ## Base image tool versions
 
 | Base image | Package | Pinned version | Registry |
 |-----------|---------|----------------|----------|
-| `minimal`, `python` | `yarn` | `1.22.22` | https://www.npmjs.com/package/yarn |
-| `python` | `pip` | `26.0.1` | https://pypi.org/project/pip/ |
+| `minimal`, `python` | `yarn` | `1.22.22` | <https://www.npmjs.com/package/yarn> |
+| `python` | `pip` | `26.0.1` | <https://pypi.org/project/pip/> |
 
 ---
 
