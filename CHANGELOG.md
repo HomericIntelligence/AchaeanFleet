@@ -70,7 +70,7 @@ All notable changes to AchaeanFleet are documented here.
 ### CI
 
 - Switch from self-hosted to ubuntu-latest runners
-- Add .github/workflows/** and tests/** to paths trigger
+- Add .github/workflows/** and tests/** to paths trigger  <!-- markdownlint-disable MD037 -->
 - Add pre-commit hook to detect stale lockfiles
 - Remove PR path filter, add shellcheck, add coverage check
 - Pin trivy-action to SHA and add SARIF upload
@@ -295,4 +295,3 @@ All notable changes to AchaeanFleet are documented here.
 
 - Scope container volume mounts to least-privilege paths
 - Remove passwordless sudo from base images
-
