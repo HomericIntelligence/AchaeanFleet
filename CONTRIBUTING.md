@@ -547,9 +547,8 @@ When preparing a release (typically before major deployments or after significan
    git push origin v2026.04.23
    ```
 
-1. **Automated CHANGELOG updates:** The [git-cliff](https://git-cliff.org/) tool (configured via
-   `cliff.toml`) automatically groups commit history under the version tag in `CHANGELOG.md`,
-   replacing commit SHA and date anchors with semantic version references.
+1. **Release notes:** Generate release notes from commit history at release time via
+   `gh release create --generate-notes`. We no longer maintain a `CHANGELOG.md` file.
 
 1. **Release triggers:** The monthly digest-bump workflow and Dependabot PRs should trigger a
    release tag before major deployments to keep version history clean and deployments traceable.

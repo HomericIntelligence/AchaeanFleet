@@ -245,7 +245,7 @@ Both checks run automatically in CI on every PR that touches `bases/**`, `vessel
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for Dockerfile conventions, branch strategy, and the PR
-review process. Changes are documented in [CHANGELOG.md](CHANGELOG.md).
+review process.
 
 ## Nomad (Phase 6)
 
