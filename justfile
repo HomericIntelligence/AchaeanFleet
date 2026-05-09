@@ -91,6 +91,14 @@ bootstrap:
         echo "  compose/.env already exists — skipping copy"
     fi
 
+    # Warn if .env contains merge conflict markers
+    if grep -qE '^(<<<<<<<|=======|>>>>>>>)' compose/.env 2>/dev/null; then
+        echo ""
+        echo "  ERROR: compose/.env contains git merge conflict markers (=======, <<<<<<<, >>>>>>>)."
+        echo "  Resolve the conflicts before running 'just compose-up'."
+        exit 1
+    fi
+
     # Warn if any API key looks like a placeholder
     placeholder_keys=()
     if grep -qE '^ANTHROPIC_API_KEY=($|your_key_here|<.*>|PLACEHOLDER|changeme)' compose/.env 2>/dev/null; then
