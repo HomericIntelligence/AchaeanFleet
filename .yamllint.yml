@@ -1,17 +1,36 @@
+# YAML Lint configuration — canonical config for all YAML in this repo.
+# See https://yamllint.readthedocs.io/en/stable/configuration.html
+#
+# Used by:
+#   - CI: yamllint -c .yamllint.yml .github/workflows/ compose/
+#   - pre-commit: yamllint hook (--config-file .yamllint.yml)
+
 extends: default
 
 rules:
+  # Allow long lines (URLs, long commands, GH Actions expressions)
+  line-length:
+    max: 200
+    level: warning
+
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  comments:
+    min-spaces-from-content: 1
+
   # Allow GitHub Actions ${{ }} template syntax inside braces
   braces:
     max-spaces-inside: 1
 
-  # GitHub Actions uses 'true'/'false'/'on'/'off' as booleans in YAML
-  truthy:
-    allowed-values: ['true', 'false', 'on', 'off']
+  # Don't require document-start (---) markers
+  document-start: disable
 
-  # Allow long lines in CI files (URLs, long commands)
-  line-length:
-    max: 160
+  # GitHub Actions uses 'on'/'off' as well as standard true/false/yes/no
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
 
 ignore: |
   .git/

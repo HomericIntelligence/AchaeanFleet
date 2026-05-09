@@ -20,13 +20,13 @@ repos:
         args: [--maxkb=500]
 
   # ---------------------------------------------------------------------------
-  # YAML linting (with project-specific overrides in .yamllint.yaml)
+  # YAML linting (with project-specific overrides in .yamllint.yml)
   # ---------------------------------------------------------------------------
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args: [--config-file, .yamllint.yaml]
+        args: [--config-file, .yamllint.yml]
 
   # ---------------------------------------------------------------------------
   # Dockerfile linting (hadolint)
