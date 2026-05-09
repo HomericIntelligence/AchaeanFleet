@@ -231,6 +231,10 @@ jobs:
         working-directory: dagger
         run: npm audit --audit-level=high
 
+      - name: Type-check TypeScript pipeline
+        working-directory: dagger
+        run: npx tsc --noEmit
+
       - name: Audit Python dependencies (aider-chat)
         run: |
           pip install --quiet pip-audit aider-chat 2>/dev/null || true
