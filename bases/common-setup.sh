@@ -1,7 +1,11 @@
 #!/bin/bash
-# bases/common-setup.sh — Shared setup steps for all AchaeanFleet base images.
+# bases/common-setup.sh — Shared setup steps for AchaeanFleet base images.
 #
-# Called during Docker build (as root) to:
+# NOTE: This script is not currently called by any Dockerfile. It exists as
+# a reference implementation of the common setup steps. To use it, copy it
+# into a Dockerfile build context and invoke it as shown below.
+#
+# Intended to be run during Docker build (as root) to:
 #   1. Configure tmux for the 'agent' user
 #   2. Install Oh My Zsh for the 'agent' user
 #   3. Create /workspace and /app directories with correct ownership
