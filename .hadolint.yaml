@@ -12,11 +12,14 @@ ignore:
 
   # DL3015: Avoid --no-install-recommends.
   # Base images intentionally install recommended packages for a full
-  # developer/agent environment.
+  # developer/agent environment. Usage is intentionally inconsistent
+  # across base images — policy is to allow recommended packages globally.
   - DL3015
 
   # DL3016: npm packages not pinned to a specific version.
-  # Vessel images install CLI tools at latest by design.
+  # All vessel Dockerfiles pin npm packages to exact versions; however,
+  # hadolint cannot always statically verify pinning via ARG substitution,
+  # so the rule is suppressed globally to avoid false positives.
   - DL3016
 
   # DL3013: pip packages not pinned to a specific version.
