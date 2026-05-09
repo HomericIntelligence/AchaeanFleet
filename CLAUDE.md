@@ -21,8 +21,20 @@ vessels/        9 agent vessel Dockerfiles (FROM a base + AI tool)
 compose/        Docker Compose files (claude-only and full mesh)
 nomad/          Nomad job specs (Phase 6)
 dagger/         Dagger pipeline for CI/CD (Phase 5)
+hephaestus/     Python utilities for image tagging and digest verification
 .github/        GitHub Actions CI
 ```
+
+## hephaestus/ Python module
+
+The `hephaestus/` directory contains Python utilities used by CI and tests:
+
+- **`tags.py`** — Image tag generation (`:latest`, `:git-<sha>`, `:YYYY-MM-DD-<sha>`)
+- **`digest.py`** — Docker image digest capture and validation before registry push
+- **`tag_verify.py`** — Post-push GHCR tag verification helpers
+
+These modules are imported by `tests/` and used in the CI push-to-registry job for
+auditor traceability between built artifacts and pushed registry images.
 
 ## Building images locally
 
