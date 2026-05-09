@@ -1,5 +1,13 @@
 # Versioning Strategy
 
+> **File guide** — three versioning-related files exist in this repo; each serves a distinct purpose:
+>
+> | File | Purpose |
+> |------|---------|
+> | `VERSIONING.md` | This file — describes the image tagging strategy (CalVer + git SHA). |
+> | `VERSIONS.md` | Tracks pinned tool versions inside vessel Dockerfiles. |
+> | `VERSION` | Records the last CalVer release date; not consumed by CI or justfile. |
+
 AchaeanFleet uses a three-tier image tagging strategy to support both mutable continuous deployments
 and immutable release pinning.
 
