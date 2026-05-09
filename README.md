@@ -242,6 +242,18 @@ Both checks run automatically in CI on every PR that touches `bases/**`, `vessel
 5. Add to the build matrix in `.github/workflows/ci.yml`
 6. Run `just build-vessel <name>` to verify
 
+## hephaestus/ Python utilities
+
+The `hephaestus/` directory provides Python utilities used by CI and the test suite:
+
+| Module | Purpose |
+|--------|---------|
+| `hephaestus/tags.py` | Image tag generation (`:latest`, `:git-<sha>`, `:YYYY-MM-DD-<sha>`) |
+| `hephaestus/digest.py` | Docker image digest capture and validation before registry push |
+| `hephaestus/tag_verify.py` | Post-push GHCR tag verification helpers |
+
+These modules are imported by `tests/` to verify that CI pushes the expected tags to GHCR.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for Dockerfile conventions, branch strategy, and the PR
