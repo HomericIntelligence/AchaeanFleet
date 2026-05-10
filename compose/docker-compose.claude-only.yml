@@ -47,7 +47,6 @@ x-tmpfs: &tmpfs
   - /home/agent/.npm
   - /home/agent/.config
   - /home/agent/.local
-  - /home/agent/.npm
 
 x-logging: &default-logging
   driver: json-file
