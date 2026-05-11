@@ -137,8 +137,23 @@ bootstrap:
 
 # Show which container runtime is active
 runtime:
-    @echo "Container runtime: {{container_cmd}}"
-    @{{container_cmd}} version 2>&1 | grep -i "^Version:" | head -1 || true
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Container runtime: {{container_cmd}}"
+    # `{{container_cmd}} version` is the load-bearing call; the pipeline to
+    # `grep | head` is best-effort formatting. If the runtime is missing we
+    # want to surface that failure, not swallow it.
+    if ! version_out="$({{container_cmd}} version 2>&1)"; then
+        echo "error: {{container_cmd}} version failed:" >&2
+        printf '%s\n' "$version_out" >&2
+        exit 1
+    fi
+    line="$(printf '%s\n' "$version_out" | grep -i "^Version:" | head -1 || printf '')"
+    if [ -n "$line" ]; then
+        printf '%s\n' "$line"
+    else
+        echo "info: no \"Version:\" line found in runtime output (proceeding anyway)"
+    fi
 
 # Build all 3 base images
 build-bases:
@@ -290,7 +305,11 @@ test-smoke:
         fi
         sleep 2
     done
-    ${compose_cmd} -f compose/docker-compose.smoke.yml down --volumes --remove-orphans || true
+    # Best-effort teardown — log if it fails but don't mask the health-check
+    # outcome below, which is the real signal for this recipe.
+    if ! ${compose_cmd} -f compose/docker-compose.smoke.yml down --volumes --remove-orphans; then
+        echo "warn: compose down encountered errors during smoke-test teardown" >&2
+    fi
     [ $ok -eq 1 ] || { echo "FAIL: /health did not respond within 60s"; exit 1; }
     echo "=== Smoke test passed ==="
 
@@ -671,9 +690,20 @@ clean:
     set -euo pipefail
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     echo "=== Removing achaean-* images (${container_cmd}) ==="
-    ${container_cmd} images --format '{{{{.Repository}}}}:{{{{.Tag}}}}' \
-        | grep '^achaean-' \
-        | xargs -r ${container_cmd} rmi || true
+    # Enumerate images first; `grep` returning 1 (no matches) is the
+    # expected idempotent case, not an error. Use awk so the pipeline stays
+    # clean under `set -o pipefail`.
+    images_to_remove="$(${container_cmd} images --format '{{{{.Repository}}}}:{{{{.Tag}}}}' \
+        | awk '/^achaean-/')"
+    if [ -z "$images_to_remove" ]; then
+        echo "  No achaean-* images present — nothing to remove."
+    else
+        # rmi may fail for an image with running containers; surface as a
+        # warning so subsequent prune steps still run, but record it.
+        if ! printf '%s\n' "$images_to_remove" | xargs -r ${container_cmd} rmi; then
+            echo "warn: ${container_cmd} rmi reported errors (some images may be in use)" >&2
+        fi
+    fi
     echo "=== Cleaned ==="
 
 # Prune dangling images, stopped containers, and build cache
@@ -686,10 +716,25 @@ clean-dangling:
     echo "=== Pruning stopped containers ==="
     ${container_cmd} container prune -f
     echo "=== Pruning build cache ==="
-    ${container_cmd} builder prune -f 2>/dev/null || true
+    # `builder prune` is unsupported on some podman versions; treat the
+    # "unknown command" path as a no-op but surface anything else as a
+    # warning rather than silently swallowing it.
+    if ! ${container_cmd} builder prune -f 2>/tmp/_builder_prune.err; then
+        if grep -qiE 'unknown|unrecognized|not found' /tmp/_builder_prune.err; then
+            echo "  ${container_cmd} builder prune unsupported on this runtime — skipping."
+        else
+            echo "warn: ${container_cmd} builder prune failed:" >&2
+            cat /tmp/_builder_prune.err >&2
+        fi
+    fi
+    rm -f /tmp/_builder_prune.err
     echo "=== Pruning volumes ==="
-    {{container_cmd}} volume prune -f || true
-    @echo "=== Disk cleanup complete — check above for reclaimed space ==="
+    # volume prune can refuse with a non-zero exit if no volumes match; that's
+    # idempotent. Other failures (daemon unreachable) should be visible.
+    if ! {{container_cmd}} volume prune -f; then
+        echo "warn: {{container_cmd}} volume prune reported errors" >&2
+    fi
+    echo "=== Disk cleanup complete — check above for reclaimed space ==="
 
 # Full cleanup: remove achaean-* images + dangling layers + build cache
 clean-all:
