@@ -43,14 +43,20 @@ jobs:
 
       - name: Check shell script test coverage
         run: |
+          # Informational only — emit WARN: lines to stdout. The GitHub Actions
+          # advisory-annotation form is forbidden by docs/runbooks/no-silent-failures.md
+          # (Bucket F) because it is morally equivalent to continue-on-error.
+          # Test coverage enforcement is tracked separately; if this signal
+          # ever becomes a hard requirement, replace the WARN: echoes with
+          # `exit 1` and add real coverage for each missing script first.
           missing=0
           for f in scripts/*.sh; do
             base=$(basename "$f" .sh)
             if ! ls tests/**/*"${base}"* 2>/dev/null | grep -q .; then
-              echo "WARNING: No test found for $f"
+              echo "WARN: No test found for $f"
               missing=$((missing + 1))
             fi
           done
           if [ "$missing" -gt 0 ]; then
-            echo "::warning::$missing shell script(s) have no corresponding test file"
+            echo "WARN: $missing shell script(s) have no corresponding test file"
           fi
