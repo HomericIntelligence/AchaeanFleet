@@ -19,6 +19,57 @@ permissions:
   security-events: write  # needed by gitleaks-action
 
 jobs:
+  forbid-suppressions:
+    name: forbid-suppressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Reject silent-failure workaround in shell/YAML/Dockerfile/justfile/HCL"
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git ls-files \
+            -- \
+            '*.sh' '*.bash' '*.yml' '*.yaml' '*.hcl' \
+            'Dockerfile*' '**/Dockerfile*' \
+            'justfile' '**/justfile' 'Justfile' '**/Justfile')
+          declare -a scan_files=()
+          for f in "${files[@]}"; do
+            case "$f" in
+              # Exempt this workflow file (heredoc would otherwise self-match)
+              .github/workflows/_required.yml) continue ;;
+              # Exempt any runbook that documents the rule (if present)
+              docs/runbooks/no-silent-failures.md) continue ;;
+            esac
+            scan_files+=("$f")
+          done
+          if [ "${#scan_files[@]}" -eq 0 ]; then
+            echo "No files to scan"
+            exit 0
+          fi
+          if grep -nE '\|\|[[:space:]]*true([[:space:]]*$|[[:space:]]+#)' "${scan_files[@]}"; then
+            echo ""
+            echo '::error::Found silent-failure workarounds above. Refactor per HomericIntelligence/Odysseus#280.'
+            exit 1
+          fi
+          echo 'OK: no silent-failure workarounds found'
+
+      - name: "Reject continue-on-error workflow opt-out"
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git ls-files -- '.github/workflows/*.yml' '.github/workflows/*.yaml')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No workflow files"
+            exit 0
+          fi
+          if grep -nE '^[[:space:]]*continue-on-error:[[:space:]]*true[[:space:]]*$' "${files[@]}"; then
+            echo ""
+            echo '::error::Found "continue-on-error: true" above. Fix the root cause per HomericIntelligence/Odysseus#280.'
+            exit 1
+          fi
+          echo 'OK: no "continue-on-error: true" found'
+
   lint:
     name: lint
     runs-on: ubuntu-24.04
@@ -174,7 +225,12 @@ jobs:
           gitleaks version
 
       - name: Run Gitleaks
+        # `--exit-code 0` already makes this step a non-blocking advisory
+        # scan (the SARIF report is uploaded by a later step). No
+        # continue-on-error suppression is needed; gitleaks itself encodes
+        # the advisory semantics. See HomericIntelligence/Odysseus#280.
         run: |
+          set -euo pipefail
           if [ -f .gitleaks.toml ]; then
             gitleaks detect --source . --config .gitleaks.toml \
               --report-format sarif --report-path gitleaks.sarif --exit-code 0
@@ -182,7 +238,6 @@ jobs:
             gitleaks detect --source . \
               --report-format sarif --report-path gitleaks.sarif --exit-code 0
           fi
-        continue-on-error: true
 
       - name: Upload Gitleaks SARIF
         if: always() && hashFiles('gitleaks.sarif') != ''
@@ -258,11 +313,13 @@ jobs:
 
       - name: Check Dockerfile base images — no :latest pins
         run: |
+          set -euo pipefail
           echo "Scanning FROM lines for ':latest' base image pins..."
-          # Collect all FROM lines (skip ARG-substituted and comment lines)
-          latest_hits=$(grep -rh "^FROM" --include="Dockerfile*" . \
-            | grep -v "^#" \
-            | grep ":latest" || true)
+          # Collect all FROM lines (skip ARG-substituted and comment lines).
+          # `awk` always exits 0, which keeps the pipeline clean under
+          # `set -o pipefail` even when no rows match.
+          from_lines="$(grep -rh "^FROM" --include="Dockerfile*" . | awk '!/^#/')"
+          latest_hits="$(printf '%s\n' "$from_lines" | awk '/:latest/')"
 
           if [ -n "$latest_hits" ]; then
             echo "FAIL: The following FROM lines use ':latest' — pin to a digest or explicit version tag:"
@@ -272,11 +329,9 @@ jobs:
             echo "OK: No ':latest' base image pins found."
           fi
 
-          # Advisory: report any unpinned (no tag at all) base images
-          untagged=$(grep -rh "^FROM" --include="Dockerfile*" . \
-            | grep -v "^#" \
-            | grep -v ":" \
-            | grep -v "@" || true)
+          # Advisory: report any unpinned (no tag at all) base images.
+          # A bare FROM line has no `:` (no tag) and no `@` (no digest).
+          untagged="$(printf '%s\n' "$from_lines" | awk '!/:/ && !/@/ && NF')"
           if [ -n "$untagged" ]; then
             echo "::warning::The following FROM lines have no version tag or digest (implicitly latest):"
             echo "$untagged"
