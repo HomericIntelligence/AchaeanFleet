@@ -172,6 +172,25 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:<PORT>/health 2>/dev/null || exit 1
 ```
 
+## Vessel CMD pattern
+
+AI-agent vessels (`claude`, `codex`, `aider`, `goose`, `cline`, `opencode`,
+`codebuff`, `ampcode`) **do not declare a Dockerfile `CMD`**. They inherit
+`ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]` from the base image, and
+`bases/entrypoint.sh` dispatches to `$AGENT_PROGRAM` (set per-vessel via
+`ENV AGENT_PROGRAM=<binary>`) with `$AGENT_HEADLESS_FLAG` appended. This
+keeps the launch contract uniform across vessels.
+
+The **only** vessel that overrides this is `worker`, which has no AI binary
+to run and instead serves the healthcheck endpoint directly:
+
+```dockerfile
+CMD ["node", "/app/healthcheck-server.js"]
+```
+
+When adding a new agent vessel, set `ENV AGENT_PROGRAM=...` (and optionally
+`ENV AGENT_HEADLESS_FLAG=...`) — do **not** add a `CMD`.
+
 ## Nomad
 
 See [`nomad/PATTERNS.md`](nomad/PATTERNS.md) for the full HCL authoring guide.

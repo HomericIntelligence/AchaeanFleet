@@ -12,6 +12,15 @@ LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${VCS_REF}
+LABEL org.opencontainers.image.version=${VERSION}
+LABEL git-sha=${GIT_SHA}
+
 # Install system dependencies
 # curl: required by Oh My Zsh installer in common-setup.sh
 RUN apt-get update && apt-get install -y \

@@ -11,7 +11,7 @@ Produces collision-safe tags per image push:
 from __future__ import annotations
 
 import re
-from datetime import date, timezone
+from datetime import date
 from typing import Sequence
 
 _DATE_TAG_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-[0-9a-f]{7}$")

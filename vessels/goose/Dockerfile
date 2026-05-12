@@ -9,7 +9,13 @@ FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.title="achaean-goose"
 LABEL org.opencontainers.image.description="Goose (Block) AI agent vessel"
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
 ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${VCS_REF}
+LABEL org.opencontainers.image.version=${VERSION}
 LABEL git-sha=${GIT_SHA}
 
 USER root
