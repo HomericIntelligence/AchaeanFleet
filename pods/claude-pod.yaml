@@ -40,7 +40,9 @@ spec:
             secretKeyRef:
               name: achaean-secrets
               key: anthropic-api-key
-              optional: true
+              # Required: Claude Code cannot authenticate without this key.
+              # Fail fast at pod startup rather than silently launching an
+              # agent that will hit 401s on first API call.
         - name: AGAMEMNON_URL
           value: "https://caddy:8443"
         - name: TLS_CA_CERT
