@@ -1141,6 +1141,7 @@ jobs:
           VESSEL_NAME: ${{ matrix.vessel.name }}
           COMMIT_SHA: ${{ github.sha }}
           BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+          REGISTRY: ghcr.io/homericintelligence
         run: |
           set -euo pipefail
           IMAGE_NAME=$(echo "$VESSEL_NAME" | tr '[:upper:]' '[:lower:]')
@@ -1153,14 +1154,31 @@ jobs:
             echo "ERROR: digest format invalid: ${DIGEST}" >&2
             exit 1
           fi
+          # Cross-reference: capture the local image config ID (what
+          # `docker inspect` returns) alongside the registry manifest digest
+          # so an operator can correlate a built artifact with what landed
+          # in GHCR (see issue #421). Both are emitted to step outputs and
+          # to the run summary.
+          REF="${REGISTRY}/${IMAGE_NAME}:latest"
+          LOCAL_ID=""
+          REPO_DIGEST=""
+          if docker image inspect "$REF" >/dev/null 2>&1; then
+            LOCAL_ID=$(docker image inspect --format '{{.Id}}' "$REF" 2>/dev/null || echo "")
+            REPO_DIGEST=$(docker image inspect --format '{{range .RepoDigests}}{{.}} {{end}}' "$REF" 2>/dev/null \
+              | tr ' ' '\n' | grep -F "${REGISTRY}/${IMAGE_NAME}@" | head -1 || echo "")
+          fi
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "local_image_id=${LOCAL_ID}" >> "$GITHUB_OUTPUT"
+          echo "repo_digest=${REPO_DIGEST}" >> "$GITHUB_OUTPUT"
           echo "## Vessel Image Digest: \`${IMAGE_NAME}:latest\`" >> "$GITHUB_STEP_SUMMARY"
           echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
           echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Image | \`${IMAGE_NAME}:latest\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Digest | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Local image ID (pre-push) | \`${LOCAL_ID:-n/a}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Registry manifest digest (post-push) | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| RepoDigest reference | \`${REPO_DIGEST:-n/a}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Commit | \`${COMMIT_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "::notice title=Image Digest::${IMAGE_NAME}:latest -> ${DIGEST}"
+          echo "::notice title=Image Digest::${IMAGE_NAME}:latest -> ${DIGEST} (local id ${LOCAL_ID:-n/a})"
 
   verify-registry:
     name: Verify GHCR Tags
