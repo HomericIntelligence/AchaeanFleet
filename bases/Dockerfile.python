@@ -65,9 +65,12 @@ RUN mkdir -p /home/agent && \
     echo "set -g status-fg colour136" >> /home/agent/.tmux.conf && \
     chown -R agent:agent /home/agent
 
-# Install Oh My Zsh
+# Install Oh My Zsh from a pinned commit (reproducible, no curl|bash)
+ENV OHMYZSH_COMMIT=7c10d9839f05b8b73e26aa4e0f04cc886fbba6a6
 USER agent
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+RUN git clone https://github.com/ohmyzsh/ohmyzsh.git /home/agent/.oh-my-zsh && \
+    git -C /home/agent/.oh-my-zsh checkout "$OHMYZSH_COMMIT" && \
+    cp /home/agent/.oh-my-zsh/templates/zshrc.zsh-template /home/agent/.zshrc
 USER root
 
 COPY bases/scripts/strip-setuid.sh /tmp/strip-setuid.sh
