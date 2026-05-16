@@ -87,12 +87,34 @@ jobs:
           else
             echo "available=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Trivy image scan
+      - name: Trivy image scan — achaean-base-node
         if: steps.pull_images.outputs.available == 'true'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
         with:
           scan-type: image
           image-ref: ghcr.io/homericintelligence/achaean-base-node:latest
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+      - name: Trivy image scan — achaean-base-python
+        if: steps.pull_images.outputs.available == 'true'
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/homericintelligence/achaean-base-python:latest
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+      - name: Trivy image scan — achaean-base-minimal
+        if: steps.pull_images.outputs.available == 'true'
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/homericintelligence/achaean-base-minimal:latest
           format: table
           exit-code: '0'
           ignore-unfixed: true
