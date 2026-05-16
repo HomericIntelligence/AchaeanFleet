@@ -1,6 +1,7 @@
+---
+
 default_install_hook_types: [pre-commit, pre-push]
 
----
 # AchaeanFleet pre-commit configuration
 # Install: pre-commit install  (or: just lint-install)
 # Run manually: pre-commit run --all-files  (or: just lint)
