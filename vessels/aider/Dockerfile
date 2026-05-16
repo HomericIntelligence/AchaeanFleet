@@ -46,7 +46,7 @@ COPY vessels/aider/requirements.txt /tmp/requirements.txt
 # We expose `aider` on PATH via a symlink so existing AGENT_PROGRAM=aider
 # wiring continues to work without changes elsewhere.
 RUN /opt/python3.12/bin/python3.12 -m venv /opt/aider-venv \
-    && /opt/aider-venv/bin/pip install --no-cache-dir --upgrade pip \
+    && /opt/aider-venv/bin/pip install --no-cache-dir --upgrade "pip==26.0.1" \
     && /opt/aider-venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
     && ln -sf /opt/aider-venv/bin/aider /usr/local/bin/aider \
     && rm /tmp/requirements.txt
