@@ -4,7 +4,7 @@ Brief description of the change and the motivation.
 
 ## Related issues
 
-Refs #<issue-number>
+Refs #NNN (replace with issue number)
 
 ## Type of change
 
