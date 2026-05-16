@@ -261,6 +261,15 @@ review process.
 
 ## Nomad (Phase 6)
 
+> **Phase 6 status:** `nomad/mesh.nomad.hcl` currently defines 3 of the 9 vessel
+> groups (`claude-agents`, `aider-agents`, `worker-agents`). The remaining 6
+> vessel groups — `codex-agents`, `gemini-agents`, `goose-agents`,
+> `opencode-agents`, `q-agents`, `agentcode-agents` — are tracked for addition
+> in issue [#577](https://github.com/HomericIntelligence/AchaeanFleet/issues/577).
+> The interpolation anti-pattern fix is tracked in
+> [#110](https://github.com/HomericIntelligence/AchaeanFleet/issues/110) /
+> [#19](https://github.com/HomericIntelligence/AchaeanFleet/issues/19).
+
 ```bash
 # Validate
 nomad job plan nomad/mesh.nomad.hcl
