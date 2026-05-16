@@ -68,7 +68,9 @@ silently depending on the Nomad version and task driver.
 
 > **Note:** `mesh.nomad.hcl` currently contains this anti-pattern in the `claude-agents`,
 > `aider-agents`, and `worker-agents` groups. It is tracked for correction in the Phase 6
-> rework (see issue #110 / #19).
+> rework (see issue #110 / #19). The 6 remaining Phase 6 vessel groups
+> (`codex-agents`, `gemini-agents`, `goose-agents`, `opencode-agents`, `q-agents`,
+> `agentcode-agents`) are tracked separately in issue #577.
 
 ---
 
