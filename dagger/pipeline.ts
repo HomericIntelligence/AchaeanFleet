@@ -97,7 +97,11 @@ async function exportToLocalDaemon(container: Container, name: string): Promise<
   }
 }
 
-async function buildBases(client: Client, registry?: string): Promise<Map<string, Container>> {
+async function buildBases(
+  client: Client,
+  tags: { shortSha: string; dateTag: string },
+  registry?: string,
+): Promise<Map<string, Container>> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
   });
@@ -126,8 +130,8 @@ async function buildBases(client: Client, registry?: string): Promise<Map<string
     if (registry) {
       const tags = [
         `${registry}/${base.name}:latest`,
-        `${registry}/${base.name}:git-${shortSha}`,
-        `${registry}/${base.name}:${dateTag}`,
+        `${registry}/${base.name}:git-${tags.shortSha}`,
+        `${registry}/${base.name}:${tags.dateTag}`,
       ];
       for (const tag of tags) {
         console.log(`Pushing: ${tag}`);
@@ -146,7 +150,8 @@ async function buildBases(client: Client, registry?: string): Promise<Map<string
 async function buildVessels(
   client: Client,
   builtBases: Map<string, Container>,
-  registry?: string
+  tags: { shortSha: string; dateTag: string },
+  registry?: string,
 ): Promise<void> {
   const src = client.host().directory(".", {
     exclude: [".git", "node_modules", ".env"],
@@ -183,8 +188,8 @@ async function buildVessels(
     if (registry) {
       const tags = [
         `${registry}/${vessel.name}:latest`,
-        `${registry}/${vessel.name}:git-${shortSha}`,
-        `${registry}/${vessel.name}:${dateTag}`,
+        `${registry}/${vessel.name}:git-${tags.shortSha}`,
+        `${registry}/${vessel.name}:${tags.dateTag}`,
       ];
       for (const tag of tags) {
         console.log(`Pushing: ${tag}`);
@@ -286,8 +291,8 @@ connect(
   async (client) => {
     switch (command) {
       case "build":
-        const bases = await buildBases(client);
-        await buildVessels(client, bases);
+        const bases = await buildBases(client, { shortSha, dateTag });
+        await buildVessels(client, bases, { shortSha, dateTag });
         console.log("All images built successfully.");
         break;
 
@@ -296,8 +301,8 @@ connect(
           console.error("--registry <url> required for push");
           process.exit(1);
         }
-        const basesForPush = await buildBases(client, registry);
-        await buildVessels(client, basesForPush, registry);
+        const basesForPush = await buildBases(client, { shortSha, dateTag }, registry);
+        await buildVessels(client, basesForPush, { shortSha, dateTag }, registry);
         console.log(`All images pushed to ${registry} (tags: latest, git-${shortSha}, ${dateTag})`);
         break;
 
