@@ -387,17 +387,26 @@ lint-install:
 lint:
     pre-commit run --all-files
 
-# Check pinned tool versions against latest available releases
+# Check pinned tool versions against latest available releases.
+# Pinned versions are read from versions.yml so this recipe stays in sync
+# with the single source of truth (vessels' Dockerfiles + CI workflows).
+# Requires `yq` (mikefarah/yq v4+) on PATH.
 check-versions:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "=== Checking pinned tool versions ==="
+    echo "=== Checking pinned tool versions (source: versions.yml) ==="
     exit_code=0
 
-    # Goose (GitHub releases API)
+    if ! command -v yq >/dev/null 2>&1; then
+        echo "ERROR: yq is required to read versions.yml but is not on PATH."
+        echo "Install: https://github.com/mikefarah/yq"
+        exit 2
+    fi
+
+    # Goose
     echo ""
     echo "Checking GOOSE_VERSION..."
-    goose_pinned="1.31.1"
+    goose_pinned=$(yq -r '.tools.goose.version' versions.yml)
     goose_latest=$(curl -s https://api.github.com/repos/block/goose/releases/latest \
         | grep -oP '"tag_name":\s*"v\K[^"]+' | head -1 || echo "unknown")
     if [ "$goose_latest" = "unknown" ]; then
@@ -410,10 +419,11 @@ check-versions:
         exit_code=1
     fi
 
-    # OpenCode (GitHub releases API)
+    # OpenCode
     echo ""
     echo "Checking OPENCODE_VERSION..."
-    opencode_pinned="v1.4.3"
+    # versions.yml stores opencode as "vX.Y.Z" (matches GitHub tag format).
+    opencode_pinned=$(yq -r '.tools.opencode.version' versions.yml)
     opencode_latest=$(curl -s https://api.github.com/repos/sst/opencode/releases/latest \
         | grep -oP '"tag_name":\s*"\K[^"]+' | head -1 || echo "unknown")
     if [ "$opencode_latest" = "unknown" ]; then
@@ -426,10 +436,11 @@ check-versions:
         exit_code=1
     fi
 
-    # YQ (GitHub releases API)
+    # YQ
     echo ""
     echo "Checking YQ_VERSION..."
-    yq_pinned="v4.53.2"
+    # versions.yml stores yq as "vX.Y.Z" (matches GitHub tag format).
+    yq_pinned=$(yq -r '.tools.yq.version' versions.yml)
     yq_latest=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest \
         | grep -oP '"tag_name":\s*"\K[^"]+' | head -1 || echo "unknown")
     if [ "$yq_latest" = "unknown" ]; then

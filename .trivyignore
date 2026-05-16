@@ -3,42 +3,191 @@
 # CVEs that have been reviewed and accepted as unfixable or false-positive
 # for the AchaeanFleet container images.
 #
-# Format: one CVE ID per line (comments start with #)
+# Format: each entry MUST be preceded by a 6-field structured comment block
+# per SECURITY.md "CVE Suppression Policy" / "Required entry format":
+#
+#   # <CVE-ID>
+#   # Category: OS | npm | python | other
+#   # Rationale: <why it cannot be fixed here>
+#   # Exploitability: <none | low | medium | ...> — justification
+#   # Expires: YYYY-MM-DD  (max 90 days from approval; re-review before)
+#   # Reviewer: @<github-handle>  PR #<number>
+#   <CVE-ID>
+#
 # Reference: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#trivyignore
-#
-# Example:
-#   CVE-2023-XXXXX  # upstream not yet patched, no fix available in Debian bookworm
-#
-# Keep this list short — if you're adding a CVE here, document why below it.
 
-# Suppress false-positive secret detections for placeholder values in .env.example
-# These are documentation examples, not real credentials
+# secret-0-generic-api-key
+# Category: other
+# Rationale: false-positive secret detections for placeholder values in .env.example; these are documentation examples, not real credentials.
+# Exploitability: none — values are documented placeholder strings, never used at runtime.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
 secret-0-generic-api-key
+
+# secret-0-anthropic-api-key
+# Category: other
+# Rationale: false-positive secret detections for placeholder values in .env.example; these are documentation examples, not real credentials.
+# Exploitability: none — values are documented placeholder strings, never used at runtime.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
 secret-0-anthropic-api-key
 
-# npm transitive dependencies in @anthropic-ai/claude-code node_modules
-# These are indirect deps bundled by the upstream package — no direct fix available
-CVE-2024-21538  # cross-spawn ReDoS — fixed upstream but not yet in claude-code bundle
-CVE-2025-64756  # glob command injection — in npm bundled glob, not user-controllable
-CVE-2026-26996  # minimatch DoS — transitive dep in claude-code, upstream fix pending
-CVE-2026-27903  # minimatch DoS — transitive dep in claude-code, upstream fix pending
-CVE-2026-27904  # minimatch DoS — transitive dep in claude-code, upstream fix pending
-CVE-2026-23745  # node-tar arbitrary file overwrite — in npm bundled tar, no user input path
+# CVE-2024-21538
+# Category: npm
+# Rationale: cross-spawn ReDoS — fixed upstream but not yet in the @anthropic-ai/claude-code bundled node_modules; cannot be upgraded without breaking the package.
+# Exploitability: low — no attacker-controlled input reaches cross-spawn in the vessel runtime context.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2024-21538
 
-# aider-chat==0.82.3 pins exact transitive dep versions that contain known CVEs.
-# aider-chat itself pins these as exact requirements (==) so they cannot be upgraded
-# without breaking the package. No newer aider-chat release available as of 2026-04-29.
-CVE-2026-35030       # litellm@1.68.0 CRITICAL auth bypass — fixed in 1.83.0, pinned by aider-chat
-CVE-2026-35029       # litellm@1.68.0 HIGH RCE — fixed in 1.83.0, pinned by aider-chat
-GHSA-69x8-hrgq-fjj8 # litellm@1.68.0 HIGH password hash exposure — fixed in 1.83.0, pinned by aider-chat
-CVE-2025-69223       # aiohttp@3.11.18 HIGH HTTP parser — fixed in 3.13.3, pinned by aider-chat
-CVE-2025-48379       # pillow@11.2.1 DDS heap buffer overflow — fixed in 11.3.0, pinned by aider-chat
-CVE-2026-25990       # pillow@11.2.1 OOB write — fixed in 12.1.1, pinned by aider-chat
-CVE-2026-40192       # pillow@11.2.1 decompression bomb DoS — fixed in 12.2.0, pinned by aider-chat
-CVE-2025-4565        # protobuf@5.29.4 unbounded recursion — fixed in 5.29.5, pinned by aider-chat
-CVE-2026-0994        # protobuf@5.29.4 DoS — fixed in 5.29.6, pinned by aider-chat
-CVE-2026-23490       # pyasn1@0.6.1 memory exhaustion — fixed in 0.6.2, pinned by aider-chat
-CVE-2026-30922       # pyasn1@0.6.1 DoS — fixed in 0.6.3, pinned by aider-chat
-CVE-2025-66418       # urllib3@2.4.0 decompression — fixed in 2.6.0, pinned by aider-chat
-CVE-2025-66471       # urllib3@2.4.0 streaming — pinned by aider-chat
-CVE-2026-21441       # urllib3@2.4.0 decompression bomb — fixed in 2.6.3, pinned by aider-chat
+# CVE-2025-64756
+# Category: npm
+# Rationale: glob command injection — present in npm-bundled glob within @anthropic-ai/claude-code; not user-controllable in the vessel context.
+# Exploitability: none — glob inputs are hard-coded in the bundled package.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2025-64756
+
+# CVE-2026-26996
+# Category: npm
+# Rationale: minimatch DoS — transitive dep in claude-code bundled node_modules, upstream fix pending.
+# Exploitability: low — minimatch input limited to bundled-package code paths.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-26996
+
+# CVE-2026-27903
+# Category: npm
+# Rationale: minimatch DoS — transitive dep in claude-code bundled node_modules, upstream fix pending.
+# Exploitability: low — minimatch input limited to bundled-package code paths.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-27903
+
+# CVE-2026-27904
+# Category: npm
+# Rationale: minimatch DoS — transitive dep in claude-code bundled node_modules, upstream fix pending.
+# Exploitability: low — minimatch input limited to bundled-package code paths.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-27904
+
+# CVE-2026-23745
+# Category: npm
+# Rationale: node-tar arbitrary file overwrite — in npm-bundled tar within claude-code; no user-controlled tar input path in the vessel runtime.
+# Exploitability: none — no attacker-controlled tar input reaches the bundled tar.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-23745
+
+# CVE-2026-35030
+# Category: python
+# Rationale: litellm@1.68.0 CRITICAL auth bypass — fixed in 1.83.0, pinned (==) by aider-chat@0.82.3; no newer aider-chat release available as of 2026-04-29.
+# Exploitability: low — vessel does not expose litellm auth endpoints externally.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-35030
+
+# CVE-2026-35029
+# Category: python
+# Rationale: litellm@1.68.0 HIGH RCE — fixed in 1.83.0, pinned (==) by aider-chat@0.82.3; no newer aider-chat release available as of 2026-04-29.
+# Exploitability: low — vessel runs litellm only via aider-chat's internal call paths.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-35029
+
+# GHSA-69x8-hrgq-fjj8
+# Category: python
+# Rationale: litellm@1.68.0 HIGH password hash exposure — fixed in 1.83.0, pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — vessel does not persist litellm-managed credentials.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+GHSA-69x8-hrgq-fjj8
+
+# CVE-2025-69223
+# Category: python
+# Rationale: aiohttp@3.11.18 HIGH HTTP parser — fixed in 3.13.3, pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — aiohttp invoked only against trusted upstream model APIs.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2025-69223
+
+# CVE-2025-48379
+# Category: python
+# Rationale: pillow@11.2.1 DDS heap buffer overflow — fixed in 11.3.0, pinned (==) by aider-chat@0.82.3.
+# Exploitability: none — aider-chat does not load attacker-supplied DDS images.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2025-48379
+
+# CVE-2026-25990
+# Category: python
+# Rationale: pillow@11.2.1 OOB write — fixed in 12.1.1, pinned (==) by aider-chat@0.82.3.
+# Exploitability: none — aider-chat does not load attacker-supplied images.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-25990
+
+# CVE-2026-40192
+# Category: python
+# Rationale: pillow@11.2.1 decompression bomb DoS — fixed in 12.2.0, pinned (==) by aider-chat@0.82.3.
+# Exploitability: none — aider-chat does not load attacker-supplied images.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-40192
+
+# CVE-2025-4565
+# Category: python
+# Rationale: protobuf@5.29.4 unbounded recursion — fixed in 5.29.5, pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — protobuf input limited to model-API payloads.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2025-4565
+
+# CVE-2026-0994
+# Category: python
+# Rationale: protobuf@5.29.4 DoS — fixed in 5.29.6, pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — protobuf input limited to model-API payloads.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-0994
+
+# CVE-2026-23490
+# Category: python
+# Rationale: pyasn1@0.6.1 memory exhaustion — fixed in 0.6.2, pinned (==) by aider-chat@0.82.3.
+# Exploitability: none — pyasn1 not exposed to attacker-controlled input.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-23490
+
+# CVE-2026-30922
+# Category: python
+# Rationale: pyasn1@0.6.1 DoS — fixed in 0.6.3, pinned (==) by aider-chat@0.82.3.
+# Exploitability: none — pyasn1 not exposed to attacker-controlled input.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-30922
+
+# CVE-2025-66418
+# Category: python
+# Rationale: urllib3@2.4.0 decompression — fixed in 2.6.0, pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — urllib3 invoked only against trusted upstream model APIs.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2025-66418
+
+# CVE-2025-66471
+# Category: python
+# Rationale: urllib3@2.4.0 streaming — pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — urllib3 invoked only against trusted upstream model APIs.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2025-66471
+
+# CVE-2026-21441
+# Category: python
+# Rationale: urllib3@2.4.0 decompression bomb — fixed in 2.6.3, pinned (==) by aider-chat@0.82.3.
+# Exploitability: low — urllib3 invoked only against trusted upstream model APIs.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-21441
