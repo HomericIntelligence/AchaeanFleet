@@ -1,0 +1,12 @@
+# Security overrides — aider hard-pins older versions of these libs with
+# known HIGH-severity CVEs. Installed AFTER aider-chat (with pip --upgrade)
+# so the patched versions win over aider's transitive pins. A single
+# `pip install -r requirements.txt` cannot satisfy both aider's pins and
+# these upgrade constraints simultaneously (ResolutionImpossible), which
+# is why this file is consumed by a separate `pip install --upgrade` step
+# in vessels/aider/Dockerfile. Revisit and remove these lines when aider
+# upstream releases a build that bumps them natively (tracked upstream at
+# Aider-AI/aider).
+GitPython>=3.1.49     # CVE-2026-42215, -42284, -44243, -44244
+Pillow>=12.2.0        # CVE-2026-42311
+urllib3>=2.7.0        # CVE-2026-44431

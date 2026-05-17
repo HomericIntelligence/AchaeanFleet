@@ -14,18 +14,18 @@
 base_images:
   node:
     tag: "25-slim"
-    digest: "sha256:e49fd70491eb042270f974167c874d6245287263ffc16422fcf93b3c150409d8"
+    digest: "sha256:67134eb99e14d566f2882a38a374b8351ea474656487dbb1e0c79e4064cc1725"
     used_by:
       - bases/Dockerfile.node
       - bases/Dockerfile.minimal
   python:
-    tag: "3.12-slim"
-    digest: "sha256:9e1985bbb7f0028d6bef4d07dbc1a39e94e694879bd9d0a09d68c9bf40af49ca"
+    tag: "3.14-slim"
+    digest: "sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856"
     used_by:
       - bases/Dockerfile.python
   debian:
     tag: "bookworm-slim"
-    digest: "sha256:f9c6a2fd2ddbc23e336b6257a5245e31f996953ef06cd13a59fa0a1df2d5c252"
+    digest: "sha256:67b30a61dc87758f0caf819646104f29ecbda97d920aaf5edc834128ac8493d3"
     used_by:
       - bases/Dockerfile.minimal
 

@@ -39,17 +39,24 @@ USER root
 # base image's Python 3.14.
 COPY --from=python312-source /usr/local /opt/python3.12
 
-# Copy requirements.txt for reproducible dependency management
+# Copy requirements files for reproducible dependency management.
+# The security-overrides file is consumed by a second `pip install --upgrade`
+# pass below because aider-chat hard-pins older CVE-affected versions of
+# GitPython/Pillow/urllib3; a single resolver pass cannot satisfy both
+# aider's pins and the upgrade constraints (ResolutionImpossible).
 COPY vessels/aider/requirements.txt /tmp/requirements.txt
+COPY vessels/aider/requirements-security-overrides.txt /tmp/requirements-security-overrides.txt
 
-# Create an isolated venv with Python 3.12 and install aider-chat into it.
+# Create an isolated venv with Python 3.12 and install aider-chat into it,
+# then force-upgrade the CVE-affected transitive deps in a second pass.
 # We expose `aider` on PATH via a symlink so existing AGENT_PROGRAM=aider
 # wiring continues to work without changes elsewhere.
 RUN /opt/python3.12/bin/python3.12 -m venv /opt/aider-venv \
     && /opt/aider-venv/bin/pip install --no-cache-dir --upgrade "pip==26.0.1" \
     && /opt/aider-venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+    && /opt/aider-venv/bin/pip install --no-cache-dir --upgrade -r /tmp/requirements-security-overrides.txt \
     && ln -sf /opt/aider-venv/bin/aider /usr/local/bin/aider \
-    && rm /tmp/requirements.txt
+    && rm /tmp/requirements.txt /tmp/requirements-security-overrides.txt
 
 # Verify installation
 RUN aider --version
