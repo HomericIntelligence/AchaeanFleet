@@ -1,1 +1,9 @@
-aider-chat==0.82.3
+aider-chat==0.86.2
+# Security overrides — aider hard-pins older versions of these libs with
+# known HIGH-severity CVEs. We force-upgrade post-install to the lowest
+# CVE-clean version within the same major release. Revisit and remove
+# these lines when aider upstream releases a build that bumps them
+# natively (tracked upstream at Aider-AI/aider — see PR body).
+GitPython>=3.1.49     # CVE-2026-42215, -42284, -44243, -44244
+Pillow>=12.2.0        # CVE-2026-42311
+urllib3>=2.7.0        # CVE-2026-44431
