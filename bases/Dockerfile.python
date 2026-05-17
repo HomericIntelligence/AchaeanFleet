@@ -4,9 +4,9 @@
 # Python-based agent vessels (Aider) FROM this.
 
 # Node.js 20 source stage — binary copied into runtime, no external scripts
-FROM node:25-slim@sha256:e49fd70491eb042270f974167c874d6245287263ffc16422fcf93b3c150409d8 AS node-source
+FROM node:25-slim@sha256:67134eb99e14d566f2882a38a374b8351ea474656487dbb1e0c79e4064cc1725 AS node-source
 
-FROM python:3.14-slim@sha256:5b3879b6f3cb77e712644d50262d05a7c146b7312d784a18eff7ff5462e77033
+FROM python:3.14-slim@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856
 
 LABEL org.opencontainers.image.title="achaean-base-python"
 LABEL org.opencontainers.image.description="AchaeanFleet Python base image for AI agent containers"
@@ -21,9 +21,13 @@ LABEL org.opencontainers.image.revision=${VCS_REF}
 LABEL org.opencontainers.image.version=${VERSION}
 LABEL git-sha=${GIT_SHA}
 
-# Install system dependencies
+# Install system dependencies and apply security patches.
+# `apt-get upgrade` is required because the upstream python:3.14-slim base
+# image lags behind Debian security updates (e.g. CVE-2026-4878 libcap2,
+# CVE-2026-29111 libsystemd0/libudev1) and the trivy gate fails on any
+# HIGH/CRITICAL CVE with a fixed version available.
 # curl: required by Oh My Zsh installer in common-setup.sh
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \
