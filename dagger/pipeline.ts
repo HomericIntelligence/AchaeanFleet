@@ -125,12 +125,12 @@ async function buildBases(
       });
 
     if (registry) {
-      const tags = [
+      const tagList = [
         `${registry}/${base.name}:latest`,
         `${registry}/${base.name}:git-${tags.shortSha}`,
         `${registry}/${base.name}:${tags.dateTag}`,
       ];
-      for (const tag of tags) {
+      for (const tag of tagList) {
         console.log(`Pushing: ${tag}`);
         await image.publish(tag);
       }
@@ -183,12 +183,12 @@ async function buildVessels(
     });
 
     if (registry) {
-      const tags = [
+      const tagList = [
         `${registry}/${vessel.name}:latest`,
         `${registry}/${vessel.name}:git-${tags.shortSha}`,
         `${registry}/${vessel.name}:${tags.dateTag}`,
       ];
-      for (const tag of tags) {
+      for (const tag of tagList) {
         console.log(`Pushing: ${tag}`);
         await image.publish(tag);
       }
