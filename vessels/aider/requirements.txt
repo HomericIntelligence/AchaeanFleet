@@ -1,1 +1,1 @@
-aider-chat==0.82.3
+aider-chat==0.86.2

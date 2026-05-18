@@ -191,3 +191,43 @@ CVE-2025-66471
 # Expires: 2026-08-14
 # Reviewer: @mvillmow  PR #TBD
 CVE-2026-21441
+
+# CVE-2026-33811
+# Category: other
+# Rationale: Go stdlib net (LookupCNAME w/ cgo resolver) — embedded in /usr/bin/gh (GitHub CLI 2.92.0 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; resolution requires upstream cli/cli to rebuild and republish the apt package. No newer gh release available in cli.github.com/packages/dists/stable as of 2026-05-16.
+# Exploitability: none — vessel does not invoke gh against attacker-controlled hostnames; CNAME lookup path requires malicious DNS responses.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #662
+CVE-2026-33811
+
+# CVE-2026-33814
+# Category: other
+# Rationale: Go stdlib HTTP/2 SETTINGS frame infinite loop — embedded in /usr/bin/gh (GitHub CLI 2.92.0 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
+# Exploitability: low — gh only connects to api.github.com (trusted upstream); no attacker-controlled HTTP/2 server in the vessel runtime context.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #662
+CVE-2026-33814
+
+# CVE-2026-39820
+# Category: other
+# Rationale: Go stdlib net/mail (ParseAddress/ParseAddressList) — embedded in /usr/bin/gh built with Go 1.26.2. Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
+# Exploitability: none — gh does not parse RFC 5322 addresses from attacker-controlled input in the vessel runtime context.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #662
+CVE-2026-39820
+
+# CVE-2026-39836
+# Category: other
+# Rationale: Go stdlib Dial/LookupPort NUL-byte panic on Windows — embedded in /usr/bin/gh built with Go 1.26.2. Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
+# Exploitability: none — vessel images run on Linux only; the vulnerable code path is Windows-specific.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #662
+CVE-2026-39836
+
+# CVE-2026-42499
+# Category: other
+# Rationale: Go stdlib net/mail consumePhrase DoS — embedded in /usr/bin/gh built with Go 1.26.2. Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
+# Exploitability: none — gh does not parse attacker-controlled mail phrases in the vessel runtime context.
+# Expires: 2026-08-14
+# Reviewer: @mvillmow  PR #662
+CVE-2026-42499

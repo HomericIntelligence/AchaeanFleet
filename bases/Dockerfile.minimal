@@ -4,9 +4,9 @@
 # Binary-based agent vessels (Goose, OpenCode, Worker) FROM this.
 
 # Node.js 20 source stage — binary copied into runtime, no external scripts
-FROM node:25-slim@sha256:e49fd70491eb042270f974167c874d6245287263ffc16422fcf93b3c150409d8 AS node-source
+FROM node:25-slim@sha256:67134eb99e14d566f2882a38a374b8351ea474656487dbb1e0c79e4064cc1725 AS node-source
 
-FROM debian:bookworm-slim@sha256:f9c6a2fd2ddbc23e336b6257a5245e31f996953ef06cd13a59fa0a1df2d5c252
+FROM debian:bookworm-slim@sha256:67b30a61dc87758f0caf819646104f29ecbda97d920aaf5edc834128ac8493d3
 
 LABEL org.opencontainers.image.title="achaean-base-minimal"
 LABEL org.opencontainers.image.description="AchaeanFleet minimal Debian base image for AI agent containers"
@@ -21,9 +21,12 @@ LABEL org.opencontainers.image.revision=${VCS_REF}
 LABEL org.opencontainers.image.version=${VERSION}
 LABEL git-sha=${GIT_SHA}
 
-# Install system dependencies
+# Install system dependencies and apply security patches.
+# `apt-get upgrade` is required because upstream slim base images may lag
+# behind Debian security updates and the trivy gate fails on any
+# HIGH/CRITICAL CVE with a fixed version available.
 # curl: required by Oh My Zsh installer in common-setup.sh
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     wget \
     git \

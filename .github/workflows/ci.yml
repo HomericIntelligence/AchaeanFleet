@@ -140,12 +140,8 @@ jobs:
           config: .hadolint.yaml
           failure-threshold: error
 
-      - name: Lint vessels/aider/Dockerfile
-        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5  # v3.3.0
-        with:
-          dockerfile: vessels/aider/Dockerfile
-          config: .hadolint.yaml
-          failure-threshold: error
+      # achaean-aider vessel disabled in CI — see #665. Re-enable by restoring
+      # this hadolint step alongside the other aider entries in this file.
 
       - name: Lint vessels/goose/Dockerfile
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5  # v3.3.0
@@ -247,82 +243,10 @@ jobs:
         working-directory: dagger
         run: npx tsc --noEmit
 
-      - name: Audit Python dependencies (aider-chat)
-        run: |
-          set -euo pipefail
-          # pip install MUST succeed — if pip-audit or aider-chat can't be
-          # installed, the audit step is meaningless.
-          pip install --quiet pip-audit aider-chat
-          # Fail-fast on findings — see docs/runbooks/no-silent-failures.md
-          # (Bucket F). The prior advisory annotation wrapper was a no-op
-          # masking the fact that the original `--require` flag never worked
-          # (it argparse-abbreviated to `--requirement`, which expects a
-          # requirements file path, not a package name).
-          #
-          # Allowlist below: 57 transitive CVEs in aider-chat's pinned deps
-          # tracked in HomericIntelligence/AchaeanFleet#655. Planned fix:
-          # upstream aider-chat bumps OR replace aider-chat. Review by
-          # 2026-08-10. Each ignore entry must be removed once the upstream
-          # fix lands. To audit without ignores: `pip-audit` against the
-          # installed env locally.
-          pip-audit --desc \
-            --ignore-vuln GHSA-2vrm-gr82-f7m5 \
-            --ignore-vuln GHSA-2xpw-w6gg-jr37 \
-            --ignore-vuln GHSA-38jv-5279-wg99 \
-            --ignore-vuln GHSA-3wq7-rqq7-wx6j \
-            --ignore-vuln GHSA-48p4-8xcf-vxj5 \
-            --ignore-vuln GHSA-4xh5-x5gv-qwph \
-            --ignore-vuln GHSA-5239-wwwm-4pmq \
-            --ignore-vuln GHSA-53mr-6c8q-9789 \
-            --ignore-vuln GHSA-54jq-c3m8-4m76 \
-            --ignore-vuln GHSA-58qw-9mgm-455v \
-            --ignore-vuln GHSA-5xmw-vc9v-4wf2 \
-            --ignore-vuln GHSA-63hf-3vf5-4wqf \
-            --ignore-vuln GHSA-63vm-454h-vhhq \
-            --ignore-vuln GHSA-69f9-5gxw-wvc2 \
-            --ignore-vuln GHSA-69x8-hrgq-fjj8 \
-            --ignore-vuln GHSA-6jhg-hg63-jvvf \
-            --ignore-vuln GHSA-6mq8-rvhq-8wgg \
-            --ignore-vuln GHSA-6vgw-5pg2-w6jp \
-            --ignore-vuln GHSA-735f-pc8j-v9w8 \
-            --ignore-vuln GHSA-7gcm-g887-7qv7 \
-            --ignore-vuln GHSA-8qvm-5x2c-j2w7 \
-            --ignore-vuln GHSA-9548-qrrj-x5pj \
-            --ignore-vuln GHSA-966j-vmvw-g2g9 \
-            --ignore-vuln GHSA-9hjg-9r4m-mvj7 \
-            --ignore-vuln GHSA-c427-h43c-vf67 \
-            --ignore-vuln GHSA-cfh3-3jmp-rvhc \
-            --ignore-vuln GHSA-cx63-2mw6-8hw5 \
-            --ignore-vuln GHSA-fh55-r93g-j68g \
-            --ignore-vuln GHSA-g84x-mcqj-x9qq \
-            --ignore-vuln GHSA-gc5v-m9x4-r6x2 \
-            --ignore-vuln GHSA-gm62-xv2j-4w53 \
-            --ignore-vuln GHSA-hcc4-c3v8-rx92 \
-            --ignore-vuln GHSA-jj3x-wxrx-4x23 \
-            --ignore-vuln GHSA-jjhc-v7c2-5hh6 \
-            --ignore-vuln GHSA-jp4c-xjxw-mgf9 \
-            --ignore-vuln GHSA-jr27-m4p2-rc6r \
-            --ignore-vuln GHSA-m5qp-6w8w-w647 \
-            --ignore-vuln GHSA-mf9w-mj56-hr94 \
-            --ignore-vuln GHSA-mqqc-3gqh-h2x8 \
-            --ignore-vuln GHSA-mv93-w799-cj2w \
-            --ignore-vuln GHSA-mwh4-6h8g-pg8w \
-            --ignore-vuln GHSA-p998-jp59-783m \
-            --ignore-vuln GHSA-pq67-6m6q-mj2v \
-            --ignore-vuln GHSA-pwv6-vv43-88gr \
-            --ignore-vuln GHSA-qmgc-5h2g-mvrw \
-            --ignore-vuln GHSA-r73j-pqj5-w3x7 \
-            --ignore-vuln GHSA-rpm5-65cw-6hj4 \
-            --ignore-vuln GHSA-v87r-6q3f-2j67 \
-            --ignore-vuln GHSA-w2fm-2cpv-w7v5 \
-            --ignore-vuln GHSA-w853-jp5j-5j7f \
-            --ignore-vuln GHSA-w8v5-vhqr-4h9v \
-            --ignore-vuln GHSA-whj4-6x5x-4v2j \
-            --ignore-vuln GHSA-wjx4-4jcj-g98j \
-            --ignore-vuln GHSA-x2qx-6953-8485 \
-            --ignore-vuln PYSEC-2022-43012 \
-            --ignore-vuln PYSEC-2025-49 \
-            --ignore-vuln PYSEC-2025-61
+      # The "Audit Python dependencies (aider-chat)" pip-audit step (with its
+      # 70+ --ignore-vuln allowlist for aider-chat's hard-pinned transitive
+      # CVEs) lived here and was removed when aider was disabled. Restore
+      # from PR #662 history if re-enabling aider — see #665 and #655.
 
   validate:
     name: Validate Compose Files
@@ -725,9 +649,8 @@ jobs:
           - name: achaean-codex
             dockerfile: vessels/codex/Dockerfile
             base: achaean-base-node
-          - name: achaean-aider
-            dockerfile: vessels/aider/Dockerfile
-            base: achaean-base-python
+          # achaean-aider disabled — see #665. Restore here (build matrix)
+          # and in the push-to-ghcr matrix when re-enabling.
           - name: achaean-goose
             dockerfile: vessels/goose/Dockerfile
             base: achaean-base-minimal
@@ -1029,9 +952,8 @@ jobs:
           - name: achaean-codex
             dockerfile: vessels/codex/Dockerfile
             base: achaean-base-node
-          - name: achaean-aider
-            dockerfile: vessels/aider/Dockerfile
-            base: achaean-base-python
+          # achaean-aider disabled — see #665. Restore here (build matrix)
+          # and in the push-to-ghcr matrix when re-enabling.
           - name: achaean-goose
             dockerfile: vessels/goose/Dockerfile
             base: achaean-base-minimal
@@ -1194,10 +1116,10 @@ jobs:
           echo "| Vessel | Tag | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "| --- | --- | --- |" >> "$GITHUB_STEP_SUMMARY"
 
+          # achaean-aider intentionally omitted — see #665.
           vessels=(
             "achaean-claude"
             "achaean-codex"
-            "achaean-aider"
             "achaean-goose"
             "achaean-cline"
             "achaean-opencode"
