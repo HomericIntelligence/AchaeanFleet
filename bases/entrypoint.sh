@@ -16,15 +16,19 @@
 
 set -e
 
+# ENTRYPOINT_SECRETS_DIR allows tests to inject a different secrets directory.
+# In production, this is unset and defaults to /run/secrets.
+SECRETS_DIR_DEFAULT="${ENTRYPOINT_SECRETS_DIR:-/run/secrets}"
+
 # Load Anthropic API key from secret file if present
-if [ -f /run/secrets/anthropic_api_key ]; then
-    ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"
+if [ -f "$SECRETS_DIR_DEFAULT/anthropic_api_key" ]; then
+    ANTHROPIC_API_KEY="$(cat "$SECRETS_DIR_DEFAULT/anthropic_api_key")"
     export ANTHROPIC_API_KEY
 fi
 
 # Load OpenAI API key from secret file if present
-if [ -f /run/secrets/openai_api_key ]; then
-    OPENAI_API_KEY="$(cat /run/secrets/openai_api_key)"
+if [ -f "$SECRETS_DIR_DEFAULT/openai_api_key" ]; then
+    OPENAI_API_KEY="$(cat "$SECRETS_DIR_DEFAULT/openai_api_key")"
     export OPENAI_API_KEY
 fi
 
