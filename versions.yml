@@ -55,10 +55,10 @@ tools:
     checksums:
       amd64:
         asset: "opencode-linux-x64.tar.gz"
-        sha256: null  # TODO: add checksum verification to Dockerfile (see issue #210)
+        sha256: "34d503ebb029853293be6fd4d441bbb2dbb03919bfa4525e88b1ca55d68f3e17"
       arm64:
         asset: "opencode-linux-arm64.tar.gz"
-        sha256: null
+        sha256: "4cbf32f4c31da7dae14712b65aadbce6acfa1a7a85bee986a2ce4eaaed4eb5c8"
 
   yq:
     version: "v4.53.2"
@@ -68,10 +68,10 @@ tools:
     checksums:
       amd64:
         asset: "yq_linux_amd64"
-        sha256: null  # TODO: add checksum verification to Dockerfile
+        sha256: "d56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b"
       arm64:
         asset: "yq_linux_arm64"
-        sha256: null
+        sha256: "03061b2a50c7a498de2bbb92d7cb078ce433011f085a4994117c2726be4106ea"
 
   yarn:
     version: "1.22.22"
