@@ -1,17 +1,17 @@
 #!/usr/bin/env bats
-# Smoke tests for bases/entrypoint.sh credential chain loader
-# Asserts: entrypoint is executable
-# Asserts: ANTHROPIC_API_KEY is exported when secrets file is present
-# Asserts: without secrets, existing env vars pass through
-# Asserts: entrypoint execs the CMD argument
+# Tests for bases/entrypoint.sh credential chain loader
+#
+# These tests invoke the actual entrypoint script to verify its behavior.
+# A test-only override env var (ENTRYPOINT_SECRETS_DIR) allows hermetic testing
+# without relying on /run/secrets (which exists only in containers).
 
-SCRIPT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)/bases/entrypoint.sh"
+ENTRYPOINT="$BATS_TEST_DIRNAME/../bases/entrypoint.sh"
 
 setup() {
-    # Create a temp directory for test secrets files
+    # Create a temp directory for test secrets files so tests are isolated
+    # from any real credentials on the host.
     SECRETS_DIR="$(mktemp -d)"
-    export SECRETS_DIR
-    # Unset any real keys to ensure clean test environment
+    # Unset any real keys that might be set in the test runner's environment.
     unset ANTHROPIC_API_KEY
     unset OPENAI_API_KEY
 }
@@ -22,78 +22,60 @@ teardown() {
 }
 
 @test "entrypoint.sh exists and is executable" {
-    [ -x "$SCRIPT" ]
+    [ -x "$ENTRYPOINT" ]
 }
 
-@test "entrypoint loads ANTHROPIC_API_KEY from secrets file" {
-    # Mock the secrets by using a wrapper that injects the test logic
+@test "loads ANTHROPIC_API_KEY from secret file" {
     echo -n "sk-ant-test-123" > "$SECRETS_DIR/anthropic_api_key"
-    run bash -c "
-        # Simulate secret mount by replacing /run/secrets with temp dir
-        sh <<'EOF'
-if [ -f '$SECRETS_DIR/anthropic_api_key' ]; then
-    ANTHROPIC_API_KEY=\"\$(cat '$SECRETS_DIR/anthropic_api_key')\"
-    export ANTHROPIC_API_KEY
-fi
-echo \"\$ANTHROPIC_API_KEY\"
-EOF
-    "
+    run env -i HOME="$HOME" PATH="$PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" "$ENTRYPOINT" sh -c 'echo "$ANTHROPIC_API_KEY"'
     [ "$status" -eq 0 ]
-    [[ "$output" == *"sk-ant-test-123"* ]]
+    [ "$output" = "sk-ant-test-123" ]
 }
 
-@test "entrypoint loads OPENAI_API_KEY from secrets file" {
-    # Mock the secrets by using a wrapper that injects the test logic
+@test "loads OPENAI_API_KEY from secret file" {
     echo -n "sk-openai-test-456" > "$SECRETS_DIR/openai_api_key"
-    run bash -c "
-        # Simulate secret mount by replacing /run/secrets with temp dir
-        sh <<'EOF'
-if [ -f '$SECRETS_DIR/openai_api_key' ]; then
-    OPENAI_API_KEY=\"\$(cat '$SECRETS_DIR/openai_api_key')\"
-    export OPENAI_API_KEY
-fi
-echo \"\$OPENAI_API_KEY\"
-EOF
-    "
+    run env -i HOME="$HOME" PATH="$PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" "$ENTRYPOINT" sh -c 'echo "$OPENAI_API_KEY"'
     [ "$status" -eq 0 ]
-    [[ "$output" == *"sk-openai-test-456"* ]]
+    [ "$output" = "sk-openai-test-456" ]
 }
 
-@test "entrypoint passes through existing env vars when no secrets present" {
-    run bash -c "
-        ANTHROPIC_API_KEY='sk-from-env' sh <<'EOF'
-if [ -f '/tmp/no-such-secrets-dir-$$$/anthropic_api_key' ]; then
-    ANTHROPIC_API_KEY=\"\$(cat '/tmp/no-such-secrets-dir-$$$/anthropic_api_key')\"
-    export ANTHROPIC_API_KEY
-fi
-echo \"\$ANTHROPIC_API_KEY\"
-EOF
-    "
+@test "passes through existing ANTHROPIC_API_KEY env var when no secret file" {
+    # No secret file created — env var should pass through unchanged
+    run env -i HOME="$HOME" PATH="$PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" ANTHROPIC_API_KEY="sk-from-env" "$ENTRYPOINT" sh -c 'echo "$ANTHROPIC_API_KEY"'
     [ "$status" -eq 0 ]
-    [[ "$output" == *"sk-from-env"* ]]
+    [ "$output" = "sk-from-env" ]
 }
 
-@test "entrypoint execs the CMD argument" {
-    run bash -c "
-        # Verify the exec logic exists in entrypoint
-        grep -q 'exec \"\$@\"' '$SCRIPT'
-    "
-    [ "$status" -eq 0 ]
-}
-
-@test "entrypoint credential chain: secrets take priority over env vars" {
+@test "secret file takes precedence over env var" {
     # When both secret file and env var exist, secret file should win
     echo -n "sk-from-secret" > "$SECRETS_DIR/anthropic_api_key"
-    run bash -c "
-        ANTHROPIC_API_KEY='sk-from-env' sh <<'EOF'
-if [ -f '$SECRETS_DIR/anthropic_api_key' ]; then
-    ANTHROPIC_API_KEY=\"\$(cat '$SECRETS_DIR/anthropic_api_key')\"
-    export ANTHROPIC_API_KEY
-fi
-echo \"\$ANTHROPIC_API_KEY\"
-EOF
-    "
+    run env -i HOME="$HOME" PATH="$PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" ANTHROPIC_API_KEY="sk-from-env" "$ENTRYPOINT" sh -c 'echo "$ANTHROPIC_API_KEY"'
     [ "$status" -eq 0 ]
-    [[ "$output" == *"sk-from-secret"* ]]
-    [[ "$output" != *"sk-from-env"* ]]
+    [ "$output" = "sk-from-secret" ]
+}
+
+@test "leaves ANTHROPIC_API_KEY unset when neither file nor env var present" {
+    # No secret file and no env var — key should remain unset
+    run env -i HOME="$HOME" PATH="$PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" "$ENTRYPOINT" sh -c 'if [ -z "$ANTHROPIC_API_KEY" ]; then echo "UNSET"; else echo "$ANTHROPIC_API_KEY"; fi'
+    [ "$status" -eq 0 ]
+    [ "$output" = "UNSET" ]
+}
+
+@test "execs CMD arguments and propagates exit code" {
+    # Verify that entrypoint execs the child command and passes through its exit code
+    run env -i HOME="$HOME" PATH="$PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" "$ENTRYPOINT" sh -c 'echo "hello"; exit 7'
+    [ "$status" -eq 7 ]
+    [ "$output" = "hello" ]
+}
+
+@test "bash→sh fallback when bash is not on PATH" {
+    # When bash is not available, entrypoint should fall back to sh
+    # Create a minimal fake PATH with only sh
+    FAKE_PATH="$(mktemp -d)"
+    ln -s /bin/sh "$FAKE_PATH/sh"
+    run env -i HOME="$HOME" PATH="$FAKE_PATH" ENTRYPOINT_SECRETS_DIR="$SECRETS_DIR" "$ENTRYPOINT" bash -c 'echo "via-sh"; exit 0'
+    EXIT_CODE="$status"
+    rm -rf "$FAKE_PATH"
+    [ "$EXIT_CODE" -eq 0 ]
+    [ "$output" = "via-sh" ]
 }
