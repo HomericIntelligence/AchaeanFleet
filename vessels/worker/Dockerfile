@@ -27,14 +27,22 @@ USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG TARGETARCH=amd64
+ARG YQ_AMD64_SHA256=d56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b
+ARG YQ_ARM64_SHA256=03061b2a50c7a498de2bbb92d7cb078ce433011f085a4994117c2726be4106ea
 
 # Install required tools — failures here are fatal
 RUN apt-get update && \
     apt-get install -y jq make && \
     rm -rf /var/lib/apt/lists/* && \
+    case "${TARGETARCH}" in \
+      amd64) YQ_SHA256="${YQ_AMD64_SHA256}" ;; \
+      arm64) YQ_SHA256="${YQ_ARM64_SHA256}" ;; \
+      *) echo "Unsupported arch: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
     ( which yq || ( \
         curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${TARGETARCH}" \
             -o /usr/local/bin/yq && \
+        echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum --check && \
         chmod +x /usr/local/bin/yq ) )
 
 COPY vessels/worker/healthcheck-server.js /app/healthcheck-server.js
