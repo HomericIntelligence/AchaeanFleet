@@ -1,0 +1,14 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: >-
+      https://github.com/HomericIntelligence/AchaeanFleet/blob/main/SECURITY.md
+    about: >-
+      Please review our security policy before reporting vulnerabilities.
+  - name: Questions & discussions
+    url: >-
+      https://github.com/HomericIntelligence/AchaeanFleet/blob/main/CONTRIBUTING.md
+    about: >-
+      Read our contributing guide for questions about development workflow
+      and contribution process.

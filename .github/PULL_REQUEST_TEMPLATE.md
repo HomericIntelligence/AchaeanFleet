@@ -24,3 +24,6 @@ Refs #ISSUE_NUMBER
 - [ ] Scope is focused (one logical change per PR)
 - [ ] No unrelated formatting / dependency churn
 - [ ] Documentation updated where behavior changed
+- [ ] Linked to a GitHub issue (Refs/Closes #N)
+- [ ] Conventional Commit format used (feat/fix/docs/chore/...)
+- [ ] `just verify` passes locally
