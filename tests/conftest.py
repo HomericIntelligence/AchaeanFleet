@@ -23,3 +23,7 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers", "dockerfile: marks tests that statically analyse Dockerfiles"
     )
+    config.addinivalue_line(
+        "markers",
+        "integration: marks tests that run real containers (requires Docker and RUN_INTEGRATION=1)",
+    )
