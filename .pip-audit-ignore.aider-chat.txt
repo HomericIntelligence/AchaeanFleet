@@ -1,0 +1,79 @@
+# pip-audit allowlist for aider-chat transitive dependencies
+#
+# 57 GHSA/PYSEC IDs covering aider-chat==0.82.3's hard-pinned dependency tree.
+# aider-chat pins each transitive dep with == so upgrades cannot land without a
+# new aider-chat release. All entries must be pruned once aider-chat releases
+# versions with fixed transitive deps.
+#
+# Expires: 2026-08-10
+#
+# Review procedure: see docs/runbooks/dependency-audit-allowlists.md
+# Issue: HomericIntelligence/AchaeanFleet#655
+# Cross-reference: .trivyignore also suppresses 1 overlapping ID (GHSA-69x8-hrgq-fjj8)
+#   for Trivy container scans. When removing an ID, search both files.
+#   See docs/runbooks/dependency-audit-allowlists.md for dual-file guidance.
+#
+# CI consumer: .github/workflows/ci.yml "Audit Python dependencies (aider-chat)" step.
+# NOTE: that step is currently disabled (aider vessel disabled in #665). Restore it
+# from PR #662 history when re-enabling aider, then this file will be consumed.
+#
+# GHSA/PYSEC IDs are lowercase per GitHub advisory database; CVE IDs uppercase.
+# Format regex: ^(GHSA-[0-9a-z-]+|PYSEC-[0-9]{4}-[0-9]+|CVE-[0-9]{4}-[0-9]+)$
+
+GHSA-2vrm-gr82-f7m5
+GHSA-2xpw-w6gg-jr37
+GHSA-38jv-5279-wg99
+GHSA-3wq7-rqq7-wx6j
+GHSA-48p4-8xcf-vxj5
+GHSA-4xh5-x5gv-qwph
+GHSA-5239-wwwm-4pmq
+GHSA-53mr-6c8q-9789
+GHSA-54jq-c3m8-4m76
+GHSA-58qw-9mgm-455v
+GHSA-5xmw-vc9v-4wf2
+GHSA-63hf-3vf5-4wqf
+GHSA-63vm-454h-vhhq
+GHSA-69f9-5gxw-wvc2
+GHSA-69x8-hrgq-fjj8
+GHSA-6jhg-hg63-jvvf
+GHSA-6mq8-rvhq-8wgg
+GHSA-6vgw-5pg2-w6jp
+GHSA-735f-pc8j-v9w8
+GHSA-7gcm-g887-7qv7
+GHSA-8qvm-5x2c-j2w7
+GHSA-9548-qrrj-x5pj
+GHSA-966j-vmvw-g2g9
+GHSA-9hjg-9r4m-mvj7
+GHSA-c427-h43c-vf67
+GHSA-cfh3-3jmp-rvhc
+GHSA-cx63-2mw6-8hw5
+GHSA-fh55-r93g-j68g
+GHSA-g84x-mcqj-x9qq
+GHSA-gc5v-m9x4-r6x2
+GHSA-gm62-xv2j-4w53
+GHSA-hcc4-c3v8-rx92
+GHSA-jj3x-wxrx-4x23
+GHSA-jjhc-v7c2-5hh6
+GHSA-jp4c-xjxw-mgf9
+GHSA-jr27-m4p2-rc6r
+GHSA-m5qp-6w8w-w647
+GHSA-mf9w-mj56-hr94
+GHSA-mqqc-3gqh-h2x8
+GHSA-mv93-w799-cj2w
+GHSA-mwh4-6h8g-pg8w
+GHSA-p998-jp59-783m
+GHSA-pq67-6m6q-mj2v
+GHSA-pwv6-vv43-88gr
+GHSA-qmgc-5h2g-mvrw
+GHSA-r73j-pqj5-w3x7
+GHSA-rpm5-65cw-6hj4
+GHSA-v87r-6q3f-2j67
+GHSA-w2fm-2cpv-w7v5
+GHSA-w853-jp5j-5j7f
+GHSA-w8v5-vhqr-4h9v
+GHSA-whj4-6x5x-4v2j
+GHSA-wjx4-4jcj-g98j
+GHSA-x2qx-6953-8485
+PYSEC-2022-43012
+PYSEC-2025-49
+PYSEC-2025-61
