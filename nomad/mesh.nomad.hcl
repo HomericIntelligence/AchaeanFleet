@@ -226,6 +226,378 @@ EOH
   }
 
   # -------------------------------------------------------------------------
+  # Codex agents group
+  # -------------------------------------------------------------------------
+  group "codex-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "codex" {
+      driver = "docker"
+
+      config {
+        image        = "achaean-codex:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="codex-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="codex-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
+
+      service {
+        name = "achaean-codex-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Goose agents group
+  # -------------------------------------------------------------------------
+  group "goose-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "goose" {
+      driver = "docker"
+
+      config {
+        image        = "achaean-goose:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="goose-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="goose-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
+
+      service {
+        name = "achaean-goose-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Cline agents group
+  # -------------------------------------------------------------------------
+  group "cline-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "cline" {
+      driver = "docker"
+
+      config {
+        image        = "achaean-cline:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="cline-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="cline-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
+
+      service {
+        name = "achaean-cline-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # OpenCode agents group
+  # -------------------------------------------------------------------------
+  group "opencode-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "opencode" {
+      driver = "docker"
+
+      config {
+        image        = "achaean-opencode:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="opencode-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="opencode-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
+
+      service {
+        name = "achaean-opencode-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # Codebuff agents group
+  # -------------------------------------------------------------------------
+  group "codebuff-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "codebuff" {
+      driver = "docker"
+
+      config {
+        image        = "achaean-codebuff:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="codebuff-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="codebuff-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
+
+      service {
+        name = "achaean-codebuff-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
+  # AmpCode agents group
+  # -------------------------------------------------------------------------
+  group "ampcode-agents" {
+    count = 1
+
+    network {
+      port "agent" { to = 23001 }
+    }
+
+    task "ampcode" {
+      driver = "docker"
+
+      config {
+        image        = "achaean-ampcode:latest"
+        ports        = ["agent"]
+        cap_drop     = ["ALL"]
+        no_new_privs = true
+        volumes = [
+          "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",
+          "${var.tls_cert_dir}:/certs:ro",
+        ]
+      }
+
+      env {
+        AGENT_PORT    = "23001"
+        AGAMEMNON_URL = var.agamemnon_url
+      }
+
+      # NOMAD_ALLOC_INDEX is only available via Consul Template — see nomad/PATTERNS.md
+      template {
+        data        = <<EOT
+TMUX_SESSION_NAME="ampcode-{{ env "NOMAD_ALLOC_INDEX" }}"
+AGENT_ID="ampcode-{{ env "NOMAD_ALLOC_INDEX" }}"
+EOT
+        destination = "local/runtime-env.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000  # MHz
+        memory = 4096  # MB
+      }
+      logs {
+        max_files     = 3
+        max_file_size = 10
+      }
+
+      service {
+        name = "achaean-ampcode-${NOMAD_ALLOC_INDEX}"
+        port = "agent"
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+    }
+  }
+
+  # -------------------------------------------------------------------------
   # Shell Worker group
   # -------------------------------------------------------------------------
   group "worker-agents" {
