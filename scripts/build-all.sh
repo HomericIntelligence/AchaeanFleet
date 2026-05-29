@@ -76,7 +76,7 @@ build_image "achaean-codebuff:${TAG}" "vessels/codebuff/Dockerfile" --build-arg 
 build_image "achaean-ampcode:${TAG}"  "vessels/ampcode/Dockerfile"  --build-arg "BASE_IMAGE=achaean-base-node:${TAG}"   "${OCI_BUILD_ARGS[@]}"
 
 # Python-based vessels
-build_image "achaean-aider:${TAG}" "vessels/aider/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-python:${TAG}" "${OCI_BUILD_ARGS[@]}"
+# achaean-aider disabled — see #665. Restore: build_image "achaean-aider:${TAG}" "vessels/aider/Dockerfile" --build-arg "BASE_IMAGE=achaean-base-python:${TAG}" "${OCI_BUILD_ARGS[@]}"
 
 # Minimal-based vessels
 build_image "achaean-goose:${TAG}"    "vessels/goose/Dockerfile"    --build-arg "BASE_IMAGE=achaean-base-minimal:${TAG}" "${OCI_BUILD_ARGS[@]}"
