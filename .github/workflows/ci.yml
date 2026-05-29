@@ -881,6 +881,110 @@ jobs:
           fi
           echo "Read-only root smoke test: PASS"
 
+  test-smoke-vessels:
+    name: Smoke Test AI Vessel Entrypoint (${{ matrix.vessel.name }})
+    runs-on: ubuntu-latest
+    # Required check — add to branch protection required status checks in GitHub settings
+    strategy:
+      fail-fast: false
+      matrix:
+        vessel:
+          - name: achaean-claude
+            program: claude
+            version_flag: --version
+            base: achaean-base-node
+            base_dockerfile: bases/Dockerfile.node
+            dockerfile: vessels/claude/Dockerfile
+          - name: achaean-codex
+            program: codex
+            version_flag: --version
+            base: achaean-base-node
+            base_dockerfile: bases/Dockerfile.node
+            dockerfile: vessels/codex/Dockerfile
+          # achaean-aider disabled — see #665. Restore entry here when re-enabling.
+          - name: achaean-goose
+            program: goose
+            version_flag: --version
+            base: achaean-base-minimal
+            base_dockerfile: bases/Dockerfile.minimal
+            dockerfile: vessels/goose/Dockerfile
+          - name: achaean-cline
+            program: cline
+            version_flag: --version
+            base: achaean-base-node
+            base_dockerfile: bases/Dockerfile.node
+            dockerfile: vessels/cline/Dockerfile
+          - name: achaean-opencode
+            program: opencode
+            version_flag: --version
+            base: achaean-base-minimal
+            base_dockerfile: bases/Dockerfile.minimal
+            dockerfile: vessels/opencode/Dockerfile
+          - name: achaean-codebuff
+            program: codebuff
+            version_flag: --version
+            base: achaean-base-node
+            base_dockerfile: bases/Dockerfile.node
+            dockerfile: vessels/codebuff/Dockerfile
+          - name: achaean-ampcode
+            program: amp
+            version_flag: --version
+            base: achaean-base-node
+            base_dockerfile: bases/Dockerfile.node
+            dockerfile: vessels/ampcode/Dockerfile
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Docker Buildx (docker driver — loads image into daemon directly)
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
+        with:
+          driver: docker
+
+      - name: Build base image (${{ matrix.vessel.base }})
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
+        with:
+          context: .
+          file: ${{ matrix.vessel.base_dockerfile }}
+          push: false
+          load: true
+          tags: ${{ matrix.vessel.base }}:latest
+
+      - name: Build vessel image (${{ matrix.vessel.name }})
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
+        with:
+          context: .
+          file: ${{ matrix.vessel.dockerfile }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.vessel.base }}:latest
+            GOOSE_VERSION=1.31.1
+            YQ_VERSION=v4.53.2
+            OPENCODE_VERSION=v1.4.3
+          push: false
+          load: true
+          tags: ${{ matrix.vessel.name }}:latest
+
+      - name: Smoke test — binary reachable and invokable via entrypoint
+        # Exercises entrypoint.sh (exec "$@" path) end-to-end WITHOUT --entrypoint=""
+        # so that errors in entrypoint.sh itself are caught.  --version proves the
+        # binary is on PATH and its shared libraries load correctly.
+        # Matrix values are static workflow constants (not user-supplied inputs), but
+        # we bind them through env vars as best practice for all run: interpolations.
+        env:
+          VESSEL_IMAGE: ${{ matrix.vessel.name }}:latest
+          VESSEL_PROGRAM: ${{ matrix.vessel.program }}
+          VESSEL_VERSION_FLAG: ${{ matrix.vessel.version_flag }}
+        run: |
+          timeout 30 docker run --rm \
+            --read-only \
+            --tmpfs /tmp \
+            --tmpfs /run \
+            --tmpfs /home/agent/.cache \
+            --tmpfs /home/agent/.config \
+            --tmpfs /home/agent/.local \
+            "$VESSEL_IMAGE" \
+            "$VESSEL_PROGRAM" "$VESSEL_VERSION_FLAG"
+          echo "Entrypoint smoke test passed: $VESSEL_PROGRAM $VESSEL_VERSION_FLAG"
+
   build-goose-multiarch:
     name: Build Goose Vessel (Multi-Arch)
     runs-on: ubuntu-24.04

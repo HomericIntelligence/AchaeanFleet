@@ -176,10 +176,14 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
 
 AI-agent vessels (`claude`, `codex`, `aider`, `goose`, `cline`, `opencode`,
 `codebuff`, `ampcode`) **do not declare a Dockerfile `CMD`**. They inherit
-`ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]` from the base image, and
-`bases/entrypoint.sh` dispatches to `$AGENT_PROGRAM` (set per-vessel via
-`ENV AGENT_PROGRAM=<binary>`) with `$AGENT_HEADLESS_FLAG` appended. This
-keeps the launch contract uniform across vessels.
+`ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]` from the base image.
+
+**Important:** `bases/entrypoint.sh` does **not** dispatch to `$AGENT_PROGRAM`.
+It runs `exec "$@"` — it hands off to whatever arguments are passed to
+`docker run` (or `CMD` if present). The `$AGENT_PROGRAM` env var names the
+AI binary installed inside the vessel; it is used by the runtime sidecar
+(ProjectAgamemnon) or passed explicitly as `docker run <vessel> <binary> <args>`.
+Do not write plans assuming `entrypoint.sh` auto-launches `$AGENT_PROGRAM`.
 
 The **only** vessel that overrides this is `worker`, which has no AI binary
 to run and instead serves the healthcheck endpoint directly:
@@ -189,7 +193,8 @@ CMD ["node", "/app/healthcheck-server.js"]
 ```
 
 When adding a new agent vessel, set `ENV AGENT_PROGRAM=...` (and optionally
-`ENV AGENT_HEADLESS_FLAG=...`) — do **not** add a `CMD`.
+`ENV AGENT_HEADLESS_FLAG=...`) — do **not** add a `CMD`. The runtime sidecar
+will supply the command at container start time.
 
 ## Nomad
 
