@@ -86,9 +86,8 @@ job "achaean-mesh" {
         ports        = ["agent"]
         cap_drop     = ["ALL"]
         no_new_privs = true
-        # Note: cap_drop ALL compatibility with Claude Code CLI is unverified.
-        # If Claude Code requires specific capabilities (e.g. NET_BIND_SERVICE),
-        # add cap_add = ["NET_BIND_SERVICE"] here after validating with a live run.
+        # cap_drop=ALL validated: claude --version exits 0 under cap_drop=ALL.
+        # See scripts/validate_claude_caps.sh and nomad/PATTERNS.md §Capability validation.
 
         volumes = [
           "${var.agamemnon_sidecar_path}:/app/agent-sidecar:ro",

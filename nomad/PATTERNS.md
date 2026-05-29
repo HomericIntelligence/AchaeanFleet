@@ -187,3 +187,25 @@ which is often not what you intend. Always use `entrypoint` and `args` separatel
 | `NOMAD_IP_<label>` | Host IP for the named network port |
 
 All of these require Consul Template syntax (`{{ env "VAR" }}`) inside a `template` stanza.
+
+---
+
+## Capability validation
+
+The `claude` task in `mesh.nomad.hcl` runs with `cap_drop=["ALL"]` and `no_new_privs=true`.
+This was validated in issue #305: `claude --version` exits 0 under `--cap-drop=ALL
+--security-opt=no-new-privileges` with an empty `cap_add` list.
+
+To re-validate after a Claude Code CLI upgrade:
+
+```bash
+scripts/validate_claude_caps.sh
+```
+
+The script writes `cap_validation_report.json` with `version_check`, `cap_drop`, `cap_add`,
+`failure_class`, and a `stderr` field. Pass criteria: `version_check == "pass"` and
+`cap_add == []`. If caps are required, each entry must be documented with a justification
+comment in `mesh.nomad.hcl` citing the specific failure observed.
+
+See `tests/test_cap_validate.py` for unit tests of the failure-classification logic and
+an integration test (`RUN_INTEGRATION=1 pytest tests/test_cap_validate.py -m integration`).
