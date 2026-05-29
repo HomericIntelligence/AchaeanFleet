@@ -6,7 +6,7 @@
 #
 # Digest pinned: run scripts/pin-digests.sh to refresh when bumping base image versions.
 
-FROM node:25-slim@sha256:67134eb99e14d566f2882a38a374b8351ea474656487dbb1e0c79e4064cc1725
+FROM node:26-slim@sha256:1e738cb88890a15c71880323fbc35a739b7bbc703d72e8bfd1613128f8182f78
 
 LABEL org.opencontainers.image.title="achaean-base-node"
 LABEL org.opencontainers.image.description="AchaeanFleet Node.js base image for AI agent containers"
