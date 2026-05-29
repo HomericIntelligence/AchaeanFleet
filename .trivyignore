@@ -231,3 +231,27 @@ CVE-2026-39836
 # Expires: 2026-08-14
 # Reviewer: @mvillmow  PR #662
 CVE-2026-42499
+
+# CVE-2026-39823
+# Category: other
+# Rationale: Go stdlib URL canonicalization — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29 that bundles a patched Go toolchain.
+# Exploitability: none — yq in the achaean-worker vessel processes only local YAML files and does not handle attacker-controlled URLs.
+# Expires: 2026-08-27
+# Reviewer: @mvillmow  PR #658
+CVE-2026-39823
+
+# CVE-2026-39825
+# Category: other
+# Rationale: Go stdlib net/http ReverseProxy query parameter forwarding — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
+# Exploitability: none — yq in the achaean-worker vessel is a YAML processor; it does not act as an HTTP reverse proxy and does not forward query parameters.
+# Expires: 2026-08-27
+# Reviewer: @mvillmow  PR #658
+CVE-2026-39825
+
+# CVE-2026-39826
+# Category: other
+# Rationale: Go stdlib html/template XSS via trusted template author script tag — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
+# Exploitability: none — yq in the achaean-worker vessel processes YAML, not HTML templates; the html/template code path is unreachable in this usage.
+# Expires: 2026-08-27
+# Reviewer: @mvillmow  PR #658
+CVE-2026-39826
