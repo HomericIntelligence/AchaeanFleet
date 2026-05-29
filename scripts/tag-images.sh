@@ -29,7 +29,7 @@ REGISTRY="${REGISTRY:-}"
 ALL_VESSELS=(
   achaean-claude
   achaean-codex
-  achaean-aider
+  # achaean-aider disabled — see #665. Restore by un-commenting this line.
   achaean-goose
   achaean-cline
   achaean-opencode

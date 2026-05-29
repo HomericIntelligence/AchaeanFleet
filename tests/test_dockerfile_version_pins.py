@@ -197,7 +197,7 @@ _EXPECTED_DOCKERFILES = [
     "bases/Dockerfile.node",
     "bases/Dockerfile.python",
     "vessels/claude/Dockerfile",
-    "vessels/aider/Dockerfile",
+    "vessels/aider/Dockerfile",  # retained on disk per #665; CI build disabled, re-enable is a revert
     "vessels/ampcode/Dockerfile",
     "vessels/cline/Dockerfile",
     "vessels/codebuff/Dockerfile",

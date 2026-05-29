@@ -73,6 +73,9 @@ updates:
     reviewers:
       - "mvillmow"
 
+  # vessels/aider Dependabot monitoring intentionally kept per #665 Decision F:
+  # Dependabot PRs signal upstream pin improvements and serve as the cheapest
+  # re-enable indicator. CI will reject those PRs until #665 is reverted.
   - package-ecosystem: "docker"
     directory: "/vessels/aider"
     schedule:

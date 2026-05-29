@@ -18,7 +18,7 @@ tag := env_var_or_default("TAG", "latest")
 
 bases := "achaean-base-node achaean-base-python achaean-base-minimal"
 
-vessels := "claude codex aider goose cline opencode codebuff ampcode worker"
+vessels := "claude codex goose cline opencode codebuff ampcode worker"  # achaean-aider excluded per #665
 
 # Auto-detect container runtime: prefer podman, fall back to docker
 container_cmd := `which podman 2>/dev/null && echo podman || echo docker`
@@ -180,7 +180,7 @@ build-vessel NAME:
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     case "{{NAME}}" in
         claude|codex|cline|codebuff|ampcode) base="achaean-base-node" ;;
-        aider)                               base="achaean-base-python" ;;
+        # aider disabled — see #665; restore: aider) base="achaean-base-python" ;;
         goose|opencode|worker)               base="achaean-base-minimal" ;;
         *) echo "Unknown vessel: {{NAME}}"; exit 1 ;;
     esac
@@ -204,14 +204,15 @@ build-all:
     CONTAINER_CMD={{container_cmd}} bash scripts/build-all.sh
     @echo "=== All images built ==="
 
-# Verify all 9 vessel images exist locally (podman or docker)
+# Verify all vessel images exist locally (podman or docker)
+# Note: achaean-aider excluded per #665 (CVE chain); restore by adding 'aider' to the loop below.
 verify:
     #!/usr/bin/env bash
     set -euo pipefail
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     echo "Verifying images with: ${container_cmd}"
     failed=0
-    for vessel in claude codex aider goose cline opencode codebuff ampcode worker; do
+    for vessel in claude codex goose cline opencode codebuff ampcode worker; do
         if ${container_cmd} image exists "achaean-${vessel}:latest" 2>/dev/null || \
            ${container_cmd} inspect "achaean-${vessel}:latest" &>/dev/null; then
             echo "  ✓ achaean-${vessel}:latest"

@@ -148,6 +148,10 @@ EOH
 
   # -------------------------------------------------------------------------
   # Aider agents group (Python)
+  # DISABLED per #665 — achaean-aider:latest is NOT produced by CI (CVE chain in
+  # aider-chat transitive deps). DO NOT run `nomad job run` against this group
+  # until #665 is re-enabled and a GHCR image exists. The group is retained here
+  # so re-enabling is a trivial revert of the #665 CI changes.
   # -------------------------------------------------------------------------
   group "aider-agents" {
     count = 1
