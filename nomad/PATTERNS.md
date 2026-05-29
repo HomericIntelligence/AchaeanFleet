@@ -90,10 +90,11 @@ service {
 
 ## 5. Secrets Management (Phase 6 Vault Integration)
 
-**Current state (Phases 1–5):**
-API keys and other secrets are **not yet wired** into the Nomad job spec. When Phase 6
-is implemented, secrets must be injected dynamically from Vault, never stored in HCL
-or passed as plain environment variables.
+**Current state:**
+Secrets are wired for claude and aider groups in `mesh.nomad.hcl`; see the
+`vault { policies = ["achaean-secrets"] }` job stanza and per-group `template` stanzas.
+Secrets must be injected dynamically from Vault — never stored in HCL or passed as
+plain environment variables.
 
 **When implementing (Phase 6+):**
 

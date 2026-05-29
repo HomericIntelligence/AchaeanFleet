@@ -10,9 +10,9 @@
 # Override variables at run time:
 #   nomad job run -var="agamemnon_url=http://192.168.1.10:8080" nomad/mesh.nomad.hcl
 #
-# SECRETS MANAGEMENT (Phase 6):
-# API keys and dynamic secrets are injected via Nomad's Vault integration.
-# See nomad/PATTERNS.md § 5 for the template stanza pattern and anti-patterns to avoid.
+# SECRETS MANAGEMENT:
+# Vault integration is wired for claude-agents and aider-agents groups.
+# See nomad/PATTERNS.md §5 for the template stanza pattern and anti-patterns to avoid.
 # Never pass secrets as inline env vars or store them in HCL.
 
 # =============================================================================
@@ -61,6 +61,10 @@ job "achaean-mesh" {
     canary           = 0
   }
 
+  vault {
+    policies = ["achaean-secrets"]
+  }
+
   # -------------------------------------------------------------------------
   # Claude agents group
   # -------------------------------------------------------------------------
@@ -107,16 +111,17 @@ EOT
         env         = true
       }
 
-      # Secrets via Nomad Vault integration (Phase 6)
-      # template {
-      #   data = <<EOH
-      #   {{ with secret "secret/achaean/claude" }}
-      #   ANTHROPIC_API_KEY={{ .Data.api_key }}
-      #   {{ end }}
-      #   EOH
-      #   destination = "secrets/env"
-      #   env         = true
-      # }
+      # Secrets via Nomad Vault integration
+      template {
+        data = <<EOH
+{{ with secret "secret/data/achaean/claude" }}
+ANTHROPIC_API_KEY={{ .Data.data.anthropic_api_key }}
+{{ end }}
+EOH
+        destination = "secrets/env"
+        env         = true
+        change_mode = "restart"
+      }
 
       resources {
         cpu    = 2000  # MHz
@@ -179,6 +184,18 @@ AGENT_ID="aider-{{ env "NOMAD_ALLOC_INDEX" }}"
 EOT
         destination = "local/runtime-env.env"
         env         = true
+      }
+
+      # Secrets via Nomad Vault integration
+      template {
+        data = <<EOH
+{{ with secret "secret/data/achaean/aider" }}
+ANTHROPIC_API_KEY={{ .Data.data.anthropic_api_key }}
+{{ end }}
+EOH
+        destination = "secrets/env"
+        env         = true
+        change_mode = "restart"
       }
 
       resources {
