@@ -17,6 +17,7 @@ on:
       - 'justfile'
       - 'pixi.toml'
       - 'pixi.lock'
+      - '.pip-audit-ignore.aider-chat.txt'
   pull_request:
     branches: [main]
     paths:
@@ -33,6 +34,7 @@ on:
       - 'justfile'
       - 'pixi.toml'
       - 'pixi.lock'
+      - '.pip-audit-ignore.aider-chat.txt'
   schedule:
     - cron: '0 6 * * 1'  # Every Monday 06:00 UTC — digest freshness check
   workflow_dispatch:
@@ -243,10 +245,11 @@ jobs:
         working-directory: dagger
         run: npx tsc --noEmit
 
-      # The "Audit Python dependencies (aider-chat)" pip-audit step (with its
-      # 70+ --ignore-vuln allowlist for aider-chat's hard-pinned transitive
-      # CVEs) lived here and was removed when aider was disabled. Restore
-      # from PR #662 history if re-enabling aider — see #665 and #655.
+      # The "Audit Python dependencies (aider-chat)" pip-audit step lived here
+      # and was removed when the aider vessel was disabled — see #665 and #655.
+      # The 57-CVE allowlist is externalized in .pip-audit-ignore.aider-chat.txt
+      # (expires 2026-08-10). Restore the three CI gate steps from
+      # docs/runbooks/dependency-audit-allowlists.md when re-enabling aider.
 
   validate:
     name: Validate Compose Files
