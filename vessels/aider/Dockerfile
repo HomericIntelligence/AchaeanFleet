@@ -16,7 +16,7 @@
 ARG BASE_IMAGE=achaean-base-python:latest
 
 # Source stage — provides a complete Python 3.12 install we can copy whole.
-FROM python:3.12-slim@sha256:ec948fa5f90f4f8907e89f4800cfd2d2e91e391a4bce4a6afa77ba265bc3a2fe AS python312-source
+FROM python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97 AS python312-source
 
 FROM ${BASE_IMAGE}
 
