@@ -69,8 +69,9 @@ silently depending on the Nomad version and task driver.
 > **Note:** This anti-pattern previously existed in `mesh.nomad.hcl` across the `claude-agents`,
 > `aider-agents`, and `worker-agents` groups. It was corrected in commit 34f2128 (see issues
 > #110, #19, #578). All three groups now use `template` stanzas with Consul Template syntax
-> as shown in § 2 above. The 6 Phase 6 vessel groups (`codex-agents`, `gemini-agents`,
-> `goose-agents`, `opencode-agents`, `q-agents`, `agentcode-agents`) are tracked in issue #577.
+> as shown in § 2 above. The 6 additional vessel groups (`codex-agents`, `goose-agents`,
+> `cline-agents`, `opencode-agents`, `codebuff-agents`, `ampcode-agents`) were added in
+> issue #577 and follow the same established `template`-stanza pattern.
 
 ---
 
