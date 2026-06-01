@@ -979,7 +979,7 @@ jobs:
             --tmpfs /tmp \
             --tmpfs /run \
             --tmpfs /home/agent/.cache \
-            --tmpfs /home/agent/.config \
+            --tmpfs /home/agent/.config:exec \
             --tmpfs /home/agent/.local \
             "$VESSEL_IMAGE" \
             "$VESSEL_PROGRAM" "$VESSEL_VERSION_FLAG"
