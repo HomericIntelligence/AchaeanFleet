@@ -21,6 +21,7 @@ USER root
 
 # Install Codebuff CLI (version pinned for reproducibility — issue #2)
 RUN npm install -g codebuff@1.0.638
+RUN chmod -R a+x /usr/local/lib/node_modules/.bin/
 
 # Verify installation
 RUN codebuff --version
