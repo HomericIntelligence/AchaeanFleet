@@ -613,10 +613,11 @@ jobs:
         with:
           name: base-image-achaean-base-minimal
           path: /tmp
+          skip-decompress: true
 
       - name: Load base image into Docker daemon
         run: |
-          docker load -i /tmp/achaean-base-minimal.tar
+          docker load -i /tmp/base-image-achaean-base-minimal/achaean-base-minimal.tar
 
       - name: Verify base image is available
         run: docker image inspect achaean-base-minimal:latest --format '{{.Id}}'
@@ -680,10 +681,11 @@ jobs:
         with:
           name: base-image-${{ matrix.vessel.base }}
           path: /tmp
+          skip-decompress: true
 
       - name: Load base image into Docker daemon
         run: |
-          IMAGE_ID=$(docker load -i /tmp/${{ matrix.vessel.base }}.tar | tail -1 | awk '{print $NF}')
+          IMAGE_ID=$(docker load -i /tmp/base-image-${{ matrix.vessel.base }}/${{ matrix.vessel.base }}.tar | tail -1 | awk '{print $NF}')
           docker tag "$IMAGE_ID" "${{ matrix.vessel.base }}:latest"
 
       - name: Verify base image is available
@@ -1094,9 +1096,10 @@ jobs:
         with:
           name: base-image-${{ matrix.vessel.base }}
           path: /tmp
+          skip-decompress: true
 
       - name: Load base image into Docker daemon
-        run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
+        run: docker load -i /tmp/base-image-${{ matrix.vessel.base }}/${{ matrix.vessel.base }}.tar
 
       - name: Verify loaded base image integrity
         run: |
