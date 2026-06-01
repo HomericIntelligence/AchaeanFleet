@@ -509,8 +509,6 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ steps.meta.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Verify ENTRYPOINT is set
         run: |
