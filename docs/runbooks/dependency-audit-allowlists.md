@@ -66,6 +66,7 @@ rm -rf /tmp/aider-audit-venv /tmp/pip-audit-fresh.txt
 ```
 
 After pruning resolved IDs:
+
 1. Remove each resolved ID from `.pip-audit-ignore.aider-chat.txt`.
 2. Search `.trivyignore` for each removed ID — remove from there too if present.
 3. Update the `# Expires:` header in `.pip-audit-ignore.aider-chat.txt` to the next review date
@@ -77,6 +78,7 @@ After pruning resolved IDs:
 ## Format Validation
 
 `.pip-audit-ignore.aider-chat.txt` must contain:
+
 - One CVE/GHSA/PYSEC ID per line.
 - Lines matching: `^(GHSA-[0-9a-z-]+|PYSEC-[0-9]{4}-[0-9]+|CVE-[0-9]{4}-[0-9]+)$`
 - Blank lines and `#` comment lines are ignored.
