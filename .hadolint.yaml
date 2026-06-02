@@ -2,10 +2,15 @@
 #
 # Intentional suppressions — each rule is suppressed because the pattern
 # is reviewed and accepted for this repo.
+#
+# NOTE: the suppression key MUST be `ignored:` (hadolint >=2.x). The
+# misspelling `ignore:` is silently dropped, which voids EVERY suppression
+# below and leaks all findings into CI as errors — the lint job was red on
+# main for exactly that reason.
 
 failure-threshold: error
 
-ignore:
+ignored:
   # DL3008: apt packages not pinned to a specific version.
   # Intentional: base image digest acts as the version lock.
   - DL3008
