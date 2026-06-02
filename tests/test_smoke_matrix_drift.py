@@ -14,6 +14,13 @@ Design notes
 - ``aider`` is excluded: currently disabled in CI — see issue #665.  When
   aider is re-enabled, remove it from ``DISABLED_VESSELS`` and add the
   matrix row in ci.yml; this test will then enforce coverage automatically.
+- ``codebuff`` is excluded from the read-only smoke matrix: the ``codebuff``
+  npm package is a self-updating launcher that downloads its ~48 MB runtime
+  on first invocation and cannot persist/execute it under
+  ``docker run --read-only``, so even ``codebuff --version`` re-downloads and
+  exits 1.  The image is still built and validated by the build-vessels
+  matrix.  Remove from EXCLUDED_VESSELS and restore the matrix row once
+  codebuff ships a self-contained binary.
 
 Run locally:
     pixi run pytest tests/test_smoke_matrix_drift.py -v
@@ -35,7 +42,11 @@ SMOKE_JOB_NAME = "test-smoke-vessels"
 #   aider       — disabled in CI per #665; re-enable there first
 #   hello-world — C++ E2E integration test binary, not an AI-agent vessel;
 #                 it has its own CMD and is not part of the agent mesh smoke set
-EXCLUDED_VESSELS = {"worker", "aider", "hello-world"}
+#   codebuff    — self-updating launcher that re-downloads its runtime on every
+#                 invocation; incompatible with the read-only smoke test. Still
+#                 built/validated by build-vessels. Restore when it ships a
+#                 self-contained binary.
+EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff"}
 
 
 def _load_workflow() -> dict:
