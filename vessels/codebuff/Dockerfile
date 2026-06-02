@@ -23,6 +23,13 @@ USER root
 RUN npm install -g codebuff@1.0.638
 RUN chmod -R a+x /usr/local/lib/node_modules/codebuff/
 
+# Pre-create the config directory and ensure agent user can write to it
+# This is needed for codebuff to download its binary at runtime
+RUN mkdir -p /home/agent/.config/manicode && \
+    chown -R agent:agent /home/agent/.config && \
+    chmod 755 /home/agent/.config && \
+    chmod 755 /home/agent/.config/manicode
+
 # Verify installation
 RUN codebuff --version
 
