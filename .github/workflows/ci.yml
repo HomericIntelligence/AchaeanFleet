@@ -124,8 +124,10 @@ jobs:
           push: false
           load: true
           tags: achaean-base-node:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # No GHA cache: the `docker` driver cannot export to type=gha
+          # ("Cache export is not supported for the docker driver"), which
+          # aborts the build. Two sequential builds in an ephemeral job gain
+          # nothing from gha cache anyway. See #305 / drive-prs-green analysis.
 
       - name: Build achaean-claude
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -137,8 +139,7 @@ jobs:
           push: false
           load: true
           tags: achaean-claude:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # No GHA cache — incompatible with the `docker` driver (see above).
 
       - name: Run cap_drop=ALL validation (5-min internal timeout)
         run: timeout 300 scripts/validate_claude_caps.sh --image achaean-claude:latest --out cap_validation_report.json
@@ -976,12 +977,14 @@ jobs:
             base: achaean-base-minimal
             base_dockerfile: bases/Dockerfile.minimal
             dockerfile: vessels/opencode/Dockerfile
-          - name: achaean-codebuff
-            program: codebuff
-            version_flag: --version
-            base: achaean-base-node
-            base_dockerfile: bases/Dockerfile.node
-            dockerfile: vessels/codebuff/Dockerfile
+          # achaean-codebuff excluded from the read-only smoke matrix: the
+          # `codebuff` npm package is a self-updating launcher that downloads
+          # its ~48 MB runtime on first invocation and cannot persist/execute
+          # it under `docker run --read-only`, so even `codebuff --version`
+          # re-downloads and exits 1. The image is still built and validated by
+          # the build-vessels matrix above; only this runtime smoke test is
+          # incompatible. Restore here once codebuff ships a self-contained
+          # binary. See drive-prs-green analysis.
           - name: achaean-ampcode
             program: amp
             version_flag: --version
