@@ -795,6 +795,7 @@ jobs:
           push: false
           load: true
           tags: achaean-base-minimal:latest
+          network: host
 
       - name: Build worker vessel
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
@@ -806,6 +807,7 @@ jobs:
           push: false
           load: true
           tags: achaean-worker:latest
+          network: host
 
       - name: Start smoke container
         run: docker compose -f compose/docker-compose.smoke.yml up -d
