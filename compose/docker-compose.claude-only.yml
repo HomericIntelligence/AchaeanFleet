@@ -37,15 +37,14 @@ networks:
 # /run        - runtime PID files and sockets
 # /home/agent/.cache  - tool caches (npm, Claude Code, etc.)
 # /home/agent/.npm    - npm global cache (Node-based vessels)
-# /home/agent/.config - runtime config writes
+# /home/agent/.config - runtime config writes (with exec for codebuff binary downloads)
 # /home/agent/.local  - Python user installs and local state
-# /home/agent/.npm    - npm global cache
 x-tmpfs: &tmpfs
   - /tmp
   - /run
   - /home/agent/.cache
   - /home/agent/.npm
-  - /home/agent/.config
+  - /home/agent/.config:exec
   - /home/agent/.local
 
 x-logging: &default-logging
