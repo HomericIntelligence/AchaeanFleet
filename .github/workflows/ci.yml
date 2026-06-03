@@ -681,7 +681,14 @@ jobs:
 
       - name: Load base image into Docker daemon
         run: |
-          docker load -i /tmp/base-image-achaean-base-minimal/*.tar
+          set -euo pipefail
+          tar_file=$(find /tmp/base-image-achaean-base-minimal -name "*.tar" -type f | head -1)
+          if [ -z "$tar_file" ]; then
+            echo "ERROR: No tar file found in /tmp/base-image-achaean-base-minimal/"
+            ls -la /tmp/base-image-achaean-base-minimal/ || true
+            exit 1
+          fi
+          docker load -i "$tar_file"
 
       - name: Verify base image is available
         run: docker image inspect achaean-base-minimal:latest --format '{{.Id}}'
@@ -748,7 +755,9 @@ jobs:
 
       - name: Load base image into Docker daemon
         run: |
-          IMAGE_ID=$(docker load -i /tmp/base-image-${{ matrix.vessel.base }}/*.tar | tail -1 | awk '{print $NF}')
+          set -euo pipefail
+          tar_file=$(find /tmp/base-image-${{ matrix.vessel.base }} -name "*.tar" -type f | head -1)
+          IMAGE_ID=$(docker load -i "$tar_file" | tail -1 | awk '{print $NF}')
           docker tag "$IMAGE_ID" "${{ matrix.vessel.base }}:latest"
 
       - name: Verify base image is available
@@ -1161,7 +1170,10 @@ jobs:
           path: /tmp
 
       - name: Load base image into Docker daemon
-        run: docker load -i /tmp/base-image-${{ matrix.vessel.base }}/*.tar
+        run: |
+          set -euo pipefail
+          tar_file=$(find /tmp/base-image-${{ matrix.vessel.base }} -name "*.tar" -type f | head -1)
+          docker load -i "$tar_file"
 
       - name: Verify loaded base image integrity
         run: |
@@ -1175,7 +1187,7 @@ jobs:
       - name: Verify vessel artifact is non-empty
         shell: bash
         run: |
-          if ! ls /tmp/base-image-${{ matrix.vessel.base }}/*.tar 1>/dev/null 2>&1; then
+          if ! find /tmp/base-image-${{ matrix.vessel.base }} -name "*.tar" -type f | grep -q .; then
             echo "ERROR: base image tarball missing or empty"; exit 1
           fi
 
