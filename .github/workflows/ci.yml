@@ -674,14 +674,21 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Download achaean-base-minimal artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: base-image-achaean-base-minimal
           path: /tmp
 
       - name: Load base image into Docker daemon
         run: |
-          docker load -i /tmp/achaean-base-minimal.tar
+          set -euo pipefail
+          tar_file=$(find /tmp/base-image-achaean-base-minimal -name "*.tar" -type f | head -1)
+          if [ -z "$tar_file" ]; then
+            echo "ERROR: No tar file found in /tmp/base-image-achaean-base-minimal/"
+            ls -la /tmp/base-image-achaean-base-minimal/ || true
+            exit 1
+          fi
+          docker load -i "$tar_file"
 
       - name: Verify base image is available
         run: docker image inspect achaean-base-minimal:latest --format '{{.Id}}'
@@ -741,14 +748,16 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Download base image artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: base-image-${{ matrix.vessel.base }}
           path: /tmp
 
       - name: Load base image into Docker daemon
         run: |
-          IMAGE_ID=$(docker load -i /tmp/${{ matrix.vessel.base }}.tar | tail -1 | awk '{print $NF}')
+          set -euo pipefail
+          tar_file=$(find /tmp/base-image-${{ matrix.vessel.base }} -name "*.tar" -type f | head -1)
+          IMAGE_ID=$(docker load -i "$tar_file" | tail -1 | awk '{print $NF}')
           docker tag "$IMAGE_ID" "${{ matrix.vessel.base }}:latest"
 
       - name: Verify base image is available
@@ -1157,13 +1166,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download base image artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: base-image-${{ matrix.vessel.base }}
           path: /tmp
 
       - name: Load base image into Docker daemon
-        run: docker load -i /tmp/${{ matrix.vessel.base }}.tar
+        run: |
+          set -euo pipefail
+          tar_file=$(find /tmp/base-image-${{ matrix.vessel.base }} -name "*.tar" -type f | head -1)
+          docker load -i "$tar_file"
 
       - name: Verify loaded base image integrity
         run: |
@@ -1177,7 +1189,7 @@ jobs:
       - name: Verify vessel artifact is non-empty
         shell: bash
         run: |
-          if [ ! -s /tmp/${{ matrix.vessel.base }}.tar ]; then
+          if ! find /tmp/base-image-${{ matrix.vessel.base }} -name "*.tar" -type f | grep -q .; then
             echo "ERROR: base image tarball missing or empty"; exit 1
           fi
 
