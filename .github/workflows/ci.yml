@@ -684,7 +684,7 @@ jobs:
           tar_file=$(find /tmp/base-image-achaean-base-minimal -name "*.tar" -type f | head -1)
           if [ -z "$tar_file" ]; then
             echo "ERROR: No tar file found in /tmp/base-image-achaean-base-minimal/"
-            ls -la /tmp/base-image-achaean-base-minimal/ || true
+            ls -la /tmp/base-image-achaean-base-minimal/ 2>&1 || echo "Directory listing failed (directory may not exist)"
             exit 1
           fi
           docker load -i "$tar_file"
