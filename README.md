@@ -1,5 +1,10 @@
 # AchaeanFleet
 
+[![Build All Agent Images](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/ci.yml/badge.svg)](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/ci.yml)
+[![Security Scanning](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/security.yml/badge.svg)](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/security.yml)
+[![Shell Script Tests](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/shell-tests.yml/badge.svg)](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/shell-tests.yml)
+[![Release](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/release.yml/badge.svg)](https://github.com/HomericIntelligence/AchaeanFleet/actions/workflows/release.yml)
+
 Container infrastructure for the HomericIntelligence agent mesh.
 Builds OCI-compliant Docker images for every AI agent type.
 Agent provisioning lives in [Myrmidons](../Myrmidons).
