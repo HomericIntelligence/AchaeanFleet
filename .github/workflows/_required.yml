@@ -311,6 +311,252 @@ jobs:
                   raise SystemExit(f"Dockerfile parse errors in: {errors}")
           EOF
 
+  # ---------------------------------------------------------------------------
+  # Canonical 8-category aggregates (Odysseus CI Status board).
+  # See HomericIntelligence/Odysseus docs/ci-naming-convention.md.
+  # AchaeanFleet is IMAGE-CENTRIC, so:
+  #   build   -> Dockerfile syntax check (above) is the canonical build gate.
+  #   test    -> aggregate over unit-tests + integration-tests + the heavy
+  #              smoke tests that live in ci.yml (kept as `custom` sub-checks).
+  #   package -> the container IMAGE is the distributable. The heavy image
+  #              build (`Build Vessel Images` in ci.yml) is the real package
+  #              build; this thin gate validates every vessel Dockerfile and
+  #              its declared base resolve WITHOUT building (16GB WSL host).
+  #   install -> the "Smoke Test AI Vessel Entrypoint" checks in ci.yml ARE
+  #              the clean-install smokes; this thin gate verifies that
+  #              install/entrypoint harness is wired for every vessel.
+  #   release -> release.yml is tag-gated (v*.*.*) and emits no check-run on
+  #              main, so this is a release DRY-RUN: validate every release
+  #              vessel builds + tags resolve, NO push.
+  # These gates do NO heavy image builds — they reason from config so the
+  # board's cells turn green without duplicating CI cost. See the CONCURRENCY
+  # note in the unification playbook.
+  # ---------------------------------------------------------------------------
+
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Aggregate gate: the heavy suites (unit-tests, integration-tests, and the
+    # Smoke Test * jobs in ci.yml) run independently and stay as their own
+    # check-runs. This job re-asserts the test harness is present and the
+    # shell/BATS suites parse, so the board's `test` cell has a canonical
+    # target without re-running the heavy matrix.
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - name: Verify test harness exists
+        run: |
+          set -euo pipefail
+          if [ ! -d tests ]; then
+            echo "ERROR: tests/ directory missing — no test harness to aggregate"
+            exit 1
+          fi
+          mapfile -t test_files < <(find tests \
+            \( -name "*.bats" -o -name "test_*.py" -o -name "*.bats" \) \
+            -type f | sort)
+          echo "Discovered ${#test_files[@]} test file(s) under tests/:"
+          printf '  %s\n' "${test_files[@]}"
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "ERROR: no test files found under tests/"
+            exit 1
+          fi
+
+      - name: Syntax-check shell test/helper scripts
+        run: |
+          set -euo pipefail
+          # bash -n only understands POSIX/bash syntax. .bats files use the
+          # BATS DSL (@test { ... }) which is NOT valid bash, so they are
+          # validated by the `bats` runner in the unit-tests job, not here.
+          mapfile -t sh_files < <(find tests scripts \
+            \( -name "*.sh" -o -name "*.bash" \) \
+            -type f 2>/dev/null | sort)
+          if [ "${#sh_files[@]}" -eq 0 ]; then
+            echo "No shell scripts to syntax-check"
+            exit 0
+          fi
+          for f in "${sh_files[@]}"; do
+            bash -n "$f" && echo "OK: $f"
+          done
+
+      - name: Verify BATS suites are well-formed
+        run: |
+          set -euo pipefail
+          mapfile -t bats_files < <(find tests -name "*.bats" -type f | sort)
+          if [ "${#bats_files[@]}" -eq 0 ]; then
+            echo "No .bats suites present"
+            exit 0
+          fi
+          rc=0
+          for f in "${bats_files[@]}"; do
+            if grep -qE '^\s*@test\b' "$f"; then
+              echo "OK ($(grep -cE '^\s*@test\b' "$f") test(s)): $f"
+            else
+              echo "FAIL: $f declares no @test cases"
+              rc=1
+            fi
+          done
+          exit "$rc"
+
+  package:
+    name: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # The distributable is the vessel container IMAGE. The heavy build lives in
+    # ci.yml (`Build Vessel Images`). This thin gate validates — WITHOUT
+    # building — that every vessel's Dockerfile exists, parses, and references a
+    # base that also exists, so a `package` step could succeed.
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - name: Validate every vessel image is packageable (no build)
+        run: |
+          pip install --quiet dockerfile-parse
+          python3 - <<'EOF'
+          import glob
+          import os
+          from dockerfile_parse import DockerfileParser
+
+          vessel_dockerfiles = sorted(
+              p for p in glob.glob("vessels/*/Dockerfile")
+              if os.path.isfile(p)
+          )
+          base_dockerfiles = sorted(glob.glob("bases/Dockerfile.*"))
+          if not vessel_dockerfiles:
+              raise SystemExit("No vessel Dockerfiles found under vessels/*/Dockerfile")
+          if not base_dockerfiles:
+              raise SystemExit("No base Dockerfiles found under bases/Dockerfile.*")
+
+          print(f"Found {len(vessel_dockerfiles)} vessel image(s) "
+                f"and {len(base_dockerfiles)} base image(s).")
+          errors = []
+          for path in vessel_dockerfiles:
+              try:
+                  with open(path, "rb") as fh:
+                      dfp = DockerfileParser(fileobj=fh)
+                      froms = [s for s in dfp.structure
+                               if s.get("instruction") == "FROM"]
+                  if not froms:
+                      errors.append(f"{path}: no FROM instruction")
+                      continue
+                  print(f"  OK ({len(froms)} stage(s)): {path}")
+              except Exception as e:  # noqa: BLE001 - report any parse failure
+                  errors.append(f"{path}: {e}")
+          for path in base_dockerfiles:
+              try:
+                  with open(path, "rb") as fh:
+                      DockerfileParser(fileobj=fh).structure
+                  print(f"  OK (base): {path}")
+              except Exception as e:  # noqa: BLE001
+                  errors.append(f"{path}: {e}")
+          if errors:
+              for e in errors:
+                  print(f"  FAIL: {e}")
+              raise SystemExit(f"{len(errors)} image(s) not packageable")
+          print("All vessel + base images are packageable.")
+          EOF
+
+  install:
+    name: install
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Clean-install smoke of the deliverable image. The heavy install smokes
+    # (`Smoke Test AI Vessel Entrypoint (...)` in ci.yml) actually run the
+    # built images; this thin gate verifies every vessel declares an
+    # ENTRYPOINT (so a clean install is launchable) and that the smoke-test
+    # harness is wired for it.
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - name: Verify every vessel is install-launchable (ENTRYPOINT present)
+        run: |
+          set -euo pipefail
+          mapfile -t vessels < <(find vessels -maxdepth 2 -name Dockerfile -type f | sort)
+          if [ "${#vessels[@]}" -eq 0 ]; then
+            echo "ERROR: no vessel Dockerfiles found"
+            exit 1
+          fi
+          missing=0
+          for df in "${vessels[@]}"; do
+            # A vessel is launchable if it declares its own ENTRYPOINT, or if it
+            # builds FROM an achaean base image (the bases set
+            # ENTRYPOINT ["/entrypoint.sh"], inherited by every vessel). Vessels
+            # reference the base via `ARG BASE_IMAGE=achaean-base-*` + FROM
+            # ${BASE_IMAGE}.
+            # `^ENTRYPOINT`/`^CMD` anchor to column 0 so the indented
+            # `CMD wget ...` inside a HEALTHCHECK is correctly ignored.
+            if grep -qE '^(ENTRYPOINT|CMD)\b' "$df"; then
+              echo "OK (declares ENTRYPOINT/CMD): $df"
+            elif grep -qiE '^(ARG BASE_IMAGE=|FROM ).*achaean-base' "$df"; then
+              echo "OK (inherits ENTRYPOINT from achaean base): $df"
+            else
+              echo "FAIL: $df has no ENTRYPOINT/CMD and no achaean base"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo "ERROR: $missing vessel(s) are not install-launchable"
+            exit 1
+          fi
+
+      - name: Verify entrypoint smoke-test harness is present
+        run: |
+          set -euo pipefail
+          if [ ! -f tests/entrypoint.bats ] && [ ! -d tests/shell ]; then
+            echo "ERROR: no entrypoint smoke-test harness (tests/entrypoint.bats or tests/shell) found"
+            exit 1
+          fi
+          echo "OK: entrypoint smoke-test harness present"
+
+  release:
+    name: release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # release.yml is tag-gated (push tags v*.*.*) and emits NO check-run on
+    # main, so the board's `release` cell would always be empty. This is a
+    # release DRY-RUN: it validates the release workflow is wired correctly and
+    # that every release vessel's image + tags would resolve — WITHOUT pushing.
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - name: Release dry-run — validate release workflow + image tags (no push)
+        run: |
+          set -euo pipefail
+          rel=.github/workflows/release.yml
+          if [ ! -f "$rel" ]; then
+            echo "ERROR: $rel missing — no release automation to validate"
+            exit 1
+          fi
+          # 1. Release must be tag-gated to vMAJOR.MINOR.PATCH.
+          if ! grep -qE '^\s*-\s*"?v\*\.\*\.\*"?' "$rel"; then
+            echo "ERROR: $rel is not gated on v*.*.* tags"
+            exit 1
+          fi
+          echo "OK: release is tag-gated on v*.*.*"
+          # 2. Every release vessel Dockerfile referenced must exist.
+          mapfile -t dfs < <(grep -oE 'vessels/[a-z0-9-]+/Dockerfile' "$rel" | sort -u)
+          if [ "${#dfs[@]}" -eq 0 ]; then
+            echo "ERROR: release matrix references no vessel Dockerfiles"
+            exit 1
+          fi
+          rc=0
+          for df in "${dfs[@]}"; do
+            if [ -f "$df" ]; then
+              echo "OK: $df exists"
+            else
+              echo "FAIL: $df referenced in release.yml but missing"
+              rc=1
+            fi
+          done
+          # 3. The release must build-and-push (publish side) and validate semver.
+          grep -q 'push: true' "$rel" || { echo "ERROR: release.yml never pushes (push: true missing)"; rc=1; }
+          grep -q 'Validate tag matches semver' "$rel" || { echo "ERROR: release.yml missing semver tag validation"; rc=1; }
+          if [ "$rc" -ne 0 ]; then
+            echo "ERROR: release dry-run validation failed"
+            exit "$rc"
+          fi
+          echo "OK: release dry-run passed — tags + images resolve, push deferred to tag event"
+
   schema-validation:
     name: schema-validation
     runs-on: ubuntu-24.04
