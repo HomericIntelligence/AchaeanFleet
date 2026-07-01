@@ -67,7 +67,7 @@ jobs:
 
       - name: Cache Nomad binary
         id: cache-nomad
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: /usr/local/bin/nomad
           key: nomad-${{ env.NOMAD_VERSION }}
@@ -259,7 +259,7 @@ jobs:
         run: yamllint -c .yamllint.yml .github/workflows/ compose/
 
       - name: Cache pixi environment
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: |
             .pixi
@@ -286,7 +286,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
 
       - name: Cache dagger node_modules
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: dagger/node_modules
           key: ${{ runner.os }}-dagger-npm-${{ hashFiles('dagger/package-lock.json') }}
