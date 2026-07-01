@@ -13,7 +13,7 @@
     "@dagger.io/dagger": "^0.21.7"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.1",
     "ts-node": "^10.9.0",
     "typescript": "^6.0.3"
   },
