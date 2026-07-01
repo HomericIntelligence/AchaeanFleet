@@ -261,3 +261,11 @@ CVE-2026-39825
 # Expires: 2026-08-27
 # Reviewer: @mvillmow  PR #658
 CVE-2026-39826
+
+# CVE-2026-12151
+# Category: npm
+# Rationale: undici 6.25.0 bundled in node:26-slim base image; fixed version 6.27.0 not yet available in current base image tag
+# Exploitability: low — DoS via WebSocket memory growth requires attacker-controlled WebSocket connections to the container
+# Expires: 2026-08-14
+# Reviewer: @mvillmow
+CVE-2026-12151
