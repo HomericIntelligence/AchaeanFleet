@@ -25,7 +25,7 @@
 #   AGAMEMNON_URL      Agamemnon REST base URL
 #   AGAMEMNON_API_KEY  bearer key for /v1/tasks/:id/split etc.
 #   CLAUDE_HOME        host ~/.claude to bind-mount (credentials + session state)
-#   WORKSPACE_ROOT     host directory containing the working checkouts
+#   WORKSPACE_ROOT     host home containing Agents/mesh working checkouts
 #   EXEC_HOST          host identifier stamped on every state event
 
 x-security: &security
@@ -55,7 +55,7 @@ x-worker: &worker
   volumes:
     # Host Claude credentials/session state — requires userns keep-id (above).
     - ${CLAUDE_HOME:-~/.claude}:/home/agent/.claude
-    - ${WORKSPACE_ROOT:-~/Agents/mesh}:/workspace
+    - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/mesh:/workspace
   working_dir: /workspace
   restart: unless-stopped
   logging: *default-logging
