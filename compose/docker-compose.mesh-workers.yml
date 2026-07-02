@@ -1,0 +1,100 @@
+# AchaeanFleet: HMAS Mesh Worker Pool (Odysseus ADR-013 slice)
+#
+# One long-lived worker per (domain, role) queue for the thin E2E slice:
+#   research.chief-architect  (opus)   — intake, interview, researched brief
+#   pipeline.chief-architect  (opus)   — epic decomposition → POST /v1/briefs
+#   pipeline.task-agent       (sonnet) — issue implementation → PR
+#
+# Concurrency: each worker fetches ONE task at a time and the durable
+# consumers cap MaxAckPending at 3 — the hermes host heavy-agent budget.
+# Do not scale replicas beyond that on a single 16 GB host.
+#
+# Podman notes (the ecosystem default per Odysseus ADR-001):
+#   - `userns_mode: keep-id` is MANDATORY. The workers bind-mount the host
+#     ~/.claude directory; without keep-id the Claude CLI cannot read its
+#     credentials and headless `claude -p` hangs silently.
+#   - Run rootless as the host user that owns CLAUDE_HOME.
+#
+# Usage:
+#   just build-vessel mesh
+#   podman-compose -f docker-compose.mesh-workers.yml up -d
+#
+# Environment (.env):
+#   NATS_URL           nats server (default nats://host.containers.internal:4222)
+#   NATS_CLIENT_TOKEN  client token per Odysseus ADR-009 (optional in dev)
+#   AGAMEMNON_URL      Agamemnon REST base URL
+#   AGAMEMNON_API_KEY  bearer key for /v1/tasks/:id/split etc.
+#   CLAUDE_HOME        host ~/.claude to bind-mount (credentials + session state)
+#   WORKSPACE_ROOT     host home containing Agents/mesh working checkouts
+#   EXEC_HOST          host identifier stamped on every state event
+
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "${LOG_MAX_SIZE:-10m}"
+    max-file: "${LOG_MAX_FILES:-3}"
+
+x-worker: &worker
+  <<: *security
+  image: ${MESH_IMAGE:-achaean-mesh:latest}
+  userns_mode: "keep-id"
+  networks:
+    - homeric-mesh
+  environment: &worker-env
+    NATS_URL: ${NATS_URL:-nats://host.containers.internal:4222}
+    NATS_CLIENT_TOKEN: ${NATS_CLIENT_TOKEN:-}
+    AGAMEMNON_URL: ${AGAMEMNON_URL:-http://host.containers.internal:8080}
+    AGAMEMNON_API_KEY: ${AGAMEMNON_API_KEY:-}
+    EXEC_HOST: ${EXEC_HOST:-hermes}
+  volumes:
+    # Host Claude credentials/session state — requires userns keep-id (above).
+    - ${CLAUDE_HOME:-~/.claude}:/home/agent/.claude
+    - ${WORKSPACE_ROOT:-/home/mvillmow}/Agents/mesh:/workspace
+  working_dir: /workspace
+  restart: unless-stopped
+  logging: *default-logging
+
+networks:
+  homeric-mesh:
+    name: ${MESH_NETWORK:-homeric-mesh}
+    driver: bridge
+
+services:
+  mesh-research-chief-architect:
+    <<: *worker
+    container_name: mesh-research-chief-architect
+    hostname: mesh-research-chief-architect
+    environment:
+      <<: *worker-env
+      MESH_DOMAIN: research
+      MESH_ROLE: chief-architect
+      AGENT_ID: ${EXEC_HOST:-hermes}-research-chief-architect
+      MESH_MODEL: ${RESEARCH_MODEL:-opus}
+
+  mesh-pipeline-chief-architect:
+    <<: *worker
+    container_name: mesh-pipeline-chief-architect
+    hostname: mesh-pipeline-chief-architect
+    environment:
+      <<: *worker-env
+      MESH_DOMAIN: pipeline
+      MESH_ROLE: chief-architect
+      AGENT_ID: ${EXEC_HOST:-hermes}-pipeline-chief-architect
+      MESH_MODEL: ${PLANNER_MODEL:-opus}
+
+  mesh-pipeline-task-agent:
+    <<: *worker
+    container_name: mesh-pipeline-task-agent
+    hostname: mesh-pipeline-task-agent
+    environment:
+      <<: *worker-env
+      MESH_DOMAIN: pipeline
+      MESH_ROLE: task-agent
+      AGENT_ID: ${EXEC_HOST:-hermes}-pipeline-task-agent
+      MESH_MODEL: ${TASK_AGENT_MODEL:-sonnet}

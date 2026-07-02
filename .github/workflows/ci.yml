@@ -574,7 +574,9 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ steps.meta.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha
+          # No gha cache here: the docker driver (needed for load-into-daemon)
+          # does not support the gha cache importer — newer buildx fails hard
+          # with "unknown cache importer: gha".
 
       - name: Verify ENTRYPOINT is set
         run: |

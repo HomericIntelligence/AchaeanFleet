@@ -182,11 +182,18 @@ build-vessel NAME:
         claude|codex|cline|codebuff|ampcode) base="achaean-base-node" ;;
         # aider disabled — see #665; restore: aider) base="achaean-base-python" ;;
         goose|opencode|worker)               base="achaean-base-minimal" ;;
+        # mesh layers on the claude VESSEL (hephaestus[mesh] + telemachy on top)
+        mesh)                                base="achaean-claude" ;;
         *) echo "Unknown vessel: {{NAME}}"; exit 1 ;;
     esac
     echo "Container runtime: ${container_cmd}"
-    echo "Building base: ${base}"
-    ${container_cmd} build -f "bases/Dockerfile.${base#achaean-base-}" -t "${base}:latest" .
+    if [ "${base}" = "achaean-claude" ]; then
+        echo "Building base vessel chain: achaean-claude"
+        just build-vessel claude
+    else
+        echo "Building base: ${base}"
+        ${container_cmd} build -f "bases/Dockerfile.${base#achaean-base-}" -t "${base}:latest" .
+    fi
     echo "Building vessel: achaean-{{NAME}}"
     build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     vcs_ref="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"

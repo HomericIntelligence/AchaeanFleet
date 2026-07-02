@@ -46,7 +46,10 @@ SMOKE_JOB_NAME = "test-smoke-vessels"
 #                 invocation; incompatible with the read-only smoke test. Still
 #                 built/validated by build-vessels. Restore when it ships a
 #                 self-contained binary.
-EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff"}
+# ``mesh`` is excluded until its pip git dependencies (hephaestus[mesh],
+# telemachy register-epic) are merged to their main branches — the image
+# build would fail in CI before then. Activation tracked in #713.
+EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff", "mesh"}
 
 
 def _load_workflow() -> dict:

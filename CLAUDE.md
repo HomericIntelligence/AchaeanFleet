@@ -17,7 +17,7 @@ It is **infrastructure only** — no agent logic, no ProjectAgamemnon modificati
 
 ```
 bases/          3 base Dockerfiles (node, python, minimal)
-vessels/        9 agent vessel Dockerfiles (FROM a base + AI tool)
+vessels/        10 agent vessel Dockerfiles (FROM a base + AI tool)
 compose/        Docker Compose files (claude-only and full mesh)
 nomad/          Nomad job specs (Phase 6)
 dagger/         Dagger pipeline for CI/CD (Phase 5)
