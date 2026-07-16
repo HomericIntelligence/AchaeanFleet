@@ -501,27 +501,52 @@ gh pr create --title "[Type] Brief description" --body "Closes #<issue-number>"
 
 ### Required Status Checks
 
-To ensure quality and security standards are enforced before merging, certain CI jobs must be
-configured as **required status checks** in GitHub branch protection rules.
-This is a **manual configuration step** — it is not automated by the workflow files.
+The repository ruleset named `homeric-main-baseline` protects `main`. Its required contexts are:
 
-**Jobs to configure as required status checks:**
+- `lint`
+- `unit-tests`
+- `integration-tests`
+- `security/dependency-scan`
+- `security/secrets-scan`
+- `build`
+- `schema-validation`
+- `deps/version-sync`
+- `test`
+- `package`
+- `install`
+- `release`
 
-- `Lint Dockerfiles and YAML` — Enforces Dockerfile and YAML syntax rules
-- `Validate Nomad Job HCL` — Validates Nomad job specification syntax
-- `Smoke Test Worker Vessel` — Runs integration tests on worker containers
-- `Trivy filesystem scan (deps + secrets)` — Scans dependencies and secrets for vulnerabilities
+All required contexts are emitted by [`.github/workflows/_required.yml`](.github/workflows/_required.yml).
+That workflow has no path filters and runs for pull requests, pushes to `main`, and merge-queue
+`merge_group` events. Renaming a listed job, adding a condition that skips it, or removing one of
+those triggers can leave a required context pending and block every pull request or queue group.
 
-**How to configure:**
+### Merge Queue Activation
 
-1. Go to **Settings** → **Branches** → **Branch protection rules**
-2. Select or create a rule for `main`
-3. Scroll to **Require status checks to pass before merging**
-4. Search for and enable each required check listed above
-5. Save the rule
+Merge-queue workflow support is repository-owned, but the live ruleset is not. After the readiness
+change for [issue #722](https://github.com/HomericIntelligence/AchaeanFleet/issues/722) merges and
+passes strict review, a human operator must update the existing `homeric-main-baseline` ruleset for
+`refs/heads/main`. Preserve every existing rule, bypass actor, required context, and enforcement
+setting, and add this rule:
 
-These checks prevent merging code that fails security or quality gates and ensure all artifacts meet
-the project's standards.
+```json
+{
+  "type": "merge_queue",
+  "parameters": {
+    "check_response_timeout_minutes": 60,
+    "grouping_strategy": "ALLGREEN",
+    "max_entries_to_build": 10,
+    "max_entries_to_merge": 5,
+    "merge_method": "SQUASH",
+    "min_entries_to_merge": 1,
+    "min_entries_to_merge_wait_minutes": 5
+  }
+}
+```
+
+Activation is deliberately separate from the implementation pull request. After activation, read
+the live ruleset back and verify one representative pull request enters the `main` queue, emits all
+12 required contexts from a `merge_group` / `checks_requested` workflow run, and merges by squash.
 
 ### Never Push Directly to Main
 
