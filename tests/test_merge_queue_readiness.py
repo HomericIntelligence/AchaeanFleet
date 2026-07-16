@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from pathlib import Path
 
+import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -26,6 +28,10 @@ REQUIRED_CONTEXTS = {
     "unit-tests",
 }
 
+EVENT_NAME_COMPARISON = re.compile(
+    r"github\.event_name\s*(?P<operator>==|!=)\s*(['\"])(?P<event>[^'\"]+)\2"
+)
+
 
 def _load_workflows() -> dict[Path, dict]:
     """Load workflows without YAML 1.1 coercing the GitHub ``on`` key."""
@@ -39,9 +45,9 @@ def _load_workflows() -> dict[Path, dict]:
 
 def _required_context_producers(
     workflows: dict[Path, dict],
-) -> dict[str, set[Path]]:
-    """Map every required context to workflows containing a matching job name."""
-    producers: defaultdict[str, set[Path]] = defaultdict(set)
+) -> dict[str, list[tuple[Path, str, dict]]]:
+    """Map every required context to its workflow path, job ID, and definition."""
+    producers: defaultdict[str, list[tuple[Path, str, dict]]] = defaultdict(list)
     for path, workflow in workflows.items():
         jobs = workflow.get("jobs", {})
         assert isinstance(jobs, dict), f"Expected jobs mapping in {path}"
@@ -49,8 +55,22 @@ def _required_context_producers(
             assert isinstance(job, dict), f"Expected mapping for job {job_id} in {path}"
             context = job.get("name", job_id)
             if context in REQUIRED_CONTEXTS:
-                producers[context].add(path)
+                producers[context].append((path, job_id, job))
     return producers
+
+
+def _job_condition_allows_merge_group(condition: str) -> bool:
+    """Return whether direct event-name comparisons permit a merge-group run."""
+    comparisons = EVENT_NAME_COMPARISON.finditer(condition)
+    allowed_events: set[str] = set()
+    excluded_events: set[str] = set()
+    for comparison in comparisons:
+        events = allowed_events if comparison["operator"] == "==" else excluded_events
+        events.add(comparison["event"])
+
+    return "merge_group" not in excluded_events and (
+        not allowed_events or "merge_group" in allowed_events
+    )
 
 
 def test_every_required_context_has_a_workflow_producer() -> None:
@@ -61,12 +81,78 @@ def test_every_required_context_has_a_workflow_producer() -> None:
     assert not missing, f"Required contexts have no workflow producer: {sorted(missing)}"
 
 
+def test_required_context_producer_discovery_retains_job_conditions() -> None:
+    """Producer discovery must preserve the job definition used for gating checks."""
+    path = Path("conditioned-required-check.yml")
+    job = {
+        "name": "lint",
+        "if": "github.event_name == 'pull_request'",
+        "runs-on": "ubuntu-latest",
+    }
+    workflows = {path: {"jobs": {"lint-job": job}}}
+
+    producers = _required_context_producers(workflows)
+
+    assert producers["lint"] == [(path, "lint-job", job)]
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "github.event_name == 'pull_request'",
+        "github.event_name != 'merge_group'",
+    ],
+)
+def test_required_job_condition_cannot_exclude_merge_group(
+    monkeypatch: pytest.MonkeyPatch,
+    condition: str,
+) -> None:
+    """A workflow trigger cannot compensate for a job condition that skips queue groups."""
+    path = Path("conditioned-required-check.yml")
+    workflows = {
+        path: {
+            "on": {
+                "pull_request": {"branches": ["main"]},
+                "push": {"branches": ["main"]},
+                "merge_group": {"types": ["checks_requested"]},
+            },
+            "jobs": {
+                "lint-job": {
+                    "name": "lint",
+                    "if": condition,
+                }
+            },
+        }
+    }
+    monkeypatch.setitem(globals(), "_load_workflows", lambda: workflows)
+
+    with pytest.raises(AssertionError, match="must allow merge_group events"):
+        test_required_context_workflows_support_merge_queue_and_existing_events()
+
+
 def test_required_context_workflows_support_merge_queue_and_existing_events() -> None:
     """Every required-context producer must run for PRs, main pushes, and queue groups."""
     workflows = _load_workflows()
     producers = _required_context_producers(workflows)
 
-    producer_paths = set().union(*producers.values())
+    for context, context_producers in sorted(producers.items()):
+        for path, job_id, job in context_producers:
+            condition = job.get("if")
+            if condition is None:
+                continue
+            assert isinstance(condition, str), (
+                f"Expected string condition for {job_id} in {path}"
+            )
+            assert _job_condition_allows_merge_group(condition), (
+                f"{path} job {job_id} ({context}) condition {condition!r} "
+                "must allow merge_group events"
+            )
+
+    producer_paths = {
+        path
+        for context_producers in producers.values()
+        for path, _job_id, _job in context_producers
+    }
     for path in sorted(producer_paths):
         triggers = workflows[path].get("on")
         assert isinstance(triggers, dict), f"Expected event mapping in {path}"
