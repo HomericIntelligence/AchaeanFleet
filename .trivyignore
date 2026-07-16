@@ -269,3 +269,11 @@ CVE-2026-39826
 # Expires: 2026-08-14
 # Reviewer: @mvillmow
 CVE-2026-12151
+
+# CVE-2026-39822
+# Category: other
+# Rationale: Go stdlib os.Root symlink-following fix exists (Go 1.25.12 / 1.26.5) but no upstream binary rebuilt with a patched toolchain is available yet: latest GitHub CLI release v2.96.0 (2026-07-02, /usr/bin/gh in achaean-claude) is built with Go 1.26.4, and yq v4.53.3 (2026-06-06, /usr/local/bin/yq in achaean-worker) is also built with Go 1.26.4 — both predate the 1.26.5 fix. Tracking removal in issue #720.
+# Exploitability: low — os.Root traversal requires an attacker able to pre-place symlinks in directories the binary opens via os.Root; gh and yq run as developer CLIs inside the vessel with no attacker-controlled filesystem input path in this container's runtime context.
+# Expires: 2026-10-12
+# Reviewer: @mvillmow  PR #721
+CVE-2026-39822

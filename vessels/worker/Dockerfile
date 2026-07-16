@@ -14,8 +14,8 @@ LABEL org.opencontainers.image.description="Shell worker vessel — no AI tool, 
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
-ARG YQ_VERSION=v4.53.2
-ENV YQ_VERSION=v4.53.2
+ARG YQ_VERSION=v4.53.3
+ENV YQ_VERSION=v4.53.3
 ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.created=${BUILD_DATE}
 LABEL org.opencontainers.image.revision=${VCS_REF}
@@ -27,8 +27,8 @@ USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG TARGETARCH=amd64
-ARG YQ_AMD64_SHA256=d56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b
-ARG YQ_ARM64_SHA256=03061b2a50c7a498de2bbb92d7cb078ce433011f085a4994117c2726be4106ea
+ARG YQ_AMD64_SHA256=fa52a4e758c63d38299163fbdd1edfb4c4963247918bf9c1c5d31d84789eded4
+ARG YQ_ARM64_SHA256=578648e463a11c1b6db6010cbf41eafed6bee79466fcffa1bb446672cf7945ea
 
 # Install required tools — failures here are fatal
 RUN apt-get update && \

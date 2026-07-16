@@ -61,17 +61,26 @@ tools:
         sha256: "4cbf32f4c31da7dae14712b65aadbce6acfa1a7a85bee986a2ce4eaaed4eb5c8"
 
   yq:
-    version: "v4.53.2"
-    source: "https://github.com/mikefarah/yq/releases/tag/v4.53.2"
+    version: "v4.53.3"
+    source: "https://github.com/mikefarah/yq/releases/tag/v4.53.3"
     used_by:
       - vessels/worker/Dockerfile
     checksums:
       amd64:
         asset: "yq_linux_amd64"
-        sha256: "d56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b"
+        sha256: "fa52a4e758c63d38299163fbdd1edfb4c4963247918bf9c1c5d31d84789eded4"
       arm64:
         asset: "yq_linux_arm64"
-        sha256: "03061b2a50c7a498de2bbb92d7cb078ce433011f085a4994117c2726be4106ea"
+        sha256: "578648e463a11c1b6db6010cbf41eafed6bee79466fcffa1bb446672cf7945ea"
+
+  npm:
+    version: "11.18.0"
+    source: "https://registry.npmjs.org/npm/-/npm-11.18.0.tgz"
+    used_by:
+      - bases/Dockerfile.minimal
+      - bases/Dockerfile.node
+      - bases/Dockerfile.python
+    checksums: null  # installed via npm; integrity enforced by npm registry
 
   yarn:
     version: "1.22.22"
