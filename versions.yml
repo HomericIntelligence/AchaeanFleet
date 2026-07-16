@@ -73,6 +73,15 @@ tools:
         asset: "yq_linux_arm64"
         sha256: "578648e463a11c1b6db6010cbf41eafed6bee79466fcffa1bb446672cf7945ea"
 
+  npm:
+    version: "11.18.0"
+    source: "https://registry.npmjs.org/npm/-/npm-11.18.0.tgz"
+    used_by:
+      - bases/Dockerfile.minimal
+      - bases/Dockerfile.node
+      - bases/Dockerfile.python
+    checksums: null  # installed via npm; integrity enforced by npm registry
+
   yarn:
     version: "1.22.22"
     source: "https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz"
