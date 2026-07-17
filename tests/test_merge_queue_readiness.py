@@ -183,10 +183,51 @@ def test_required_job_condition_cannot_exclude_merge_group(
         test_required_context_workflows_support_merge_queue_and_existing_events()
 
 
+def test_required_context_workflow_graph_rejects_duplicate_integration_tests_producer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A second valid producer must fail the executable workflow-graph guard."""
+    workflows = _load_workflows()
+    # Inject only into the in-memory graph; do not write a workflow file.
+    duplicate_workflows = {
+        **workflows,
+        Path("duplicate-required-check.yml"): {
+            "on": {
+                "pull_request": {"branches": ["main"]},
+                "push": {"branches": ["main"]},
+                "merge_group": {"types": ["checks_requested"]},
+            },
+            "jobs": {
+                "integration-tests-copy": {
+                    "name": "integration-tests",
+                    "runs-on": "ubuntu-latest",
+                }
+            },
+        },
+    }
+    monkeypatch.setitem(globals(), "_load_workflows", lambda: duplicate_workflows)
+
+    with pytest.raises(AssertionError, match="duplicate.*integration-tests"):
+        test_required_context_workflows_support_merge_queue_and_existing_events()
+
+
 def test_required_context_workflows_support_merge_queue_and_existing_events() -> None:
     """Every required-context producer must run for PRs, main pushes, and queue groups."""
     workflows = _load_workflows()
     producers = _required_context_producers(workflows)
+
+    duplicate_producers = {
+        context: [
+            (path, job_id)
+            for path, job_id, _job in context_producers
+        ]
+        for context, context_producers in producers.items()
+        if len(context_producers) > 1
+    }
+    assert not duplicate_producers, (
+        "Required contexts must have exactly one workflow producer; "
+        f"duplicates: {duplicate_producers}"
+    )
 
     for context, context_producers in sorted(producers.items()):
         for path, job_id, job in context_producers:
