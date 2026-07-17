@@ -1,13 +1,15 @@
 name: Required Checks
 
 # NO path filters — this workflow runs on every PR regardless of which files changed.
-# It provides the 9 canonical status check names required by the homeric-main-baseline ruleset.
+# It provides the 12 status check names required by the homeric-main-baseline ruleset.
 
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
 
 concurrency:
@@ -16,7 +18,6 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write  # needed by gitleaks-action
 
 jobs:
   forbid-suppressions:
@@ -238,6 +239,9 @@ jobs:
     name: security/secrets-scan
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write  # required by the security scan reporting path
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
