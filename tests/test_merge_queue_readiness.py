@@ -29,7 +29,7 @@ REQUIRED_CONTEXTS = {
 }
 
 EVENT_NAME_COMPARISON = re.compile(
-    r"github\.event_name\s*(?P<operator>==|!=)\s*(['\"])(?P<event>[^'\"]+)\2"
+    r"\A\s*github\.event_name\s*(?P<operator>==|!=)\s*(['\"])(?P<event>[^'\"]+)\2\s*\Z"
 )
 
 
@@ -60,17 +60,68 @@ def _required_context_producers(
 
 
 def _job_condition_allows_merge_group(condition: str) -> bool:
-    """Return whether direct event-name comparisons permit a merge-group run."""
-    comparisons = EVENT_NAME_COMPARISON.finditer(condition)
-    allowed_events: set[str] = set()
-    excluded_events: set[str] = set()
-    for comparison in comparisons:
-        events = allowed_events if comparison["operator"] == "==" else excluded_events
-        events.add(comparison["event"])
+    """Return whether a condition is explicitly safe for a merge-group run.
 
-    return "merge_group" not in excluded_events and (
-        not allowed_events or "merge_group" in allowed_events
-    )
+    This intentionally accepts only a standalone direct comparison. GitHub
+    expressions involving any other context, function, output, or boolean
+    combination are not statically proven safe and must fail closed.
+    """
+    comparison = EVENT_NAME_COMPARISON.fullmatch(condition)
+    if comparison is None:
+        return False
+
+    if comparison["operator"] == "==":
+        return comparison["event"] == "merge_group"
+    return comparison["event"] != "merge_group"
+
+
+@pytest.mark.parametrize(
+    ("condition", "expected"),
+    [
+        pytest.param(
+            "github.event_name == 'merge_group'",
+            True,
+            id="direct-merge-group-equality",
+        ),
+        pytest.param(
+            'github.event_name != "pull_request"',
+            True,
+            id="direct-non-merge-group-exclusion",
+        ),
+        pytest.param(
+            "github.event_name == 'pull_request'",
+            False,
+            id="direct-pull-request-equality",
+        ),
+        pytest.param(
+            "github.event_name != 'merge_group'",
+            False,
+            id="direct-merge-group-exclusion",
+        ),
+        pytest.param(
+            "github.ref == 'refs/heads/main'",
+            False,
+            id="ref-expression",
+        ),
+        pytest.param(
+            "github.event.pull_request.draft == false",
+            False,
+            id="pull-request-payload-expression",
+        ),
+        pytest.param("always()", False, id="helper-expression"),
+        pytest.param(
+            "needs.reusable-check.outputs.safe == 'true'",
+            False,
+            id="reusable-workflow-expression",
+        ),
+    ],
+)
+def test_job_condition_allows_merge_group_is_fail_closed(
+    condition: str,
+    expected: bool,
+) -> None:
+    """Only direct event checks proven safe for merge groups may pass."""
+    assert _job_condition_allows_merge_group(condition) is expected
 
 
 def test_every_required_context_has_a_workflow_producer() -> None:
@@ -78,7 +129,9 @@ def test_every_required_context_has_a_workflow_producer() -> None:
     producers = _required_context_producers(_load_workflows())
 
     missing = REQUIRED_CONTEXTS - producers.keys()
-    assert not missing, f"Required contexts have no workflow producer: {sorted(missing)}"
+    assert not missing, (
+        f"Required contexts have no workflow producer: {sorted(missing)}"
+    )
 
 
 def test_required_context_producer_discovery_retains_job_conditions() -> None:
