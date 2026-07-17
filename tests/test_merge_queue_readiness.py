@@ -151,6 +151,24 @@ def test_every_required_context_has_a_workflow_producer() -> None:
     )
 
 
+def test_security_events_write_is_scoped_to_security_secrets_scan() -> None:
+    """Only the secrets scan may write Security-events during required runs."""
+    workflow = _load_workflows()[WORKFLOWS_DIR / "_required.yml"]
+
+    assert workflow["permissions"] == {"contents": "read"}
+
+    jobs = workflow["jobs"]
+    assert jobs["security-secrets-scan"]["permissions"] == {
+        "contents": "read",
+        "security-events": "write",
+    }
+    assert all(
+        "security-events" not in job.get("permissions", {})
+        for job_id, job in jobs.items()
+        if job_id != "security-secrets-scan"
+    )
+
+
 def test_required_context_producer_discovery_retains_job_conditions() -> None:
     """Producer discovery must preserve the job definition used for gating checks."""
     path = Path("conditioned-required-check.yml")
