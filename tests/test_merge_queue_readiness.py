@@ -28,6 +28,8 @@ REQUIRED_CONTEXTS = {
     "unit-tests",
 }
 
+REQUIRED_EVENTS = frozenset({"pull_request", "push", "merge_group"})
+
 EVENT_NAME_COMPARISON = re.compile(
     r"\A\s*github\.event_name\s*(?P<operator>==|!=)\s*(['\"])(?P<event>[^'\"]+)\2\s*\Z"
 )
@@ -59,8 +61,8 @@ def _required_context_producers(
     return producers
 
 
-def _job_condition_allows_merge_group(condition: str) -> bool:
-    """Return whether a condition is explicitly safe for a merge-group run.
+def _job_condition_allows_required_events(condition: str) -> bool:
+    """Return whether a condition is explicitly safe for every required event.
 
     This intentionally accepts only a standalone direct comparison. GitHub
     expressions involving any other context, function, output, or boolean
@@ -71,8 +73,8 @@ def _job_condition_allows_merge_group(condition: str) -> bool:
         return False
 
     if comparison["operator"] == "==":
-        return comparison["event"] == "merge_group"
-    return comparison["event"] != "merge_group"
+        return REQUIRED_EVENTS <= {comparison["event"]}
+    return comparison["event"] not in REQUIRED_EVENTS
 
 
 @pytest.mark.parametrize(
@@ -80,13 +82,18 @@ def _job_condition_allows_merge_group(condition: str) -> bool:
     [
         pytest.param(
             "github.event_name == 'merge_group'",
-            True,
+            False,
             id="direct-merge-group-equality",
         ),
         pytest.param(
+            "github.event_name == 'push'",
+            False,
+            id="direct-push-equality",
+        ),
+        pytest.param(
             'github.event_name != "pull_request"',
-            True,
-            id="direct-non-merge-group-exclusion",
+            False,
+            id="direct-pull-request-exclusion",
         ),
         pytest.param(
             "github.event_name == 'pull_request'",
@@ -97,6 +104,16 @@ def _job_condition_allows_merge_group(condition: str) -> bool:
             "github.event_name != 'merge_group'",
             False,
             id="direct-merge-group-exclusion",
+        ),
+        pytest.param(
+            "github.event_name != 'push'",
+            False,
+            id="direct-push-exclusion",
+        ),
+        pytest.param(
+            "github.event_name != 'workflow_dispatch'",
+            True,
+            id="direct-unrelated-event-exclusion",
         ),
         pytest.param(
             "github.ref == 'refs/heads/main'",
@@ -116,12 +133,12 @@ def _job_condition_allows_merge_group(condition: str) -> bool:
         ),
     ],
 )
-def test_job_condition_allows_merge_group_is_fail_closed(
+def test_job_condition_allows_all_required_events_is_fail_closed(
     condition: str,
     expected: bool,
 ) -> None:
-    """Only direct event checks proven safe for merge groups may pass."""
-    assert _job_condition_allows_merge_group(condition) is expected
+    """Only direct event checks proven safe for all required events may pass."""
+    assert _job_condition_allows_required_events(condition) is expected
 
 
 def test_every_required_context_has_a_workflow_producer() -> None:
@@ -151,16 +168,22 @@ def test_required_context_producer_discovery_retains_job_conditions() -> None:
 
 @pytest.mark.parametrize(
     "condition",
-    [
-        "github.event_name == 'pull_request'",
-        "github.event_name != 'merge_group'",
-    ],
+    sorted(
+        {
+            "github.event_name == 'pull_request'",
+            "github.event_name == 'push'",
+            "github.event_name == 'merge_group'",
+            "github.event_name != 'merge_group'",
+            "github.event_name != 'pull_request'",
+            "github.event_name != 'push'",
+        }
+    ),
 )
-def test_required_job_condition_cannot_exclude_merge_group(
+def test_required_job_condition_cannot_exclude_required_events(
     monkeypatch: pytest.MonkeyPatch,
     condition: str,
 ) -> None:
-    """A workflow trigger cannot compensate for a job condition that skips queue groups."""
+    """A workflow trigger cannot compensate for a job condition that skips a required event."""
     path = Path("conditioned-required-check.yml")
     workflows = {
         path: {
@@ -179,7 +202,7 @@ def test_required_job_condition_cannot_exclude_merge_group(
     }
     monkeypatch.setitem(globals(), "_load_workflows", lambda: workflows)
 
-    with pytest.raises(AssertionError, match="must allow merge_group events"):
+    with pytest.raises(AssertionError):
         test_required_context_workflows_support_merge_queue_and_existing_events()
 
 
@@ -237,9 +260,9 @@ def test_required_context_workflows_support_merge_queue_and_existing_events() ->
             assert isinstance(condition, str), (
                 f"Expected string condition for {job_id} in {path}"
             )
-            assert _job_condition_allows_merge_group(condition), (
+            assert _job_condition_allows_required_events(condition), (
                 f"{path} job {job_id} ({context}) condition {condition!r} "
-                "must allow merge_group events"
+                "must allow pull_request, push, and merge_group events"
             )
 
     producer_paths = {
