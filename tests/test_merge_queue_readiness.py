@@ -28,7 +28,12 @@ REQUIRED_CONTEXTS = {
     "unit-tests",
 }
 
-REQUIRED_EVENTS = frozenset({"pull_request", "push", "merge_group"})
+# merge_group is intentionally NOT a required event for context producers:
+# queue re-validation is owned exclusively by merge-queue-smoke.yml, so the
+# carrier workflows must not run in the merge queue at all.
+REQUIRED_EVENTS = frozenset({"pull_request", "push"})
+
+SMOKE_WORKFLOW = WORKFLOWS_DIR / "merge-queue-smoke.yml"
 
 EVENT_NAME_COMPARISON = re.compile(
     r"\A\s*github\.event_name\s*(?P<operator>==|!=)\s*(['\"])(?P<event>[^'\"]+)\2\s*\Z"
@@ -102,7 +107,7 @@ def _job_condition_allows_required_events(condition: str) -> bool:
         ),
         pytest.param(
             "github.event_name != 'merge_group'",
-            False,
+            True,
             id="direct-merge-group-exclusion",
         ),
         pytest.param(
@@ -191,7 +196,6 @@ def test_required_context_producer_discovery_retains_job_conditions() -> None:
             "github.event_name == 'pull_request'",
             "github.event_name == 'push'",
             "github.event_name == 'merge_group'",
-            "github.event_name != 'merge_group'",
             "github.event_name != 'pull_request'",
             "github.event_name != 'push'",
         }
@@ -208,7 +212,6 @@ def test_required_job_condition_cannot_exclude_required_events(
             "on": {
                 "pull_request": {"branches": ["main"]},
                 "push": {"branches": ["main"]},
-                "merge_group": {"types": ["checks_requested"]},
             },
             "jobs": {
                 "lint-job": {
@@ -253,7 +256,7 @@ def test_required_context_workflow_graph_rejects_duplicate_integration_tests_pro
 
 
 def test_required_context_workflows_support_merge_queue_and_existing_events() -> None:
-    """Every required-context producer must run for PRs, main pushes, and queue groups."""
+    """Every required-context producer must run for PRs and main pushes, never in the queue."""
     workflows = _load_workflows()
     producers = _required_context_producers(workflows)
 
@@ -298,6 +301,32 @@ def test_required_context_workflows_support_merge_queue_and_existing_events() ->
         assert triggers.get("push", {}).get("branches") == ["main"], (
             f"{path} must preserve push coverage for main"
         )
-        assert triggers.get("merge_group", {}).get("types") == ["checks_requested"], (
-            f"{path} must run required contexts for merge_group/checks_requested"
+        assert "merge_group" not in triggers, (
+            f"{path} must not run in the merge queue; queue re-validation is "
+            "owned by merge-queue-smoke.yml"
+        )
+
+
+def test_merge_queue_smoke_workflow_owns_the_merge_group_event() -> None:
+    """merge-queue-smoke.yml is the only workflow running in the merge queue."""
+    workflows = _load_workflows()
+
+    smoke = workflows[SMOKE_WORKFLOW]
+    triggers = smoke.get("on")
+    assert isinstance(triggers, dict), "Expected event mapping in merge-queue-smoke.yml"
+    assert set(triggers) == {"merge_group"}
+    assert triggers["merge_group"].get("types") == ["checks_requested"]
+
+    assert list(smoke["jobs"]) == ["merge-queue-smoke"]
+    job = smoke["jobs"]["merge-queue-smoke"]
+    assert job.get("name") == "merge-queue-smoke"
+    assert job.get("timeout-minutes") == "5"
+
+    for path, workflow in workflows.items():
+        if path == SMOKE_WORKFLOW:
+            continue
+        other_triggers = workflow.get("on")
+        assert isinstance(other_triggers, dict), f"Expected event mapping in {path}"
+        assert "merge_group" not in other_triggers, (
+            f"{path} must not listen on merge_group"
         )

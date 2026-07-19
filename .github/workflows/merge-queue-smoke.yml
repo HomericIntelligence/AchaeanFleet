@@ -1,10 +1,11 @@
 name: Merge Queue Smoke
 
 # Fast merge-queue gate. The full required matrix (_required.yml) runs on
-# every pull_request and on push to main; merge_group re-validation is this
-# single fast job, so a queued merge occupies one runner slot for < 5 min
-# instead of re-running the whole matrix. The job is named `merge-gate` to
-# produce the same status context as the PR-side aggregator in _required.yml.
+# every pull_request and on push to main, exactly as before; merge_group
+# re-validation is this single fast job, so a queued merge occupies one
+# runner slot for < 5 min instead of re-running the whole matrix. The
+# `merge-queue-smoke` context this job produces is the single required
+# status check for the merge queue after the ruleset flip.
 
 on:
   merge_group:
@@ -18,8 +19,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  merge-gate:
-    name: merge-gate
+  merge-queue-smoke:
+    name: merge-queue-smoke
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
