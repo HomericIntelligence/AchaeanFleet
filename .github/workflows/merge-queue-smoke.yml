@@ -1,0 +1,58 @@
+name: Merge Queue Smoke
+
+# Fast merge-queue gate. The full required matrix (_required.yml) runs on
+# every pull_request and on push to main; merge_group re-validation is this
+# single fast job, so a queued merge occupies one runner slot for < 5 min
+# instead of re-running the whole matrix. The job is named `merge-gate` to
+# produce the same status context as the PR-side aggregator in _required.yml.
+
+on:
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mq-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  merge-gate:
+    name: merge-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Install yamllint
+        run: pip install --quiet yamllint
+
+      - name: Lint YAML (yamllint)
+        run: |
+          # Use repo's own config if present, otherwise relaxed defaults
+          if [ -f .yamllint.yaml ] || [ -f .yamllint.yml ] || [ -f .yamllint ]; then
+            yamllint .
+          else
+            yamllint -d relaxed .
+          fi
+
+      - name: Run symlink check
+        run: bash scripts/check-symlinks.sh
+
+      - name: Syntax-check shell test/helper scripts
+        run: |
+          set -euo pipefail
+          # bash -n only understands POSIX/bash syntax. .bats files use the
+          # BATS DSL (@test { ... }) which is NOT valid bash, so they are
+          # excluded here (the bats runner validates them in unit-tests).
+          mapfile -t sh_files < <(find tests scripts \
+            \( -name "*.sh" -o -name "*.bash" \) \
+            -type f 2>/dev/null | sort)
+          if [ "${#sh_files[@]}" -eq 0 ]; then
+            echo "No shell scripts to syntax-check"
+            exit 0
+          fi
+          for f in "${sh_files[@]}"; do
+            bash -n "$f" && echo "OK: $f"
+          done
