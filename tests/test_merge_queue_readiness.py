@@ -28,6 +28,12 @@ REQUIRED_CONTEXTS = {
     "unit-tests",
 }
 
+# The aggregator context that satisfies the merge queue on merge_group events
+# (issue #722 / #724): produced by _required.yml on pull_request/push and by
+# merge-queue-smoke.yml on merge_group, so no individual required context
+# above needs its own merge_group trigger.
+MERGE_GATE_CONTEXT = "merge-gate"
+
 REQUIRED_EVENTS = frozenset({"pull_request", "push", "merge_group"})
 
 EVENT_NAME_COMPARISON = re.compile(
@@ -45,10 +51,10 @@ def _load_workflows() -> dict[Path, dict]:
     return workflows
 
 
-def _required_context_producers(
-    workflows: dict[Path, dict],
+def _context_producers(
+    workflows: dict[Path, dict], contexts: frozenset[str]
 ) -> dict[str, list[tuple[Path, str, dict]]]:
-    """Map every required context to its workflow path, job ID, and definition."""
+    """Map each of ``contexts`` to its workflow path, job ID, and definition."""
     producers: defaultdict[str, list[tuple[Path, str, dict]]] = defaultdict(list)
     for path, workflow in workflows.items():
         jobs = workflow.get("jobs", {})
@@ -56,9 +62,16 @@ def _required_context_producers(
         for job_id, job in jobs.items():
             assert isinstance(job, dict), f"Expected mapping for job {job_id} in {path}"
             context = job.get("name", job_id)
-            if context in REQUIRED_CONTEXTS:
+            if context in contexts:
                 producers[context].append((path, job_id, job))
     return producers
+
+
+def _required_context_producers(
+    workflows: dict[Path, dict],
+) -> dict[str, list[tuple[Path, str, dict]]]:
+    """Map every required context to its workflow path, job ID, and definition."""
+    return _context_producers(workflows, frozenset(REQUIRED_CONTEXTS))
 
 
 def _job_condition_allows_required_events(condition: str) -> bool:
@@ -253,7 +266,15 @@ def test_required_context_workflow_graph_rejects_duplicate_integration_tests_pro
 
 
 def test_required_context_workflows_support_merge_queue_and_existing_events() -> None:
-    """Every required-context producer must run for PRs, main pushes, and queue groups."""
+    """Every required-context producer must run for PRs and main pushes.
+
+    ``merge_group`` coverage is provided by the ``merge-gate`` aggregator
+    context alone (produced by ``_required.yml`` on ``pull_request``/``push``
+    and by ``merge-queue-smoke.yml`` on ``merge_group``, issue #722 / #724),
+    not by every individual required-context producer re-triggering on
+    ``merge_group``. That single-fast-job design is what replaced the
+    70-90 minute full-matrix merge-queue re-run.
+    """
     workflows = _load_workflows()
     producers = _required_context_producers(workflows)
 
@@ -298,6 +319,18 @@ def test_required_context_workflows_support_merge_queue_and_existing_events() ->
         assert triggers.get("push", {}).get("branches") == ["main"], (
             f"{path} must preserve push coverage for main"
         )
-        assert triggers.get("merge_group", {}).get("types") == ["checks_requested"], (
-            f"{path} must run required contexts for merge_group/checks_requested"
-        )
+
+    merge_gate_producers = _context_producers(workflows, frozenset({MERGE_GATE_CONTEXT})).get(
+        MERGE_GATE_CONTEXT, []
+    )
+    merge_gate_paths = {path for path, _job_id, _job in merge_gate_producers}
+    merge_group_paths = {
+        path
+        for path, workflow in workflows.items()
+        if isinstance(workflow.get("on"), dict)
+        and workflow["on"].get("merge_group", {}).get("types") == ["checks_requested"]
+    }
+    assert merge_gate_paths & merge_group_paths, (
+        "No workflow producing the 'merge-gate' aggregator context triggers on "
+        "merge_group/checks_requested — the merge queue has no way to satisfy it"
+    )
