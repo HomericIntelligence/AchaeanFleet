@@ -30,6 +30,7 @@ REQUIRED_CONTEXTS = {
 
 MERGE_GATE_CONTEXT = "merge-gate"
 FULL_REQUIRED_EVENTS = frozenset({"pull_request", "push"})
+FULL_REQUIRED_WORKFLOW = WORKFLOWS_DIR / "_required.yml"
 MERGE_QUEUE_SMOKE_WORKFLOW = WORKFLOWS_DIR / "merge-queue-smoke.yml"
 
 EVENT_NAME_COMPARISON = re.compile(
@@ -323,10 +324,15 @@ def test_required_context_workflows_and_merge_queue_smoke_are_disjoint() -> None
     merge_gate_producers = [
         (path, job_id)
         for path, workflow in workflows.items()
-        if "merge_group" in workflow.get("on", {})
         for job_id, job in workflow.get("jobs", {}).items()
         if job.get("name", job_id) == MERGE_GATE_CONTEXT
     ]
-    assert merge_gate_producers == [(MERGE_QUEUE_SMOKE_WORKFLOW, "merge-gate")], (
-        "merge_group must emit exactly one merge-gate context"
-    )
+    assert merge_gate_producers == [
+        (FULL_REQUIRED_WORKFLOW, "merge-gate"),
+        (MERGE_QUEUE_SMOKE_WORKFLOW, "merge-gate"),
+    ], "PR/push and merge_group must each emit one merge-gate context"
+
+    full_gate = workflows[FULL_REQUIRED_WORKFLOW]["jobs"]["merge-gate"]
+    assert full_gate.get("if") == "always()"
+    smoke_gate = smoke["jobs"]["merge-gate"]
+    assert "if" not in smoke_gate, "merge-queue smoke must not skip merge groups"
