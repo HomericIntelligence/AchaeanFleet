@@ -253,7 +253,15 @@ def test_required_context_workflow_graph_rejects_duplicate_integration_tests_pro
 
 
 def test_required_context_workflows_support_merge_queue_and_existing_events() -> None:
-    """Every required-context producer must run for PRs, main pushes, and queue groups."""
+    """Required-context producers must run for PRs + main pushes; the fast
+    merge-queue-smoke.yml gate (job `merge-gate`) handles merge_group runs.
+
+    This mirrors the org-wide fast-smoke design (Nestor, Scylla, Agamemnon):
+    the full matrix deliberately does NOT re-run per queue entry — that
+    starved the runner pool and pushed queued merges to 70-90 min. The queue
+    gate is the single merge-queue-smoke job, and it must exist with the
+    merge_group/checks_requested trigger.
+    """
     workflows = _load_workflows()
     producers = _required_context_producers(workflows)
 
@@ -298,6 +306,19 @@ def test_required_context_workflows_support_merge_queue_and_existing_events() ->
         assert triggers.get("push", {}).get("branches") == ["main"], (
             f"{path} must preserve push coverage for main"
         )
-        assert triggers.get("merge_group", {}).get("types") == ["checks_requested"], (
-            f"{path} must run required contexts for merge_group/checks_requested"
+        # Fast-smoke design: required-context producers must NOT trigger on
+        # merge_group (the merge queue runs the single merge-queue-smoke.yml
+        # gate instead — asserted below). See _required.yml header comment.
+        assert triggers.get("merge_group") is None, (
+            f"{path} must not trigger on merge_group — the fast "
+            "merge-queue-smoke.yml gate handles queue runs"
         )
+
+    # The merge queue must be gated by the fast smoke workflow.
+    smoke = workflows[WORKFLOWS_DIR / "merge-queue-smoke.yml"]
+    assert smoke.get("on", {}).get("merge_group", {}).get("types") == [
+        "checks_requested"
+    ], (
+        "merge-queue-smoke.yml must trigger on merge_group/checks_requested "
+        "to gate the queue"
+    )
