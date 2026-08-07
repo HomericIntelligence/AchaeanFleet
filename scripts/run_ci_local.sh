@@ -110,7 +110,7 @@ run_in_container() {
     # shellcheck disable=SC2086
     "${CONTAINER_ENGINE}" run --rm --userns=keep-id:uid=1000,gid=1000 $caches \
         -v "${PROJECT_ROOT}:/workspace:Z" -w /workspace \
-        "${IMAGE}" bash -lc "$stale_guard; $cmd"
+        "${IMAGE}" bash -lc "${stale_guard:+${stale_guard}; }$cmd"
 }
 
 run_pixi() {
