@@ -277,3 +277,19 @@ CVE-2026-12151
 # Expires: 2026-10-12
 # Reviewer: @mvillmow  PR #721
 CVE-2026-39822
+
+# CVE-2026-14257
+# Category: npm
+# Rationale: brace-expansion DoS — bundled with npm 11.18.0's dependency tree in achaean-base-* images. npm's bundled module tree cannot be overridden without forking npm; the fixed versions (5.0.8+) ship in newer npm releases than the pinned 11.18.0.
+# Exploitability: none — brace-expansion input is npm-internal and hard-coded, never attacker-controlled in the vessel runtime.
+# Expires: 2026-11-05
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-14257
+
+# CVE-2026-69152
+# Category: npm
+# Rationale: second brace-expansion DoS — same bundled-npm dependency tree as CVE-2026-14257.
+# Exploitability: none — npm-internal input only.
+# Expires: 2026-11-05
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-69152
