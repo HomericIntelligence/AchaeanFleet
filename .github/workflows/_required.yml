@@ -715,10 +715,9 @@ jobs:
   # `merge-gate` check-run exists per event.
   merge-gate:
     name: merge-gate
-    if: github.event_name != 'merge_group'
+    if: always() && github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: always()
     needs:
       - forbid-suppressions
       - lint
