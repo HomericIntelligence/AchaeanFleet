@@ -226,12 +226,12 @@ jobs:
         run: |
           if [ -f .gitleaks.toml ]; then
             podman run --rm --userns=keep-id:uid=1000,gid=1000 \
-              -v "$PWD:/workspace:Z" -w /workspace achaeanfleet:local \
+              -v "$PWD:/workspace:Z" -w /workspace achaeanfleet-ci:local \
               gitleaks detect --source /workspace --config .gitleaks.toml \
                 --report-format sarif --report-path gitleaks.sarif --redact
           else
             podman run --rm --userns=keep-id:uid=1000,gid=1000 \
-              -v "$PWD:/workspace:Z" -w /workspace achaeanfleet:local \
+              -v "$PWD:/workspace:Z" -w /workspace achaeanfleet-ci:local \
               gitleaks detect --source /workspace \
                 --report-format sarif --report-path gitleaks.sarif --redact
           fi
