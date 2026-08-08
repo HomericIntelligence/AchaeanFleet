@@ -49,6 +49,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     jq \
     yamllint \
     shellcheck \
+    just \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
