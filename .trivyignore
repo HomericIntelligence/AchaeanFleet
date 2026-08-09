@@ -309,3 +309,11 @@ CVE-2026-69192
 # Expires: 2026-11-06
 # Reviewer: @mvillmow  PR #746
 CVE-2026-56852
+
+# GHSA-f88m-g3jw-g9cj
+# Category: npm
+# Rationale: sharp@0.34.5 (transitive dep of cline@2.14.0 in achaean-cline vessel) inherits libvips CVEs CVE-2026-33327 etc.; fixed in sharp 0.35.0 but cline@2.14.0 pins the older range and no newer cline release resolves it yet.
+# Exploitability: low — sharp is used only for local image processing in the vessel runtime; no attacker-controlled image input path reaches it.
+# Expires: 2026-11-06
+# Reviewer: @mvillmow  PR #746
+GHSA-f88m-g3jw-g9cj
