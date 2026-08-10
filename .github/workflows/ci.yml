@@ -614,6 +614,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
 
       - name: Smoke test base image setup
         run: |
@@ -842,6 +843,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
 
   distribute-certs:
     name: Distribute TLS certs (main only)
