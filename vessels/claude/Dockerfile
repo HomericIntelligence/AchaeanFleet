@@ -24,7 +24,7 @@ USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install Claude Code CLI (version pinned for reproducibility — issue #2)
-RUN npm install -g @anthropic-ai/claude-code@2.1.101
+RUN npm install -g @anthropic-ai/claude-code@2.1.163
 
 # Install GitHub CLI (needed for issue/PR operations)
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
