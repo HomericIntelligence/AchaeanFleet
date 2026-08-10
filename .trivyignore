@@ -277,3 +277,43 @@ CVE-2026-12151
 # Expires: 2026-10-12
 # Reviewer: @mvillmow  PR #721
 CVE-2026-39822
+
+# CVE-2026-14257
+# Category: npm
+# Rationale: brace-expansion DoS — bundled with npm 11.18.0's dependency tree in achaean-base-* images. npm's bundled module tree cannot be overridden without forking npm; the fixed versions (5.0.8+) ship in newer npm releases than the pinned 11.18.0.
+# Exploitability: none — brace-expansion input is npm-internal and hard-coded, never attacker-controlled in the vessel runtime.
+# Expires: 2026-11-05
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-14257
+
+# CVE-2026-69152
+# Category: npm
+# Rationale: second brace-expansion DoS — same bundled-npm dependency tree as CVE-2026-14257.
+# Exploitability: none — npm-internal input only.
+# Expires: 2026-11-05
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-69152
+
+# CVE-2026-69192
+# Category: npm
+# Rationale: ip-address inconsistent parsing CVE — bundled with npm 11.18.0's dependency tree in achaean-base-* images (fixed in ip-address 10.3.1, ships in newer npm than pinned 11.18.0). npm's bundled module tree cannot be overridden without forking npm.
+# Exploitability: none — ip-address input is npm-internal and hard-coded, never attacker-controlled in the vessel runtime.
+# Expires: 2026-11-05
+# Reviewer: @mvillmow  PR #746
+CVE-2026-69192
+
+# CVE-2026-56852
+# Category: other
+# Rationale: golang.org/x/text DoS via invalid UTF-8 in the yq go binary bundled in achaean-base-* images. yq v4.53.3 (the latest release, 2026-06-06) still vendors x/text v0.37.0; fixed 0.39.0 is not yet available in any yq release, so the image cannot be upgraded to fix it.
+# Exploitability: low — yq runs on trusted in-repo YAML/JSON during vessel setup; no attacker-controlled input path reaches yq in the runtime context.
+# Expires: 2026-11-06
+# Reviewer: @mvillmow  PR #746
+CVE-2026-56852
+
+# GHSA-f88m-g3jw-g9cj
+# Category: npm
+# Rationale: sharp@0.34.5 (transitive dep of cline@2.14.0 in achaean-cline vessel) inherits libvips CVEs CVE-2026-33327 etc.; fixed in sharp 0.35.0 but cline@2.14.0 pins the older range and no newer cline release resolves it yet.
+# Exploitability: low — sharp is used only for local image processing in the vessel runtime; no attacker-controlled image input path reaches it.
+# Expires: 2026-11-06
+# Reviewer: @mvillmow  PR #746
+GHSA-f88m-g3jw-g9cj

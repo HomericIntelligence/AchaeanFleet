@@ -6,8 +6,10 @@ name: Required Checks
 on:
   pull_request:
     branches: [main]
+
   push:
     branches: [main]
+
   workflow_dispatch:
 
 concurrency:
@@ -18,12 +20,13 @@ permissions:
   contents: read
 
 jobs:
+
   forbid-suppressions:
     name: forbid-suppressions
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: "Reject silent-failure workaround in shell/YAML/Dockerfile/justfile/HCL"
         run: |
@@ -101,189 +104,147 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
 
-      - name: Install hadolint
-        run: |
-          curl -sSfL \
-            https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 \
-            -o /usr/local/bin/hadolint
-          chmod +x /usr/local/bin/hadolint
-          hadolint --version
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
 
-      - name: Lint Dockerfiles (hadolint)
-        run: |
-          find . -name "Dockerfile*" -not -path "./.git/*" | sort | tee /tmp/dockerfiles.txt
-          if [ -s /tmp/dockerfiles.txt ]; then
-            xargs hadolint < /tmp/dockerfiles.txt
-          else
-            echo "::notice::No Dockerfiles found; skipping hadolint"
-          fi
-
-      - name: Install yamllint
-        run: pip install --quiet yamllint
-
-      - name: Lint YAML (yamllint)
-        run: |
-          # Use repo's own config if present, otherwise relaxed defaults
-          if [ -f .yamllint.yaml ] || [ -f .yamllint.yml ] || [ -f .yamllint ]; then
-            yamllint .
-          else
-            yamllint -d relaxed .
-          fi
-
-      - name: Validate Nomad HCL jobs
-        run: |
-          mapfile -t hcl_files < <(find . -name "*.hcl" -not -path "./.git/*" | sort)
-          count="${#hcl_files[@]}"
-          if [ "$count" -eq 0 ]; then
-            echo "::notice::No .hcl files found; nothing to typecheck"
-            exit 0
-          fi
-          echo "Found $count HCL file(s):"
-          printf '  %s\n' "${hcl_files[@]}"
-
-          # Attempt to install nomad for proper validation; fall back gracefully
-          if command -v nomad &>/dev/null; then
-            echo "nomad available — running 'nomad job validate'"
-            for f in "${hcl_files[@]}"; do
-              nomad job validate "$f" && echo "OK: $f" || echo "WARN: $f (non-zero exit; may be non-job HCL)"
-            done
-          else
-            echo "::notice::nomad CLI not available; reporting HCL file inventory only"
-            echo "::notice::$count HCL file(s) present — install nomad in CI to enable full HCL typecheck"
-          fi
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-lint`.
+      - name: lint (in container)
+        run: bash scripts/run_ci_local.sh lint
 
   unit-tests:
     name: unit-tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
 
-      - name: Install BATS
-        run: |
-          sudo apt-get install -y bats 2>/dev/null || npm install -g bats
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
 
-      - name: Run BATS tests
-        run: |
-          mapfile -t bats_files < <(find . -name "*.bats" -not -path "./.git/*" | sort)
-          if [ "${#bats_files[@]}" -gt 0 ]; then
-            echo "Found ${#bats_files[@]} BATS file(s):"
-            printf '  %s\n' "${bats_files[@]}"
-            bats "${bats_files[@]}"
-          else
-            echo "::notice::No .bats files found; running bash -n syntax check on all shell scripts"
-            mapfile -t sh_files < <(find . \( -name "*.sh" -o -name "*.bash" \) -not -path "./.git/*")
-            if [ "${#sh_files[@]}" -gt 0 ]; then
-              for f in "${sh_files[@]}"; do
-                bash -n "$f" && echo "OK: $f"
-              done
-            else
-              echo "::notice::No shell scripts found either; nothing to test"
-            fi
-          fi
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-unit-tests`.
+      - name: unit-tests (in container)
+        run: bash scripts/run_ci_local.sh unit-tests
 
   integration-tests:
     name: integration-tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
 
-      - name: Validate docker-compose / compose files
-        run: |
-          mapfile -t compose_files < <(find . \
-            \( -name "docker-compose*.yml" -o -name "compose*.yml" \) \
-            -not -path "./.git/*" | sort)
-          if [ "${#compose_files[@]}" -eq 0 ]; then
-            echo "::notice::No compose files found; skipping integration-tests"
-            exit 0
-          fi
-          echo "Validating ${#compose_files[@]} compose file(s)..."
-          all_ok=true
-          for f in "${compose_files[@]}"; do
-            echo "--- $f ---"
-            if docker compose config --quiet -f "$f" 2>/dev/null; then
-              echo "OK (docker compose config)"
-            else
-              # Fallback: YAML parse check via Python
-              python3 -c "import yaml, sys; yaml.safe_load(open('$f'))" \
-                && echo "OK (yaml parse)" \
-                || { echo "FAIL: $f"; all_ok=false; }
-            fi
-          done
-          $all_ok
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
+
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-integration-tests`.
+      - name: integration-tests (in container)
+        run: bash scripts/run_ci_local.sh integration-tests
 
   security-dependency-scan:
     name: security/dependency-scan
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-
-      - name: Trivy filesystem scan (advisory)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          scan-type: fs
-          scan-ref: .
-          exit-code: '0'        # advisory — image CVEs caught at build time
-          format: table
-          ignore-unfixed: true
+          fetch-depth: 1
+
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
+
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-security-dependency-scan`.
+      - name: security-dependency-scan (in container)
+        run: bash scripts/run_ci_local.sh security-dependency-scan
 
   security-secrets-scan:
     name: security/secrets-scan
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
     permissions:
       contents: read
-      security-events: write  # required by the security scan reporting path
+      security-events: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          fetch-depth: 0        # gitleaks needs full history
+          fetch-depth: 0
 
-      - name: Install Gitleaks
-        run: |
-          GITLEAKS_VERSION=8.30.1
-          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-          ARCH=$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/')
-          BASE="https://github.com/gitleaks/gitleaks/releases/download"
-          URL="${BASE}/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_${OS}_${ARCH}.tar.gz"
-          curl -sSfL "$URL" | tar -xz -C /usr/local/bin gitleaks
-          gitleaks version
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
 
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
       - name: Run Gitleaks
-        # `--exit-code 0` already makes this step a non-blocking advisory
-        # scan (the SARIF report is uploaded by a later step). No
-        # continue-on-error suppression is needed; gitleaks itself encodes
-        # the advisory semantics. See HomericIntelligence/Odysseus#280.
         run: |
-          set -euo pipefail
           if [ -f .gitleaks.toml ]; then
-            gitleaks detect --source . --config .gitleaks.toml \
-              --report-format sarif --report-path gitleaks.sarif --exit-code 0
+            podman run --rm --userns=keep-id:uid=1000,gid=1000 \
+              -v "$PWD:/workspace:Z" -w /workspace achaeanfleet-ci:local \
+              gitleaks detect --source /workspace --config .gitleaks.toml \
+                --report-format sarif --report-path gitleaks.sarif --redact
           else
-            gitleaks detect --source . \
-              --report-format sarif --report-path gitleaks.sarif --exit-code 0
+            podman run --rm --userns=keep-id:uid=1000,gid=1000 \
+              -v "$PWD:/workspace:Z" -w /workspace achaeanfleet-ci:local \
+              gitleaks detect --source /workspace \
+                --report-format sarif --report-path gitleaks.sarif --redact
           fi
 
       - name: Upload Gitleaks SARIF
         if: always() && hashFiles('gitleaks.sarif') != ''
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8  # v3
         with:
-          name: gitleaks-report
-          path: gitleaks.sarif
-          retention-days: 90
+          sarif_file: gitleaks.sarif
 
   build:
     name: build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Dockerfile syntax check (dockerfile-parse)
         run: |
@@ -345,7 +306,7 @@ jobs:
     # shell/BATS suites parse, so the board's `test` cell has a canonical
     # target without re-running the heavy matrix.
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Verify test harness exists
         run: |
@@ -409,7 +370,7 @@ jobs:
     # building — that every vessel's Dockerfile exists, parses, and references a
     # base that also exists, so a `package` step could succeed.
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Validate every vessel image is packageable (no build)
         run: |
@@ -468,7 +429,7 @@ jobs:
     # ENTRYPOINT (so a clean install is launchable) and that the smoke-test
     # harness is wired for it.
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Verify every vessel is install-launchable (ENTRYPOINT present)
         run: |
@@ -519,7 +480,7 @@ jobs:
     # release DRY-RUN: it validates the release workflow is wired correctly and
     # that every release vessel's image + tags would resolve — WITHOUT pushing.
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Release dry-run — validate release workflow + image tags (no push)
         run: |
@@ -562,155 +523,147 @@ jobs:
   schema-validation:
     name: schema-validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
 
-      - name: Install check-jsonschema
-        run: pip install --quiet check-jsonschema
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
 
-      - name: Validate GitHub Actions workflow YAML schemas
-        run: |
-          mapfile -t workflow_files < <(find .github/workflows -name "*.yml" -o -name "*.yaml" | sort)
-          if [ "${#workflow_files[@]}" -eq 0 ]; then
-            echo "::notice::No workflow files found under .github/workflows"
-            exit 0
-          fi
-          echo "Validating ${#workflow_files[@]} workflow file(s) against GitHub schema..."
-          check-jsonschema \
-            --schemafile https://json.schemastore.org/github-workflow \
-            "${workflow_files[@]}"
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-schema-validation`.
+      - name: schema-validation (in container)
+        run: bash scripts/run_ci_local.sh schema-validation
 
   deps-version-sync:
     name: deps/version-sync
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
 
-      - name: Check Dockerfile base images — no :latest pins
-        run: |
-          set -euo pipefail
-          echo "Scanning FROM lines for ':latest' base image pins..."
-          # Collect all FROM lines (skip ARG-substituted and comment lines).
-          # `awk` always exits 0, which keeps the pipeline clean under
-          # `set -o pipefail` even when no rows match.
-          from_lines="$(grep -rh "^FROM" --include="Dockerfile*" . | awk '!/^#/')"
-          latest_hits="$(printf '%s\n' "$from_lines" | awk '/:latest/')"
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
 
-          if [ -n "$latest_hits" ]; then
-            echo "FAIL: The following FROM lines use ':latest' — pin to a digest or explicit version tag:"
-            echo "$latest_hits"
-            exit 1
-          else
-            echo "OK: No ':latest' base image pins found."
-          fi
-
-          # Advisory: report any unpinned (no tag at all) base images.
-          # A bare FROM line has no `:` (no tag) and no `@` (no digest).
-          untagged="$(printf '%s\n' "$from_lines" | awk '!/:/ && !/@/ && NF')"
-          if [ -n "$untagged" ]; then
-            echo "::warning::The following FROM lines have no version tag or digest (implicitly latest):"
-            echo "$untagged"
-          fi
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-deps-version-sync`.
+      - name: deps-version-sync (in container)
+        run: bash scripts/run_ci_local.sh deps-version-sync
 
   markdownlint:
     name: markdownlint
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    needs: lint
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - name: Run markdownlint-cli2
-        uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd  # v20.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          globs: |
-            **/*.md
-            !**/node_modules/**
-          config: ".markdownlint.yaml"
+          fetch-depth: 1
+
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
+
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-markdownlint`.
+      - name: markdownlint (in container)
+        run: bash scripts/run_ci_local.sh markdownlint
 
   pixi-check:
     name: pixi-check
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    needs: lint
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - name: Skip if no pixi.toml
-        id: detect
-        run: |
-          if [ ! -f pixi.toml ]; then
-            echo "::notice::No pixi.toml in repo, skipping pixi-check"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Setup pixi
-        if: steps.detect.outputs.skip == 'false'
-        uses: prefix-dev/setup-pixi@a09b6247153796b190642a2b53fac4241043cf6f  # v0.10.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          pixi-version: v0.70.2
-          cache: true
-      - name: pixi install (locked)
-        if: steps.detect.outputs.skip == 'false'
-        run: |
-          if [ -f pixi.lock ]; then
-            pixi install --locked
-          else
-            echo "::warning::pixi.toml present but pixi.lock missing — running unlocked"
-            pixi install
-          fi
+          fetch-depth: 1
+
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
+
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-pixi-check`.
+      - name: pixi-check (in container)
+        run: bash scripts/run_ci_local.sh pixi-check
 
   justfile-check:
     name: justfile-check
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    needs: lint
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - name: Skip if no justfile
-        id: detect
-        run: |
-          if [ ! -f justfile ] && [ ! -f Justfile ]; then
-            echo "::notice::No justfile in repo, skipping justfile-check"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Install just
-        if: steps.detect.outputs.skip == 'false'
-        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3  # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          just-version: "1.36.0"
-      - name: Validate justfile
-        if: steps.detect.outputs.skip == 'false'
-        run: |
-          just --evaluate >/dev/null
-          just --list >/dev/null
+          fetch-depth: 1
+
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
+
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-justfile-check`.
+      - name: justfile-check (in container)
+        run: bash scripts/run_ci_local.sh justfile-check
 
   symlink-check:
     name: symlink-check
     runs-on: ubuntu-24.04
-    timeout-minutes: 3
-    needs: lint
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - name: Run symlink check
-        run: bash scripts/check-symlinks.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
 
-  # Single aggregate context over every gating job above. On pull_request/push
-  # this summarizes the full required matrix; on merge_group events the fast
-  # merge-queue-smoke.yml workflow produces the same `merge-gate` context
-  # (this workflow no longer triggers on merge_group), so exactly one
-  # `merge-gate` check-run exists per event.
+      - name: Cache podman container storage
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.local/share/containers/storage
+          key: podman-achaeanfleet-${{ runner.os }}-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            podman-achaeanfleet-${{ runner.os }}-
+
+      - name: Build CI image (podman)
+        run: podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
+      # All checks run inside the CI container — the same image developers
+      # use via `just ci-symlink-check`.
+      - name: symlink-check (in container)
+        run: bash scripts/run_ci_local.sh symlink-check
+
   merge-gate:
     name: merge-gate
     runs-on: ubuntu-latest
