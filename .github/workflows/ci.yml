@@ -295,7 +295,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v4.0.2
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install dependencies
         working-directory: dagger
@@ -614,6 +614,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
 
       - name: Smoke test base image setup
         run: |
@@ -842,6 +843,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
 
   distribute-certs:
     name: Distribute TLS certs (main only)
