@@ -1,7 +1,7 @@
 """Regression tests for pod spec port configuration.
 
 Validates that all pod specs in pods/ use containerPort: 23001 (AGENT_PORT)
-and only vary hostPort per the CLAUDE.md port mapping convention.
+and only vary hostPort per the AGENTS.md port mapping convention.
 """
 
 from pathlib import Path
@@ -35,7 +35,7 @@ def test_container_port_is_agent_port(filename: str, spec: dict) -> None:
 
 @pytest.mark.parametrize("filename,spec", pod_specs())
 def test_host_port_matches_convention(filename: str, spec: dict) -> None:
-    """hostPort must match the CLAUDE.md port mapping table."""
+    """hostPort must match the AGENTS.md port mapping table."""
     if filename not in EXPECTED_HOST_PORTS:
         pytest.skip(f"No expected hostPort defined for {filename}")
     expected = EXPECTED_HOST_PORTS[filename]
