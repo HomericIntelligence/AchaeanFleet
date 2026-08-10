@@ -17,13 +17,14 @@
     "ts-node": "^10.9.0",
     "typescript": "^6.0.3"
   },
-  "//overrides": "Force-bump transitive deps in @dagger.io/dagger to patched versions. @opentelemetry/exporter-prometheus<0.217.0 (GHSA-q7rr-3cgh-j5r3) and protobufjs<=7.5.5 (GHSA-66ff-xgx4-vchm et al.) are pulled in via @dagger.io/dagger's @opentelemetry/sdk-node dep. No non-breaking dagger SDK release fixes these (upstream advisory recommends @dagger.io/dagger@0.11.2 downgrade). Overrides verified to still allow @dagger.io/dagger to import cleanly.",
+  "//overrides": "Force Dagger's transitive security fixes while retaining @dagger.io/dagger@0.21.7. sdk-node 0.220.0 clears the current HIGH OpenTelemetry chain (including Jaeger propagator); adm-zip 0.6.0 clears GHSA-xcpc-8h2w-3j85. Existing exporter-prometheus and protobufjs overrides retain their earlier fixes. No non-breaking Dagger SDK release currently provides this dependency set; the lockfile and CI audit prove the compatibility boundary.",
   "overrides": {
     "adm-zip": "^0.6.0",
     "@opentelemetry/core": "^2.8.0",
     "@opentelemetry/propagator-jaeger": "^2.9.0",
     "@opentelemetry/exporter-prometheus": "^0.217.0",
-    "@opentelemetry/sdk-node": "^0.217.0",
+    "@opentelemetry/sdk-node": "0.220.0",
+    "adm-zip": "0.6.0",
     "protobufjs": "^7.5.6"
   },
   "engines": {
