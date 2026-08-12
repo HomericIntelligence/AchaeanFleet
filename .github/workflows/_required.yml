@@ -11,6 +11,8 @@ on:
     branches: [main]
 
   workflow_dispatch:
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: required-checks-${{ github.head_ref || github.sha }}
