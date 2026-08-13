@@ -1,140 +1,249 @@
+# Dependabot configuration — HomericIntelligence fleet baseline
+# Cadence: monthly. Grouping: minor+patch updates in one PR, major-version
+# bumps in their own PR for focused review. See the Dependabot options
+# reference for details.
+
 version: 2
 updates:
-  # Automated Docker base image version bump PRs
-  - package-ecosystem: "docker"
-    directory: "/bases"
+  - package-ecosystem: 'docker'
+    directory: '/bases'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/claude"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/claude'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/codex"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/codex'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/cline"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/cline'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/codebuff"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/codebuff'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/ampcode"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/ampcode'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  # vessels/aider Dependabot monitoring intentionally kept per #665 Decision F:
-  # Dependabot PRs signal upstream pin improvements and serve as the cheapest
-  # re-enable indicator. CI will reject those PRs until #665 is reverted.
-  - package-ecosystem: "docker"
-    directory: "/vessels/aider"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/aider'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/goose"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/goose'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  - package-ecosystem: "docker"
-    directory: "/vessels/opencode"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'docker'
+    directory: '/vessels/opencode'
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "automated"
+      - "docker"
     commit-message:
-      prefix: "chore(docker)"
-    reviewers:
-      - "mvillmow"
-
-  # npm dependencies in dagger pipeline
-  - package-ecosystem: "npm"
-    directory: "/dagger"
+      prefix: 'chore(docker)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'npm'
+    directory: '/dagger'
     schedule:
       interval: "monthly"
-    labels:
-      - "dependencies"
-      - "automated"
-    commit-message:
-      prefix: "chore(dagger)"
-    reviewers:
-      - "mvillmow"
     open-pull-requests-limit: 5
-
-  # GitHub Actions version bumps
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "monthly"
     labels:
       - "dependencies"
-      - "automated"
+      - "npm"
     commit-message:
-      prefix: "chore(ci)"
-    reviewers:
-      - "mvillmow"
+      prefix: 'chore(deps)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: 'chore(ci)'
+    groups:
+      minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
