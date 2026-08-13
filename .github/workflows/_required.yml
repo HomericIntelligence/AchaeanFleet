@@ -14,8 +14,6 @@ on:
   merge_group:
     types: [checks_requested]
 
-  merge_group:
-    types: [checks_requested]
 
 concurrency:
   group: required-checks-${{ github.head_ref || github.sha }}
