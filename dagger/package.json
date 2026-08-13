@@ -10,7 +10,7 @@
     "test": "ts-node pipeline.ts test"
   },
   "dependencies": {
-    "@dagger.io/dagger": "^0.21.7"
+    "@dagger.io/dagger": "^0.21.8"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
