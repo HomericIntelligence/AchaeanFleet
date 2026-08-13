@@ -4,7 +4,7 @@
 # Python-based agent vessels (Aider) FROM this.
 
 # Node.js 20 source stage — binary copied into runtime, no external scripts
-FROM node:26-slim@sha256:a1d9d671994fc2d26e297ac56b4b1522a8bc7fa71c43b14cd1b1fe6c5116f7dc AS node-source
+FROM node:26-slim@sha256:4ebb5ace66f15a24c14c492e01a8beeed4fddf970a856109f5126e703e5fe503 AS node-source
 
 FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
 
