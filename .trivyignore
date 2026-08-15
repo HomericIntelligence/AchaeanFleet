@@ -16,68 +16,52 @@
 #
 # Reference: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#trivyignore
 
-# secret-0-generic-api-key
-# Category: other
-# Rationale: false-positive secret detections for placeholder values in .env.example; these are documentation examples, not real credentials.
-# Exploitability: none — values are documented placeholder strings, never used at runtime.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
-secret-0-generic-api-key
-
-# secret-0-anthropic-api-key
-# Category: other
-# Rationale: false-positive secret detections for placeholder values in .env.example; these are documentation examples, not real credentials.
-# Exploitability: none — values are documented placeholder strings, never used at runtime.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
-secret-0-anthropic-api-key
-
 # CVE-2024-21538
 # Category: npm
 # Rationale: cross-spawn ReDoS — fixed upstream but not yet in the @anthropic-ai/claude-code bundled node_modules; cannot be upgraded without breaking the package.
 # Exploitability: low — no attacker-controlled input reaches cross-spawn in the vessel runtime context.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2024-21538
 
 # CVE-2025-64756
 # Category: npm
 # Rationale: glob command injection — present in npm-bundled glob within @anthropic-ai/claude-code; not user-controllable in the vessel context.
 # Exploitability: none — glob inputs are hard-coded in the bundled package.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2025-64756
 
 # CVE-2026-26996
 # Category: npm
 # Rationale: minimatch DoS — transitive dep in claude-code bundled node_modules, upstream fix pending.
 # Exploitability: low — minimatch input limited to bundled-package code paths.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-26996
 
 # CVE-2026-27903
 # Category: npm
 # Rationale: minimatch DoS — transitive dep in claude-code bundled node_modules, upstream fix pending.
 # Exploitability: low — minimatch input limited to bundled-package code paths.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-27903
 
 # CVE-2026-27904
 # Category: npm
 # Rationale: minimatch DoS — transitive dep in claude-code bundled node_modules, upstream fix pending.
 # Exploitability: low — minimatch input limited to bundled-package code paths.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-27904
 
 # CVE-2026-23745
 # Category: npm
 # Rationale: node-tar arbitrary file overwrite — in npm-bundled tar within claude-code; no user-controlled tar input path in the vessel runtime.
 # Exploitability: none — no attacker-controlled tar input reaches the bundled tar.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-23745
 
 # Cross-reference: .pip-audit-ignore.aider-chat.txt covers pip-audit findings for the same
@@ -90,153 +74,113 @@ CVE-2026-23745
 # Category: python
 # Rationale: litellm@1.68.0 CRITICAL auth bypass — fixed in 1.83.0, pinned (==) by aider-chat@0.82.3; no newer aider-chat release available as of 2026-04-29.
 # Exploitability: low — vessel does not expose litellm auth endpoints externally.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-35030
 
 # CVE-2026-35029
 # Category: python
 # Rationale: litellm@1.68.0 HIGH RCE — fixed in 1.83.0, pinned (==) by aider-chat@0.82.3; no newer aider-chat release available as of 2026-04-29.
 # Exploitability: low — vessel runs litellm only via aider-chat's internal call paths.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-35029
 
 # GHSA-69x8-hrgq-fjj8
 # Category: python
 # Rationale: litellm@1.68.0 HIGH password hash exposure — fixed in 1.83.0, pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — vessel does not persist litellm-managed credentials.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 GHSA-69x8-hrgq-fjj8
 
 # CVE-2025-69223
 # Category: python
 # Rationale: aiohttp@3.11.18 HIGH HTTP parser — fixed in 3.13.3, pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — aiohttp invoked only against trusted upstream model APIs.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2025-69223
 
 # CVE-2025-48379
 # Category: python
 # Rationale: pillow@11.2.1 DDS heap buffer overflow — fixed in 11.3.0, pinned (==) by aider-chat@0.82.3.
 # Exploitability: none — aider-chat does not load attacker-supplied DDS images.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2025-48379
 
 # CVE-2026-25990
 # Category: python
 # Rationale: pillow@11.2.1 OOB write — fixed in 12.1.1, pinned (==) by aider-chat@0.82.3.
 # Exploitability: none — aider-chat does not load attacker-supplied images.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-25990
 
 # CVE-2026-40192
 # Category: python
 # Rationale: pillow@11.2.1 decompression bomb DoS — fixed in 12.2.0, pinned (==) by aider-chat@0.82.3.
 # Exploitability: none — aider-chat does not load attacker-supplied images.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-40192
 
 # CVE-2025-4565
 # Category: python
 # Rationale: protobuf@5.29.4 unbounded recursion — fixed in 5.29.5, pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — protobuf input limited to model-API payloads.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2025-4565
 
 # CVE-2026-0994
 # Category: python
 # Rationale: protobuf@5.29.4 DoS — fixed in 5.29.6, pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — protobuf input limited to model-API payloads.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-0994
 
 # CVE-2026-23490
 # Category: python
 # Rationale: pyasn1@0.6.1 memory exhaustion — fixed in 0.6.2, pinned (==) by aider-chat@0.82.3.
 # Exploitability: none — pyasn1 not exposed to attacker-controlled input.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-23490
 
 # CVE-2026-30922
 # Category: python
 # Rationale: pyasn1@0.6.1 DoS — fixed in 0.6.3, pinned (==) by aider-chat@0.82.3.
 # Exploitability: none — pyasn1 not exposed to attacker-controlled input.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-30922
 
 # CVE-2025-66418
 # Category: python
 # Rationale: urllib3@2.4.0 decompression — fixed in 2.6.0, pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — urllib3 invoked only against trusted upstream model APIs.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2025-66418
 
 # CVE-2025-66471
 # Category: python
 # Rationale: urllib3@2.4.0 streaming — pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — urllib3 invoked only against trusted upstream model APIs.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2025-66471
 
 # CVE-2026-21441
 # Category: python
 # Rationale: urllib3@2.4.0 decompression bomb — fixed in 2.6.3, pinned (==) by aider-chat@0.82.3.
 # Exploitability: low — urllib3 invoked only against trusted upstream model APIs.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #TBD
+# Expires: 2026-11-13  (re-reviewed 2026-08-15: still flagged in latest scan)
+# Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-21441
-
-# CVE-2026-33811
-# Category: other
-# Rationale: Go stdlib net (LookupCNAME w/ cgo resolver) — embedded in /usr/bin/gh (GitHub CLI 2.92.0 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; resolution requires upstream cli/cli to rebuild and republish the apt package. No newer gh release available in cli.github.com/packages/dists/stable as of 2026-05-16.
-# Exploitability: none — vessel does not invoke gh against attacker-controlled hostnames; CNAME lookup path requires malicious DNS responses.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #662
-CVE-2026-33811
-
-# CVE-2026-33814
-# Category: other
-# Rationale: Go stdlib HTTP/2 SETTINGS frame infinite loop — embedded in /usr/bin/gh (GitHub CLI 2.92.0 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
-# Exploitability: low — gh only connects to api.github.com (trusted upstream); no attacker-controlled HTTP/2 server in the vessel runtime context.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #662
-CVE-2026-33814
-
-# CVE-2026-39820
-# Category: other
-# Rationale: Go stdlib net/mail (ParseAddress/ParseAddressList) — embedded in /usr/bin/gh built with Go 1.26.2. Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
-# Exploitability: none — gh does not parse RFC 5322 addresses from attacker-controlled input in the vessel runtime context.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #662
-CVE-2026-39820
-
-# CVE-2026-39836
-# Category: other
-# Rationale: Go stdlib Dial/LookupPort NUL-byte panic on Windows — embedded in /usr/bin/gh built with Go 1.26.2. Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
-# Exploitability: none — vessel images run on Linux only; the vulnerable code path is Windows-specific.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #662
-CVE-2026-39836
-
-# CVE-2026-42499
-# Category: other
-# Rationale: Go stdlib net/mail consumePhrase DoS — embedded in /usr/bin/gh built with Go 1.26.2. Fixed in Go 1.25.10 / 1.26.3; requires upstream cli/cli rebuild.
-# Exploitability: none — gh does not parse attacker-controlled mail phrases in the vessel runtime context.
-# Expires: 2026-08-14
-# Reviewer: @mvillmow  PR #662
-CVE-2026-42499
 
 # CVE-2026-39823
 # Category: other
@@ -261,14 +205,6 @@ CVE-2026-39825
 # Expires: 2026-08-27
 # Reviewer: @mvillmow  PR #658
 CVE-2026-39826
-
-# CVE-2026-12151
-# Category: npm
-# Rationale: undici 6.25.0 bundled in node:26-slim base image; fixed version 6.27.0 not yet available in current base image tag
-# Exploitability: low — DoS via WebSocket memory growth requires attacker-controlled WebSocket connections to the container
-# Expires: 2026-08-14
-# Reviewer: @mvillmow
-CVE-2026-12151
 
 # CVE-2026-39822
 # Category: other
