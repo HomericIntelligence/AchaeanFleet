@@ -10,22 +10,23 @@
     "test": "ts-node pipeline.ts test"
   },
   "dependencies": {
-    "@dagger.io/dagger": "^0.21.7"
+    "@dagger.io/dagger": "^0.21.8"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
     "ts-node": "^10.9.0",
     "typescript": "^7.0.2"
   },
-  "//overrides": "Force Dagger's transitive security fixes while retaining @dagger.io/dagger@0.21.7. sdk-node 0.220.0 clears the current HIGH OpenTelemetry chain (including Jaeger propagator); adm-zip 0.6.0 clears GHSA-xcpc-8h2w-3j85. Existing exporter-prometheus and protobufjs overrides retain their earlier fixes. No non-breaking Dagger SDK release currently provides this dependency set; the lockfile and CI audit prove the compatibility boundary.",
+  "//overrides": "Force Dagger's transitive security fixes while retaining @dagger.io/dagger@0.21.8. protobufjs>=7.6.5 clears GHSA-j3f2-48v5-ccww (infinite-loop DoS); tar>=7.5.21 clears GHSA-r292-9mhp-454m (stack-overflow DoS); uuid>=11.1.1 clears GHSA-w5hq-g745-h8pq (buffer bounds check; jaeger-client only uses uuid.v4(), CJS-compatible in v11). sdk-node 0.220.0 clears the HIGH OpenTelemetry chain; adm-zip 0.6.0 clears GHSA-xcpc-8h2w-3j85. Lockfile and CI audit prove the compatibility boundary.",
   "overrides": {
-    "adm-zip": "^0.6.0",
+    "adm-zip": "0.6.0",
     "@opentelemetry/core": "^2.8.0",
     "@opentelemetry/propagator-jaeger": "^2.9.0",
     "@opentelemetry/exporter-prometheus": "^0.217.0",
     "@opentelemetry/sdk-node": "0.220.0",
-    "adm-zip": "0.6.0",
-    "protobufjs": "^7.5.6"
+    "protobufjs": "^7.6.5",
+    "tar": "^7.5.21",
+    "uuid": "^11.1.1"
   },
   "engines": {
     "node": ">=20.0.0"
