@@ -253,3 +253,18 @@ CVE-2026-56852
 # Expires: 2026-11-06
 # Reviewer: @mvillmow  PR #746
 GHSA-f88m-g3jw-g9cj
+
+# golang stdlib + golang.org/x/net cluster compiled into the gitleaks binary
+# (pre-commit golang hook env) shipped in the achaean-claude vessel image.
+# Fixed in Go 1.26.6 / 1.25.13 toolchains; no released gitleaks build vendors
+# a newer stdlib yet. Not reachable from our secret-scan usage (no untrusted
+# network input). Same cluster already suppressed on Scylla.
+# Expires: 2026-10-14 | Reviewer: mvillmow | Category: ci-image-tooling (gitleaks)
+CVE-2026-33818
+CVE-2026-39821
+CVE-2026-46600
+CVE-2026-56853
+CVE-2026-56858
+CVE-2026-56859
+CVE-2026-56860
+CVE-2026-56862
