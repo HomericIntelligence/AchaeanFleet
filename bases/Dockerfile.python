@@ -6,7 +6,7 @@
 # Node.js 20 source stage — binary copied into runtime, no external scripts
 FROM node:26-slim@sha256:4ebb5ace66f15a24c14c492e01a8beeed4fddf970a856109f5126e703e5fe503 AS node-source
 
-FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
+FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4
 
 LABEL org.opencontainers.image.title="achaean-base-python"
 LABEL org.opencontainers.image.description="AchaeanFleet Python base image for AI agent containers"
