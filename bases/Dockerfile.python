@@ -91,6 +91,12 @@ RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 # site-packages/pip/_internal/commands), which broke the base build and
 # silently wedged pip. See vessels/aider/Dockerfile for the 3.12 handling.
 
+# Security bumps for packages preinstalled in the pinned python:3.14-slim
+# digest. The trivy gate flags HIGH CVEs with available fixes:
+#   - msgpack 1.1.2 -> 1.2.1  (GHSA-6v7p-g79w-8964, OOB read on unpacker reuse)
+#   - setuptools 70.3.0 -> 78.1.1 (CVE-2025-47273, path traversal in PackageIndex)
+RUN pip install --no-cache-dir msgpack==1.2.1 setuptools==78.1.1
+
 COPY bases/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
