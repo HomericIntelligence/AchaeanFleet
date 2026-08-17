@@ -46,8 +46,11 @@ const VESSELS = [
     dockerfile: "vessels/codex/Dockerfile",
     base: "achaean-base-node",
   },
-  // achaean-aider disabled — see HomericIntelligence/AchaeanFleet#665.
-  // Restore this block when re-enabling the aider vessel.
+  {
+    name: "achaean-aider",
+    dockerfile: "vessels/aider/Dockerfile",
+    base: "achaean-base-python",
+  },
   {
     name: "achaean-goose",
     dockerfile: "vessels/goose/Dockerfile",

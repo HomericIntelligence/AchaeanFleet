@@ -26,7 +26,10 @@ jobs:
             dockerfile: vessels/codex/Dockerfile
             base: achaean-base-node
             base_dockerfile: bases/Dockerfile.node
-          # achaean-aider disabled — see #665. Re-enable by restoring the 4-line matrix entry here.
+          - name: achaean-aider
+            dockerfile: vessels/aider/Dockerfile
+            base: achaean-base-python
+            base_dockerfile: bases/Dockerfile.python
           - name: achaean-goose
             dockerfile: vessels/goose/Dockerfile
             base: achaean-base-minimal
