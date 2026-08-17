@@ -3,7 +3,6 @@
 import re
 import subprocess
 from dataclasses import dataclass
-from typing import Sequence
 
 
 REGISTRY = "ghcr.io/homericintelligence"

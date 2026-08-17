@@ -6,7 +6,6 @@ Collects all Dockerfile paths so they can be parametrized across test functions.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 import pytest

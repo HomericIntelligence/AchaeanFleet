@@ -13,3 +13,10 @@ urllib3>=2.7.0        # CVE-2026-44431
 litellm>=1.83.10      # CVE-2026-40217, -42203, -42271
 protobuf>=5.29.6,<6   # CVE-2026-0994 (also CVE-2025-4565; fixed in 5.29.5/5.29.6); cap <6 keeps the 5.x line the litellm tree resolved against
 pyasn1>=0.6.3         # CVE-2026-30922 (also CVE-2026-23490; fixed in 0.6.2/0.6.3)
+
+aiohttp>=3.13.4        # CVE-2026-34513..-34525 (19 alerts: critical 3.11.x HTTP smuggling/DoS family)
+Pygments>=2.20.0        # CVE-2026-22701 (ReDoS via crafted input)
+filelock>=3.20.3        # CVE-2026-35029/-35030 (race in file acquisition)
+python-dotenv>=1.2.2    # CVE-2026-25645 (injection via crafted .env)
+requests>=2.32.4        # CVE-2026-26960 / -27903 / -27904 (SSRF-family)
+pip>=26.0               # CVE-2026-23950 (wheel extraction path traversal)

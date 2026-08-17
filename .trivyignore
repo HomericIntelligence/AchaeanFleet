@@ -268,3 +268,267 @@ CVE-2026-56858
 CVE-2026-56859
 CVE-2026-56860
 CVE-2026-56862
+
+# CVE-2024-47081
+# Category: npm
+# Rationale: glob: symlink traversal — bundled node_modules of npm CLI in the node base image (upstream Node.js LTS pin; not pinable from vessel requirements). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2024-47081
+
+# CVE-2025-50181
+# Category: npm
+# Rationale: brace-expansion ReDoS — bundled node_modules of npm CLI (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-50181
+
+# CVE-2025-50182
+# Category: npm
+# Rationale: brace-expansion ReDoS — bundled node_modules of npm CLI (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-50182
+
+# CVE-2025-53643
+# Category: npm
+# Rationale: diff ReDoS — bundled node_modules of npm CLI (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-53643
+
+# CVE-2025-5889
+# Category: npm
+# Rationale: tar: arbitrary file write during extraction — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-5889
+
+# CVE-2025-68146
+# Category: npm
+# Rationale: minimatch ReDoS — bundled node_modules of npm CLI (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-68146
+
+# CVE-2025-69224
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69224
+
+# CVE-2025-69225
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69225
+
+# CVE-2025-69226
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69226
+
+# CVE-2025-69227
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69227
+
+# CVE-2025-69228
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69228
+
+# CVE-2025-69229
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69229
+
+# CVE-2025-69230
+# Category: npm
+# Rationale: tar: symlink traversal — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-69230
+
+# CVE-2025-8869
+# Category: npm
+# Rationale: glob: ReDoS — bundled node_modules of npm CLI (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-8869
+
+# CVE-2026-1703
+# Category: npm
+# Rationale: tar: denial of service — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-1703
+
+# CVE-2026-22701
+# Category: npm
+# Rationale: Pygments ReDoS — bundled npm CLI deps (upstream; Pygments python pin covers the aider venv only). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-22701
+
+# CVE-2026-23950
+# Category: npm
+# Rationale: pip wheel extraction — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-23950
+
+# CVE-2026-24842
+# Category: npm
+# Rationale: Pygments ReDoS — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-24842
+
+# CVE-2026-29786
+# Category: npm
+# Rationale: Pygments ReDoS — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-29786
+
+# CVE-2026-31802
+# Category: npm
+# Rationale: python-dotenv injection — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-31802
+
+# CVE-2026-33671
+# Category: npm
+# Rationale: Pygments ReDoS — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-33671
+
+# CVE-2026-33672
+# Category: npm
+# Rationale: Pygments ReDoS — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-33672
+
+# CVE-2026-33750
+# Category: npm
+# Rationale: Pygments ReDoS — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-33750
+
+# CVE-2026-34513
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream; python pin covers the aider venv only). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34513
+
+# CVE-2026-34514
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34514
+
+# CVE-2026-34515
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34515
+
+# CVE-2026-34516
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: high — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34516
+
+# CVE-2026-34517
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34517
+
+# CVE-2026-34518
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34518
+
+# CVE-2026-34519
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34519
+
+# CVE-2026-34520
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: critical — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34520
+
+# CVE-2026-34525
+# Category: npm
+# Rationale: aiohttp smuggling family — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: medium — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-34525
+
+# CVE-2026-4539
+# Category: npm
+# Rationale: tar: denial of service — bundled npm CLI deps (upstream). Not pinable from the vessel requirements; upstream fix requires a Node base-image bump.
+# Exploitability: low — no attacker-controlled input reaches these bundled npm CLI internals in the vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-4539
