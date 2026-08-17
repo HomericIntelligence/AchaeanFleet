@@ -207,8 +207,12 @@ jobs:
           config: .hadolint.yaml
           failure-threshold: error
 
-      # achaean-aider vessel disabled in CI — see #665. Re-enable by restoring
-      # this hadolint step alongside the other aider entries in this file.
+      - name: Lint vessels/aider/Dockerfile
+        uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6  # v3.4.0
+        with:
+          dockerfile: vessels/aider/Dockerfile
+          config: .hadolint.yaml
+          failure-threshold: error
 
       - name: Lint vessels/goose/Dockerfile
         uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6  # v3.4.0
@@ -309,11 +313,11 @@ jobs:
         working-directory: dagger
         run: npx tsc --noEmit
 
-      # The "Audit Python dependencies (aider-chat)" pip-audit step lived here
-      # and was removed when the aider vessel was disabled — see #665 and #655.
-      # The 57-CVE allowlist is externalized in .pip-audit-ignore.aider-chat.txt
-      # (expires 2026-08-10). Restore the three CI gate steps from
-      # docs/runbooks/dependency-audit-allowlists.md when re-enabling aider.
+      # The "Audit Python dependencies (aider-chat)" pip-audit step is NOT
+      # restored on aider re-enablement: aider-chat hard-pins its transitive
+      # tree, so the allowlist is permanently upstream-uncontrollable (runbook
+      # dependency-audit-allowlists.md, resolution path 3). Image-layer coverage
+      # comes from the trivy container scan + requirements-security-overrides.txt.
 
   validate:
     name: Validate Compose Files
@@ -725,8 +729,9 @@ jobs:
           - name: achaean-codex
             dockerfile: vessels/codex/Dockerfile
             base: achaean-base-node
-          # achaean-aider disabled — see #665. Restore here (build matrix)
-          # and in the push-to-ghcr matrix when re-enabling.
+          - name: achaean-aider
+            dockerfile: vessels/aider/Dockerfile
+            base: achaean-base-python
           - name: achaean-goose
             dockerfile: vessels/goose/Dockerfile
             base: achaean-base-minimal
@@ -979,7 +984,12 @@ jobs:
             base: achaean-base-node
             base_dockerfile: bases/Dockerfile.node
             dockerfile: vessels/codex/Dockerfile
-          # achaean-aider disabled — see #665. Restore entry here when re-enabling.
+          - name: achaean-aider
+            program: aider
+            version_flag: --version
+            base: achaean-base-python
+            base_dockerfile: bases/Dockerfile.python
+            dockerfile: vessels/aider/Dockerfile
           - name: achaean-goose
             program: goose
             version_flag: --version
@@ -1139,8 +1149,9 @@ jobs:
           - name: achaean-codex
             dockerfile: vessels/codex/Dockerfile
             base: achaean-base-node
-          # achaean-aider disabled — see #665. Restore here (build matrix)
-          # and in the push-to-ghcr matrix when re-enabling.
+          - name: achaean-aider
+            dockerfile: vessels/aider/Dockerfile
+            base: achaean-base-python
           - name: achaean-goose
             dockerfile: vessels/goose/Dockerfile
             base: achaean-base-minimal
@@ -1324,9 +1335,9 @@ jobs:
           echo "| Vessel | Tag | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "| --- | --- | --- |" >> "$GITHUB_STEP_SUMMARY"
 
-          # achaean-aider intentionally omitted — see #665.
           vessels=(
             "achaean-claude"
+            "achaean-aider"
             "achaean-codex"
             "achaean-goose"
             "achaean-cline"

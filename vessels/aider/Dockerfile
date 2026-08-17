@@ -16,7 +16,17 @@
 ARG BASE_IMAGE=achaean-base-python:latest
 
 # Source stage — provides a complete Python 3.12 install we can copy whole.
-FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4 AS python312-source
+# NOTE: must be python:3.12-slim (NOT the 3.14 base digest) — aider-chat
+# requires >=3.10,<3.13 and the RUN below invokes /opt/python3.12/bin/python3.12.
+FROM python:3.12-slim@sha256:876416ecde9aca2bcc90e1fb0c7a9500bbf749f5788b70f82d4c5a5c2357f8b4 AS python312-source
+
+# Upgrade pip in the SOURCE stage (before COPY): `pip install --upgrade pip`
+# in-place self-replacement races on python 3.12 (OSError: [Errno 39]
+# Directory not empty on site-packages/pip/_internal/commands), so use
+# --ignore-installed (no silent-failure idiom) and purge the stale 25.0.1
+# dist-info so the scan reports a single clean pip.
+RUN python3 -m pip install --no-cache-dir --upgrade --ignore-installed "pip==26.0.1" \
+    && rm -rf /usr/local/lib/python3.12/site-packages/pip-25.0.1.dist-info
 
 FROM ${BASE_IMAGE}
 
@@ -51,7 +61,7 @@ COPY vessels/aider/requirements-security-overrides.txt /tmp/requirements-securit
 # then force-upgrade the CVE-affected transitive deps in a second pass.
 # We expose `aider` on PATH via a symlink so existing AGENT_PROGRAM=aider
 # wiring continues to work without changes elsewhere.
-RUN /opt/python3.12/bin/python3.12 -m venv /opt/aider-venv \
+RUN /opt/python3.12/bin/python3.12 -m venv --upgrade-deps /opt/aider-venv \
     && /opt/aider-venv/bin/pip install --no-cache-dir --upgrade "pip==26.0.1" \
     && /opt/aider-venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
     && /opt/aider-venv/bin/pip install --no-cache-dir --upgrade -r /tmp/requirements-security-overrides.txt \
