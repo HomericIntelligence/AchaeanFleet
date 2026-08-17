@@ -78,9 +78,8 @@ def test_each_group_has_correct_image() -> None:
 def test_each_group_declares_agent_port_23001() -> None:
     """Every group's network block must declare port 'agent' mapped to container 23001."""
     text = _text()
-    # The pattern appears once per group (except worker which also has it)
-    port_declarations = re.findall(r'port\s+"agent"\s*\{\s*to\s*=\s*23001\s*\}', text)
-    # We expect at least 9 (one per group; claude-agents uses the multi-line form)
+    # The pattern appears once per group (except worker which also has it).
+    # We expect at least 9 (one per group; claude-agents uses the multi-line form).
     # claude-agents uses multi-line form with comment — check separately
     multiline_port = re.findall(
         r'port\s+"agent"\s*\{[^}]*to\s*=\s*23001[^}]*\}', text, re.DOTALL
