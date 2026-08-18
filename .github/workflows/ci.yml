@@ -1338,6 +1338,7 @@ jobs:
       REGISTRY: ghcr.io/homericintelligence
       SHORT_SHA: ${{ github.sha }}
     strategy:
+      fail-fast: false
       matrix:
         base: [achaean-base-node, achaean-base-python, achaean-base-minimal]
     steps:
@@ -1376,10 +1377,25 @@ jobs:
         run: |
           set -euo pipefail
           BASE="${{ matrix.base }}"
+          # GHCR is prone to secondary rate limits when many pushes run in
+          # parallel; retry each tag push with exponential backoff.
           for tag in latest "${SHA_TAG}" "${DATE_TAG}"; do
             docker tag "${BASE}:latest" "${REGISTRY}/${BASE}:${tag}"
-            docker push "${REGISTRY}/${BASE}:${tag}"
-            echo "Pushed ${REGISTRY}/${BASE}:${tag}"
+            attempt=1
+            while : ; do
+              if docker push "${REGISTRY}/${BASE}:${tag}"; then
+                echo "Pushed ${REGISTRY}/${BASE}:${tag}"
+                break
+              fi
+              if [[ $attempt -ge 5 ]]; then
+                echo "ERROR: failed to push ${REGISTRY}/${BASE}:${tag} after 5 attempts" >&2
+                exit 1
+              fi
+              delay=$(( 15 * attempt ))
+              echo "Push attempt ${attempt} failed — retrying in ${delay}s (rate-limit backoff)..."
+              sleep "$delay"
+              attempt=$((attempt + 1))
+            done
           done
 
       - name: Record base image digest
