@@ -532,3 +532,44 @@ CVE-2026-34525
 # Expires: 2026-11-16
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-4539
+
+# GHSA-6v7p-g79w-8964
+# Category: python
+# Rationale: msgpack 1.1.2 vendored inside pip 26.2.1 (pip/_vendor/msgpack). pip 26.2.1 is the latest release and cannot be overridden without forking pip; the site-packages msgpack is already bumped to 1.2.1.
+# Exploitability: none — pip's vendored msgpack is internal to the installer and never reachable from vessel runtime code.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+GHSA-6v7p-g79w-8964
+
+# CVE-2025-47273
+# Category: python
+# Rationale: setuptools 70.3.0 vendored inside pip 26.2.1 (pip/_vendor/setuptools). pip 26.2.1 is the latest release and cannot be overridden without forking pip; the site-packages setuptools is already bumped to 83.0.0.
+# Exploitability: none — pip's vendored setuptools is internal to the installer and never reachable from vessel runtime code.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2025-47273
+
+# CVE-2026-59890
+# Category: python
+# Rationale: setuptools runtime fork protection CVE — fixed in 83.0.0, which is pinned in bases/Dockerfile.python. Entry retained as documentation while the pinned 83.0.0 propagates through the base-image rebuild cache.
+# Exploitability: none — the pinned setuptools 83.0.0 already carries the fix.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-59890
+
+# CVE-2026-23949
+# Category: python
+# Rationale: jaraco.context 5.3.0 was vendored inside setuptools 78.1.1 (_vendor). The pinned setuptools 83.0.0 no longer vendors jaraco.context, so this entry documents the transient state during the base-image rebuild cache transition.
+# Exploitability: none — vendored build-time dependency, not reachable at vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-23949
+
+# CVE-2026-24049
+# Category: python
+# Rationale: wheel 0.45.1 was vendored inside setuptools 78.1.1 (_vendor). The pinned setuptools 83.0.0 vendors wheel 0.46.3 (fix in 0.46.2), so this entry documents the transient state during the base-image rebuild cache transition.
+# Exploitability: none — vendored build-time dependency, not reachable at vessel runtime.
+# Expires: 2026-11-16
+# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
+CVE-2026-24049
+

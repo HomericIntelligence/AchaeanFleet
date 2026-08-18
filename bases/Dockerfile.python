@@ -94,8 +94,10 @@ RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 # Security bumps for packages preinstalled in the pinned python:3.14-slim
 # digest. The trivy gate flags HIGH CVEs with available fixes:
 #   - msgpack 1.1.2 -> 1.2.1  (GHSA-6v7p-g79w-8964, OOB read on unpacker reuse)
-#   - setuptools 70.3.0 -> 78.1.1 (CVE-2025-47273, path traversal in PackageIndex)
-RUN pip install --no-cache-dir msgpack==1.2.1 setuptools==78.1.1
+#   - setuptools 70.3.0 -> 83.0.0 (CVE-2025-47273 path traversal; CVE-2026-59890
+#     runtime fork protection). 83.0.0 also drops the vendored jaraco.context
+#     (CVE-2026-23949) and vendors wheel 0.46.3 (CVE-2026-24049 fixed in 0.46.2).
+RUN pip install --no-cache-dir msgpack==1.2.1 setuptools==83.0.0
 
 COPY bases/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
