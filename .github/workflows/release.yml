@@ -54,6 +54,10 @@ jobs:
             dockerfile: vessels/worker/Dockerfile
             base: achaean-base-minimal
             base_dockerfile: bases/Dockerfile.minimal
+          - name: achaean-hello-world
+            dockerfile: vessels/hello-world/Dockerfile
+            base: ''
+            base_dockerfile: ''
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -79,6 +83,7 @@ jobs:
           driver: docker
 
       - name: Build base image
+        if: matrix.vessel.base_dockerfile != ''
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
         with:
           context: .

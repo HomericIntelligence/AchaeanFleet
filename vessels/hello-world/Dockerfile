@@ -10,9 +10,14 @@ RUN cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build
 
 FROM ubuntu:24.04
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
     libssl3 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /src/build/hello_myrmidon /usr/local/bin/
 ENV NATS_URL=nats://localhost:4222
-CMD ["hello_myrmidon"]
+
+ENTRYPOINT ["hello_myrmidon"]
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD pgrep -f hello_myrmidon > /dev/null || exit 1

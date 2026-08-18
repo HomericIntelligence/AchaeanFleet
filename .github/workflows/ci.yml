@@ -685,6 +685,7 @@ jobs:
           path: /tmp
 
       - name: Load base image into Docker daemon
+        if: matrix.vessel.base != ''
         run: |
           set -euo pipefail
           tar_file=$(find /tmp -maxdepth 1 -name "*.tar" -type f | head -1)
@@ -718,6 +719,9 @@ jobs:
     name: Build Vessel Images
     runs-on: ubuntu-24.04
     needs: [build-bases]
+    permissions:
+      contents: read
+      security-events: write
     env:
       SHORT_SHA: ${{ github.sha }}
     strategy:
@@ -750,10 +754,14 @@ jobs:
           - name: achaean-worker
             dockerfile: vessels/worker/Dockerfile
             base: achaean-base-minimal
+          - name: achaean-hello-world
+            dockerfile: vessels/hello-world/Dockerfile
+            base: ''
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Download base image artifact
+        if: matrix.vessel.base != ''
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: base-image-${{ matrix.vessel.base }}
@@ -767,6 +775,7 @@ jobs:
           docker tag "$IMAGE_ID" "${{ matrix.vessel.base }}:latest"
 
       - name: Verify base image is available
+        if: matrix.vessel.base != ''
         run: docker image inspect ${{ matrix.vessel.base }}:latest --format '{{.Id}}'
 
       - name: Set up Docker Buildx (docker driver — shares daemon image store)
@@ -1189,6 +1198,9 @@ jobs:
           - name: achaean-worker
             dockerfile: vessels/worker/Dockerfile
             base: achaean-base-minimal
+          - name: achaean-hello-world
+            dockerfile: vessels/hello-world/Dockerfile
+            base: ''
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -1200,18 +1212,21 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download base image artifact
+        if: matrix.vessel.base != ''
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: base-image-${{ matrix.vessel.base }}
           path: /tmp
 
       - name: Load base image into Docker daemon
+        if: matrix.vessel.base != ''
         run: |
           set -euo pipefail
           tar_file=$(find /tmp -maxdepth 1 -name "*.tar" -type f | head -1)
           docker load -i "$tar_file"
 
       - name: Verify loaded base image integrity
+        if: matrix.vessel.base != ''
         run: |
           image_id=$(docker inspect --format '{{.Id}}' "${{ matrix.vessel.base }}:latest" 2>/dev/null || true)
           if [[ -z "$image_id" ]]; then
@@ -1221,6 +1236,7 @@ jobs:
           echo "Base image integrity OK: $image_id"
 
       - name: Verify vessel artifact is non-empty
+        if: matrix.vessel.base != ''
         shell: bash
         run: |
           if ! find /tmp -maxdepth 1 -name "*.tar" -type f | grep -q .; then
@@ -1260,21 +1276,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Record base image push status
-        if: matrix.vessel.name == 'achaean-claude'  # Only run once per job
-        shell: bash
-        env:
-          REGISTRY: ghcr.io/homericintelligence
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          echo "## Pushed Base Images" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Base | Tags |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
-          for base in achaean-base-node achaean-base-python achaean-base-minimal; do
-            echo "| \`${base}\` | \`latest\`, \`git-${COMMIT_SHA::7}\`, \`$(date -u +%Y-%m-%d)\` |" >> "$GITHUB_STEP_SUMMARY"
-          done
 
       - name: Record vessel image digest
         id: digest
@@ -1322,11 +1323,84 @@ jobs:
           echo "| Commit | \`${COMMIT_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "::notice title=Image Digest::${IMAGE_NAME}:latest -> ${DIGEST} (local id ${LOCAL_ID:-n/a})"
 
+  push-bases:
+    name: Push Base Images to GHCR
+    runs-on: ubuntu-latest
+    needs: [build-bases]
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      github.event.inputs.force_push == 'true' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    permissions:
+      packages: write
+      contents: read
+    env:
+      REGISTRY: ghcr.io/homericintelligence
+      SHORT_SHA: ${{ github.sha }}
+    strategy:
+      matrix:
+        base: [achaean-base-node, achaean-base-python, achaean-base-minimal]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download base image artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: base-image-${{ matrix.base }}
+          path: /tmp
+
+      - name: Load base image into Docker daemon
+        run: |
+          set -euo pipefail
+          tar_file=$(find /tmp -maxdepth 1 -name "*.tar" -type f | head -1)
+          IMAGE_ID=$(docker load -i "$tar_file" | tail -1 | awk '{print $NF}')
+          docker tag "$IMAGE_ID" "${{ matrix.base }}:latest"
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          echo "sha_tag=git-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "date_tag=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Push base image to GHCR
+        env:
+          SHA_TAG: ${{ steps.tags.outputs.sha_tag }}
+          DATE_TAG: ${{ steps.tags.outputs.date_tag }}
+        run: |
+          set -euo pipefail
+          BASE="${{ matrix.base }}"
+          for tag in latest "${SHA_TAG}" "${DATE_TAG}"; do
+            docker tag "${BASE}:latest" "${REGISTRY}/${BASE}:${tag}"
+            docker push "${REGISTRY}/${BASE}:${tag}"
+            echo "Pushed ${REGISTRY}/${BASE}:${tag}"
+          done
+
+      - name: Record base image digest
+        env:
+          BASE: ${{ matrix.base }}
+        run: |
+          set -euo pipefail
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "${REGISTRY}/${BASE}:latest" 2>/dev/null || docker inspect --format '{{.Id}}' "${REGISTRY}/${BASE}:latest")
+          echo "## Base Image: ${BASE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Digest | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+
   verify-registry:
     name: Verify GHCR Tags
     runs-on: ubuntu-latest
-    needs: push-to-registry
-    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.inputs.force_push == 'true'
+    needs: [push-to-registry, push-bases]
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      github.event.inputs.force_push == 'true' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     timeout-minutes: 10
     permissions:
       packages: read
@@ -1364,6 +1438,10 @@ jobs:
             "achaean-codebuff"
             "achaean-ampcode"
             "achaean-worker"
+            "achaean-hello-world"
+            "achaean-base-node"
+            "achaean-base-python"
+            "achaean-base-minimal"
           )
 
           # Function to verify with retry (3 attempts, 10s sleep between)

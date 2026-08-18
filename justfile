@@ -184,12 +184,16 @@ build-vessel NAME:
         goose|opencode|worker)               base="achaean-base-minimal" ;;
         # mesh layers on the claude VESSEL (hephaestus[mesh] + telemachy on top)
         mesh)                                base="achaean-claude" ;;
+        # hello-world is a standalone ubuntu build — no base image needed
+        hello-world)                         base="__none__" ;;
         *) echo "Unknown vessel: {{NAME}}"; exit 1 ;;
     esac
     echo "Container runtime: ${container_cmd}"
     if [ "${base}" = "achaean-claude" ]; then
         echo "Building base vessel chain: achaean-claude"
         just build-vessel claude
+    elif [ "${base}" = "__none__" ]; then
+        echo "No base image needed (standalone build)"
     else
         echo "Building base: ${base}"
         ${container_cmd} build -f "bases/Dockerfile.${base#achaean-base-}" -t "${base}:latest" .
