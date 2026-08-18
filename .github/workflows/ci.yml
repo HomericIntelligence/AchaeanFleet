@@ -839,7 +839,7 @@ jobs:
           fi
           echo "HEALTHCHECK: $healthcheck"
 
-      - name: Trivy scan vessel image
+      - name: Trivy scan vessel image (gate)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           scan-type: image
@@ -849,6 +849,25 @@ jobs:
           ignore-unfixed: true
           severity: HIGH,CRITICAL
           trivyignores: .trivyignore
+
+      - name: Trivy scan vessel image (SARIF for Security tab)
+        if: always()
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ matrix.vessel.name }}:latest
+          format: sarif
+          output: trivy-vessel.sarif
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
+
+      - name: Upload vessel Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3  # v3
+        with:
+          sarif_file: trivy-vessel.sarif
+          category: trivy-${{ matrix.vessel.name }}
 
   distribute-certs:
     name: Distribute TLS certs (main only)
