@@ -1,6 +1,5 @@
 """Tests for hephaestus.tag_verify — post-push GHCR tag verification helpers."""
 
-import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
