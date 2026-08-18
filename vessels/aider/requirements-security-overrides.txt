@@ -20,3 +20,8 @@ filelock>=3.20.3        # CVE-2026-35029/-35030 (race in file acquisition)
 python-dotenv>=1.2.2    # CVE-2026-25645 (injection via crafted .env)
 requests>=2.32.4        # CVE-2026-26960 / -27903 / -27904 (SSRF-family)
 pip>=26.0               # CVE-2026-23950 (wheel extraction path traversal)
+# starlette/soupsieve are hard-pinned by aider-chat 0.86.2 -> fastapi 0.128.8 / beautifulsoup4 4.14.3.
+# The overrides pass below upgrades them past the fixed versions without disturbing fastapi
+# (verified: starlette 1.6.0 + soupsieve 2.9.2 resolve alongside fastapi 0.128.8).
+starlette>=1.3.1       # CVE-2026-48818 (SSRF + NTLM credential theft via UNC paths), CVE-2026-54283 (request.form() limits ignored)
+soupsieve>=2.8.4       # CVE-2026-49476, CVE-2026-49477 (DoS via crafted CSS selectors)
