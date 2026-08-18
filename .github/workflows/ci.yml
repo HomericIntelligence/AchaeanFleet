@@ -685,7 +685,6 @@ jobs:
           path: /tmp
 
       - name: Load base image into Docker daemon
-        if: matrix.vessel.base != ''
         run: |
           set -euo pipefail
           tar_file=$(find /tmp -maxdepth 1 -name "*.tar" -type f | head -1)
@@ -768,6 +767,7 @@ jobs:
           path: /tmp
 
       - name: Load base image into Docker daemon
+        if: matrix.vessel.base != ''
         run: |
           set -euo pipefail
           tar_file=$(find /tmp -maxdepth 1 -name "*.tar" -type f | head -1)
