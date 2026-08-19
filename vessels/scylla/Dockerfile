@@ -33,8 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir "hatchling==1.31.0"
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # Layer 2: dependencies resolved from pyproject.toml [project] (see upstream
 # comments for the tomllib/tomli fallback and EXTRAS semantics).

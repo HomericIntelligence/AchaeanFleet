@@ -20,8 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # -- Runtime -------------------------------------------------------------------
 FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7

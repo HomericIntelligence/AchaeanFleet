@@ -49,8 +49,8 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/charybdis-venv \
     PATH="/opt/charybdis-venv/bin:$PATH"
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # Sync the locked build toolchain into the shared venv, then chown so the
 # non-root builder user can use it (UV_PYTHON_INSTALL_DIR keeps the managed

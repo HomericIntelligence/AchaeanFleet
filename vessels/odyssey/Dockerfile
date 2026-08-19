@@ -69,8 +69,8 @@ ENV HOME=/home/${USER_NAME}
 ENV PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # Security pin for the distro-shipped system python (trivy flags setuptools
 # 70.3.0 + msgpack 1.1.2 on noble) — run as root before dropping to dev.

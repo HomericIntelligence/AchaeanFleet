@@ -48,8 +48,8 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 RUN uv sync --locked \
     && chmod -R a+rX /opt/venv /opt/uv-python

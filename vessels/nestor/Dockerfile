@@ -35,8 +35,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=uv /uv /uvx /usr/local/bin/
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # Sync the locked build toolchain first so it caches independently of sources.
 RUN uv sync --locked \

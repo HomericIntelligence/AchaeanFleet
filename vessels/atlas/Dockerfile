@@ -25,8 +25,8 @@ WORKDIR /healthcheck-src
 COPY vessels/atlas/healthcheck.go .
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # The atlas module lives in the dashboard/ subdirectory of the Argus repo.
 WORKDIR /src/dashboard

@@ -40,8 +40,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     && conan profile detect
 
 WORKDIR /src
-RUN git clone --filter=blob:none ${UPSTREAM_REPO} /src \
-    && git checkout -q ${UPSTREAM_SHA}
+RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git -C /src checkout -q ${UPSTREAM_SHA}
 
 RUN conan install . \
     --output-folder=build \
