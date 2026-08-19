@@ -83,6 +83,13 @@ RUN if command -v python3 >/dev/null 2>&1; then \
 
 RUN chown -R ${USER_ID}:${GROUP_ID} /src
 
+# Copy entrypoint script from the clone while still root (a bare COPY would
+# read the build context, where /src does not exist; /usr/local/bin is not
+# writable by the dev user). Chown to dev so the bind-mount fix can rewrite it.
+RUN cp /src/docker/entrypoint.sh /usr/local/bin/entrypoint.sh \
+    && chown ${USER_NAME}:${USER_NAME} /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
+
 USER ${USER_NAME}
 
 ENV UV_CACHE_DIR=/home/${USER_NAME}/.cache/uv
@@ -103,10 +110,6 @@ RUN git config --global user.email "build@odyssey.local" && \
     git config --global user.name "build" && \
     git config --global init.defaultBranch main && \
     uv run pre-commit install --install-hooks
-
-# Copy entrypoint script (chowned to dev so the bind-mount ownership fix works).
-COPY --chown=${USER_NAME}:${USER_NAME} /src/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENV PYTHONPATH=/src:${PYTHONPATH:-}
 
