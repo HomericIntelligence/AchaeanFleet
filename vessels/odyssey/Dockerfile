@@ -129,8 +129,11 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     sudo \
     bash \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd -g 1000 ${USER_NAME} \
-    && useradd -m -u 1000 -g 1000 -s /bin/bash ${USER_NAME} \
+    && (groupadd -g 1000 ${USER_NAME} 2>/dev/null || \
+        groupmod -n ${USER_NAME} $(getent group 1000 | cut -d: -f1)) \
+    && (useradd -m -u 1000 -g 1000 -s /bin/bash ${USER_NAME} 2>/dev/null || \
+        usermod -l ${USER_NAME} -d /home/${USER_NAME} -m $(id -nu 1000 2>/dev/null || echo nobody)) \
+    && chmod 755 /home/${USER_NAME} \
     && printf 'dev ALL=(root) NOPASSWD: /bin/mkdir\ndev ALL=(root) NOPASSWD: /bin/chown\ndev ALL=(root) NOPASSWD: /bin/chmod\n' \
         > /etc/sudoers.d/dev-workspace \
     && chmod 440 /etc/sudoers.d/dev-workspace
