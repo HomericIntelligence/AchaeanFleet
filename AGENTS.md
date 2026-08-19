@@ -250,4 +250,3 @@ The fleet layout above follows design principles inherited from
 - **One pattern, everywhere (DRY / boundaries).** Every vessel follows the same
   build→scan→publish pipeline; a new agent is a new directory plus one matrix
   row, not a new bespoke pipeline.
-
