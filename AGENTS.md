@@ -231,3 +231,23 @@ for alloc-scoped values — Nomad does not interpolate them at runtime.
    the workspace scope this agent requires
 5. Add to the matrix in `.github/workflows/ci.yml`
 6. Add vessel entry in `dagger/pipeline.ts`
+
+## Design Philosophy
+
+The fleet layout above follows design principles inherited from
+**ProjectOdyssey**:
+
+- **Single source of truth for images (DRY).** Every fleet runtime image is
+  defined *here* as a vessel — upstream repos are consumed at pinned
+  `UPSTREAM_SHA`s, never duplicated. AchaeanFleet is both the definition and
+  the sole publisher to GHCR.
+- **Minimal runtime (KISS / POLA).** Each vessel ships only what the process
+  needs — distroless or slim bases, no shells, read-only rootfs, a declared
+  `ENTRYPOINT` + `HEALTHCHECK`. Less image is less attack surface.
+- **Pin and verify (reproducibility).** Base images are digest-pinned; CI gates
+  every build on Trivy (HIGH/CRITICAL, fixable only) and the drift/pin test
+  suite before anything reaches GHCR.
+- **One pattern, everywhere (DRY / boundaries).** Every vessel follows the same
+  build→scan→publish pipeline; a new agent is a new directory plus one matrix
+  row, not a new bespoke pipeline.
+
