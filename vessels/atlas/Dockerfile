@@ -31,6 +31,12 @@ RUN git clone -q ${UPSTREAM_REPO} /src \
 # The atlas module lives in the dashboard/ subdirectory of the Argus repo.
 WORKDIR /src/dashboard
 
+# The pinned Argus commit predates the x/crypto SSH fixes. Upgrade the
+# indirect module before compiling so the final static binary carries the
+# patched implementation instead of inheriting v0.50.0.
+RUN go mod edit -require=golang.org/x/crypto@v0.52.0 \
+    && go mod tidy
+
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go mod download
