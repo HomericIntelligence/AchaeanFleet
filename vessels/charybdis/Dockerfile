@@ -50,6 +50,7 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/charybdis-venv \
 
 WORKDIR /src
 RUN git clone -q ${UPSTREAM_REPO} /src \
+    && git config --global --add safe.directory /src \
     && git -C /src checkout -q ${UPSTREAM_SHA}
 
 # Sync the locked build toolchain into the shared venv, then chown so the
