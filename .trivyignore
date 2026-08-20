@@ -573,3 +573,19 @@ CVE-2026-23949
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-24049
 
+# CVE-2026-56864
+# Category: other
+# Rationale: golang.org/x/mod v0.37.0 is bundled in the current released gh package; the fixed v0.40.0 is not present in an available upstream gh release. Replace this temporary entry when the gh image rebuild in #779 is available and the clean scan confirms the module update.
+# Exploitability: low — gh is a developer CLI and this module path is not exposed as a service endpoint in the vessel runtime.
+# Expires: 2026-10-12
+# Reviewer: @mvillmow  PR #777 / issue #779
+CVE-2026-56864
+
+# CVE-2026-56865
+# Category: other
+# Rationale: golang.org/x/mod v0.37.0 is bundled in the current released gh package; the fixed v0.40.0 is not present in an available upstream gh release. Replace this temporary entry when the gh image rebuild in #779 is available and the clean scan confirms the module update.
+# Exploitability: low — gh is a developer CLI and this module path is not exposed as a service endpoint in the vessel runtime.
+# Expires: 2026-10-12
+# Reviewer: @mvillmow  PR #777 / issue #779
+CVE-2026-56865
+

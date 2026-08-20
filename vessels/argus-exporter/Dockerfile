@@ -27,7 +27,13 @@ FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9
 LABEL org.opencontainers.image.title="achaean-argus-exporter"
 LABEL org.opencontainers.image.description="Argus exporter — fleet NATS/metrics exporter vessel"
 
-# No extra packages — exporter uses stdlib only.
+# No extra packages — exporter uses stdlib only. Upgrade the slim image's
+# Debian packages at build time so fixed OS vulnerabilities are not carried
+# into the runtime layer when the upstream digest lags the Debian archive.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 RUN groupadd -g 1000 exporter \
