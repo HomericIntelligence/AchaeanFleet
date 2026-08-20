@@ -31,6 +31,11 @@ LABEL org.opencontainers.image.description="NATS-to-Loki log bridge — fleet ob
 
 WORKDIR /app
 
+# Apply current Debian security updates to the pinned slim runtime layer.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir "nats-py==2.15.0"
 RUN useradd -r -s /usr/sbin/nologin bridge
 

@@ -28,6 +28,11 @@ LABEL org.opencontainers.image.description="Argus JetStream consumer — fleet N
 
 WORKDIR /app
 
+# Apply current Debian security updates to the pinned slim runtime layer.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install pinned runtime deps at build time.
 COPY --from=builder /src/jetstream-consumer/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt \
