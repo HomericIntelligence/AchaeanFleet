@@ -58,6 +58,50 @@ jobs:
             dockerfile: vessels/hello-world/Dockerfile
             base: ''
             base_dockerfile: ''
+          - name: achaean-hermes
+            dockerfile: vessels/hermes/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-nestor
+            dockerfile: vessels/nestor/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-agamemnon
+            dockerfile: vessels/agamemnon/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-charybdis
+            dockerfile: vessels/charybdis/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-keystone
+            dockerfile: vessels/keystone/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-odyssey
+            dockerfile: vessels/odyssey/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-scylla
+            dockerfile: vessels/scylla/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-argus-exporter
+            dockerfile: vessels/argus-exporter/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-argus-jetstream-consumer
+            dockerfile: vessels/argus-jetstream-consumer/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-atlas
+            dockerfile: vessels/atlas/Dockerfile
+            base: ''
+            base_dockerfile: ''
+          - name: achaean-nats-loki-bridge
+            dockerfile: vessels/nats-loki-bridge/Dockerfile
+            base: ''
+            base_dockerfile: ''
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 

@@ -49,7 +49,35 @@ SMOKE_JOB_NAME = "test-smoke-vessels"
 # ``mesh`` is excluded until its pip git dependencies (hephaestus[mesh],
 # telemachy register-epic) are merged to their main branches — the image
 # build would fail in CI before then. Activation tracked in #713.
-EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff", "mesh"}
+# ``mesh`` is excluded until its pip git dependencies (hephaestus[mesh],
+# telemachy register-epic) are merged to their main branches — the image
+# build would fail in CI before then. Activation tracked in #713.
+#
+# The ported control-plane / service vessels below (hermes, nestor, agamemnon,
+# charybdis, keystone, odyssey, scylla, argus-exporter,
+# argus-jetstream-consumer, atlas, nats-loki-bridge) are first-party runtime
+# services, NOT AI-agent vessels: they expose a server daemon or a CLI runner,
+# not a `--version`-invokable agent entrypoint, so the read-only agent smoke
+# matrix does not apply. They are built, trivy-gated, and pushed by the
+# build-vessels / push-to-registry matrices.
+EXCLUDED_VESSELS = {
+    "worker",
+    "aider",
+    "hello-world",
+    "codebuff",
+    "mesh",
+    "hermes",
+    "nestor",
+    "agamemnon",
+    "charybdis",
+    "keystone",
+    "odyssey",
+    "scylla",
+    "argus-exporter",
+    "argus-jetstream-consumer",
+    "atlas",
+    "nats-loki-bridge",
+}
 
 
 def _load_workflow() -> dict:
