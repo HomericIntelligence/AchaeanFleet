@@ -24,7 +24,9 @@
 # scans of rebuilt achaean-claude and achaean-aider images confirmed they no
 # longer fire (claude-code 2.1.233 bump + aider-chat 0.86.2 with
 # vessels/aider/requirements-security-overrides.txt). See PR history for the
-# removed structured blocks.
+# removed structured blocks. Reproducible check: run
+# scripts/verify-trivyignore-prune.sh (rebuilds + scans without --ignorefile);
+# the CI "Trivy scan vessel image (gate)" jobs are the authoritative gate.
 
 # CVE-2026-39823
 # Category: other
@@ -440,4 +442,3 @@ CVE-2026-23949
 # Expires: 2026-11-16
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-24049
-

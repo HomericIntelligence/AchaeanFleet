@@ -15,6 +15,13 @@ Covered assertions
   tree resolves against).
 * dagger/package.json keeps the ``tar`` override at >= 7.5.21 (clears
   GHSA-r292-9mhp-454m / CVE-2026-73566).
+
+Scope
+-----
+The pinned floors and the dagger tar override pre-exist this PR on main
+(landed via #765 / #761). This PR adds ONLY the regression guard plus the
+.trivyignore stale-suppression pruning (issue #760 step 3); these tests
+deliberately assert files that this diff itself does not modify.
 """
 
 from __future__ import annotations
