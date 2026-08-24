@@ -182,38 +182,6 @@ CVE-2025-66471
 # Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-21441
 
-# CVE-2026-39823
-# Category: other
-# Rationale: Go stdlib URL canonicalization — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29 that bundles a patched Go toolchain.
-# Exploitability: none — yq in the achaean-worker vessel processes only local YAML files and does not handle attacker-controlled URLs.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39823
-
-# CVE-2026-39825
-# Category: other
-# Rationale: Go stdlib net/http ReverseProxy query parameter forwarding — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
-# Exploitability: none — yq in the achaean-worker vessel is a YAML processor; it does not act as an HTTP reverse proxy and does not forward query parameters.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39825
-
-# CVE-2026-39826
-# Category: other
-# Rationale: Go stdlib html/template XSS via trusted template author script tag — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
-# Exploitability: none — yq in the achaean-worker vessel processes YAML, not HTML templates; the html/template code path is unreachable in this usage.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39826
-
-# CVE-2026-39822
-# Category: other
-# Rationale: Go stdlib os.Root symlink-following fix exists (Go 1.25.12 / 1.26.5) but no upstream binary rebuilt with a patched toolchain is available yet: latest GitHub CLI release v2.96.0 (2026-07-02, /usr/bin/gh in achaean-claude) is built with Go 1.26.4, and yq v4.53.3 (2026-06-06, /usr/local/bin/yq in achaean-worker) is also built with Go 1.26.4 — both predate the 1.26.5 fix. Tracking removal in issue #720.
-# Exploitability: low — os.Root traversal requires an attacker able to pre-place symlinks in directories the binary opens via os.Root; gh and yq run as developer CLIs inside the vessel with no attacker-controlled filesystem input path in this container's runtime context.
-# Expires: 2026-10-12
-# Reviewer: @mvillmow  PR #721
-CVE-2026-39822
-
 # CVE-2026-14257
 # Category: npm
 # Rationale: brace-expansion DoS — bundled with npm 11.18.0's dependency tree in achaean-base-* images. npm's bundled module tree cannot be overridden without forking npm; the fixed versions (5.0.8+) ship in newer npm releases than the pinned 11.18.0.
@@ -237,14 +205,6 @@ CVE-2026-69152
 # Expires: 2026-11-05
 # Reviewer: @mvillmow  PR #746
 CVE-2026-69192
-
-# CVE-2026-56852
-# Category: other
-# Rationale: golang.org/x/text DoS via invalid UTF-8 in the yq go binary bundled in achaean-base-* images. yq v4.53.3 (the latest release, 2026-06-06) still vendors x/text v0.37.0; fixed 0.39.0 is not yet available in any yq release, so the image cannot be upgraded to fix it.
-# Exploitability: low — yq runs on trusted in-repo YAML/JSON during vessel setup; no attacker-controlled input path reaches yq in the runtime context.
-# Expires: 2026-11-06
-# Reviewer: @mvillmow  PR #746
-CVE-2026-56852
 
 # GHSA-f88m-g3jw-g9cj
 # Category: npm
@@ -573,3 +533,27 @@ CVE-2026-23949
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-24049
 
+
+# CVE-2026-56864
+# Category: other
+# Rationale: golang.org/x/mod v0.38.0 (malicious GOSUMDB module-content finding, fixed in x/mod v0.40.0) vendored in /usr/bin/gh — GitHub CLI v2.98.0 (2026-08-20) is the latest release and still vendors x/mod v0.38.0; no gh release with x/mod >= 0.40.0 exists yet.
+# Exploitability: none — the vulnerable code path is Go module download/sum verification, which gh never performs at vessel runtime; gh talks only to the GitHub API.
+# Expires: 2026-11-22
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-56864
+
+# CVE-2026-56865
+# Category: other
+# Rationale: golang.org/x/mod v0.38.0 (malicious GOPROXY forgery finding, same fixed version v0.40.0 as CVE-2026-56864) vendored in /usr/bin/gh — GitHub CLI v2.98.0 is the latest release; no gh release vendors x/mod >= 0.40.0 yet.
+# Exploitability: none — gh does not act as a Go module consumer at runtime; GOPROXY forgery requires a module-download code path that never executes inside the vessel.
+# Expires: 2026-11-22
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-56865
+
+# CVE-2026-73566
+# Category: npm
+# Rationale: node-tar DoS via crafted long-path archive — bundled tar 7.5.19 in npm 11.18.0's dependency tree in achaean-base-* images (fixed in tar 7.5.21, ships in newer npm than pinned 11.18.0). npm's bundled module tree cannot be overridden without forking npm.
+# Exploitability: none — tar input is npm-internal and hard-coded, never attacker-controlled in the vessel runtime.
+# Expires: 2026-11-22
+# Reviewer: @mvillmow  PR #TBD
+CVE-2026-73566
