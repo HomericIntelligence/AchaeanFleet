@@ -48,14 +48,19 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     chmod +x /usr/local/lib/node_modules/npm/bin/npm-cli.js \
              /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
-# npm is intentionally NOT re-pinned here. node:26-slim (digest-pinned above)
-# bundles npm 11.19.0 with picomatch 4.0.4 (CVE-2026-33671 fix), tar 7.5.19,
-# minimatch 10.2.5, sigstore 4.1.1. pinning npm down to 11.18.0 was a downgrade
-# (the same class of bug as the pip downgrade removed above).
-# sigstore>=4.1.1 (CVE-2026-48815 fix)
+# Pin npm after copying it from node-source so this base does not inherit the
+# vulnerable tar 7.5.19 bundle (CVE-2026-73566).
+RUN npm install -g npm@11.19.1
 
 # Install Yarn
 RUN npm install -g yarn@1.22.22
+
+COPY bases/scripts/assert-npm-supply-chain.js /tmp/assert-npm-supply-chain.js
+COPY tests/assert-npm-supply-chain.test.js /tmp/assert-npm-supply-chain.test.js
+RUN NPM_SUPPLY_CHAIN_GUARD_PATH=/tmp/assert-npm-supply-chain.js \
+      node --test /tmp/assert-npm-supply-chain.test.js && \
+    node /tmp/assert-npm-supply-chain.js && \
+    rm /tmp/assert-npm-supply-chain.js /tmp/assert-npm-supply-chain.test.js
 
 # Create non-root user
 ARG USER_ID=1000
