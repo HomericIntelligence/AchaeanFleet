@@ -24,9 +24,16 @@ LABEL org.opencontainers.image.version=${VERSION}
 
 USER root
 
-# Upgrade npm to get picomatch>=4.0.4 (CVE-2026-33671 fix) and
-# sigstore>=4.1.1 (CVE-2026-48815 fix)
-RUN npm install -g npm@11.18.0
+# Upgrade npm to retain the existing security fixes and bundle tar>=7.5.21
+# (CVE-2026-73566 fix).
+RUN npm install -g npm@11.19.1
+
+COPY bases/scripts/assert-npm-supply-chain.js /tmp/assert-npm-supply-chain.js
+COPY tests/assert-npm-supply-chain.test.js /tmp/assert-npm-supply-chain.test.js
+RUN NPM_SUPPLY_CHAIN_GUARD_PATH=/tmp/assert-npm-supply-chain.js \
+      node --test /tmp/assert-npm-supply-chain.test.js && \
+    node /tmp/assert-npm-supply-chain.js && \
+    rm /tmp/assert-npm-supply-chain.js /tmp/assert-npm-supply-chain.test.js
 
 # Install system dependencies and apply security patches
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \

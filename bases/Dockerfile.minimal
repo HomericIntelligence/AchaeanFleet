@@ -48,12 +48,19 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     chmod +x /usr/local/lib/node_modules/npm/bin/npm-cli.js \
              /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
-# Upgrade npm to get picomatch>=4.0.4 (CVE-2026-33671 fix) and
-# sigstore>=4.1.1 (CVE-2026-48815 fix)
-RUN npm install -g npm@11.18.0
+# Upgrade npm to retain the existing security fixes and bundle tar>=7.5.21
+# (CVE-2026-73566 fix).
+RUN npm install -g npm@11.19.1
 
 # Install Yarn
 RUN npm install -g yarn@1.22.22
+
+COPY bases/scripts/assert-npm-supply-chain.js /tmp/assert-npm-supply-chain.js
+COPY tests/assert-npm-supply-chain.test.js /tmp/assert-npm-supply-chain.test.js
+RUN NPM_SUPPLY_CHAIN_GUARD_PATH=/tmp/assert-npm-supply-chain.js \
+      node --test /tmp/assert-npm-supply-chain.test.js && \
+    node /tmp/assert-npm-supply-chain.js && \
+    rm /tmp/assert-npm-supply-chain.js /tmp/assert-npm-supply-chain.test.js
 
 # Create non-root user
 ARG USER_ID=1000

@@ -19,6 +19,7 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -90,6 +91,26 @@ def test_npm_installs_are_pinned(dockerfile: Path) -> None:
     assert not unpinned, (
         f"{_relative(dockerfile)}: unpinned npm packages found: {unpinned}\n"
         "Pin with: npm install -g <pkg>@<exact-version>"
+    )
+
+
+def test_npm_manifest_used_by_matches_global_npm_pins() -> None:
+    """The npm manifest maps every Dockerfile that pins the npm CLI."""
+    dockerfiles_with_npm_pin: set[str] = set()
+
+    for dockerfile in ALL_DOCKERFILES:
+        for match in _NPM_INSTALL_RE.finditer(dockerfile.read_text()):
+            packages = match.group("packages").split()
+            if any(re.fullmatch(r"npm@[^\s]+", package) for package in packages):
+                dockerfiles_with_npm_pin.add(_relative(dockerfile))
+
+    versions = yaml.safe_load((REPO_ROOT / "versions.yml").read_text())
+    manifest_used_by = set(versions["tools"]["npm"]["used_by"])
+
+    assert manifest_used_by == dockerfiles_with_npm_pin, (
+        "versions.yml tools.npm.used_by must exactly match Dockerfiles that "
+        f"pin npm: manifest={sorted(manifest_used_by)}, "
+        f"Dockerfiles={sorted(dockerfiles_with_npm_pin)}"
     )
 
 
