@@ -182,34 +182,10 @@ CVE-2025-66471
 # Reviewer: @mvillmow  PR #TBD (re-review 2026-08-15)
 CVE-2026-21441
 
-# CVE-2026-39823
-# Category: other
-# Rationale: Go stdlib URL canonicalization — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29 that bundles a patched Go toolchain.
-# Exploitability: none — yq in the achaean-worker vessel processes only local YAML files and does not handle attacker-controlled URLs.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39823
-
-# CVE-2026-39825
-# Category: other
-# Rationale: Go stdlib net/http ReverseProxy query parameter forwarding — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
-# Exploitability: none — yq in the achaean-worker vessel is a YAML processor; it does not act as an HTTP reverse proxy and does not forward query parameters.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39825
-
-# CVE-2026-39826
-# Category: other
-# Rationale: Go stdlib html/template XSS via trusted template author script tag — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
-# Exploitability: none — yq in the achaean-worker vessel processes YAML, not HTML templates; the html/template code path is unreachable in this usage.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39826
-
 # CVE-2026-39822
 # Category: other
-# Rationale: Go stdlib os.Root symlink-following fix exists (Go 1.25.12 / 1.26.5) but no upstream binary rebuilt with a patched toolchain is available yet: latest GitHub CLI release v2.96.0 (2026-07-02, /usr/bin/gh in achaean-claude) is built with Go 1.26.4, and yq v4.53.3 (2026-06-06, /usr/local/bin/yq in achaean-worker) is also built with Go 1.26.4 — both predate the 1.26.5 fix. Tracking removal in issue #720.
-# Exploitability: low — os.Root traversal requires an attacker able to pre-place symlinks in directories the binary opens via os.Root; gh and yq run as developer CLIs inside the vessel with no attacker-controlled filesystem input path in this container's runtime context.
+# Rationale: Go stdlib os.Root symlink-following fix exists in Go 1.26.5, but the GitHub CLI binary in achaean-claude is still built with Go 1.26.4. yq was repaired independently by the v4.53.6 upgrade and no longer relies on this suppression. Tracking the remaining gh repair in #720/#779.
+# Exploitability: low — os.Root traversal requires an attacker able to pre-place symlinks in directories gh opens via os.Root; gh runs as a developer CLI with no attacker-controlled filesystem input path in this vessel runtime.
 # Expires: 2026-10-12
 # Reviewer: @mvillmow  PR #721
 CVE-2026-39822
@@ -237,14 +213,6 @@ CVE-2026-69152
 # Expires: 2026-11-05
 # Reviewer: @mvillmow  PR #746
 CVE-2026-69192
-
-# CVE-2026-56852
-# Category: other
-# Rationale: golang.org/x/text DoS via invalid UTF-8 in the yq go binary bundled in achaean-base-* images. yq v4.53.3 (the latest release, 2026-06-06) still vendors x/text v0.37.0; fixed 0.39.0 is not yet available in any yq release, so the image cannot be upgraded to fix it.
-# Exploitability: low — yq runs on trusted in-repo YAML/JSON during vessel setup; no attacker-controlled input path reaches yq in the runtime context.
-# Expires: 2026-11-06
-# Reviewer: @mvillmow  PR #746
-CVE-2026-56852
 
 # GHSA-f88m-g3jw-g9cj
 # Category: npm
@@ -572,4 +540,3 @@ CVE-2026-23949
 # Expires: 2026-11-16
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-24049
-
