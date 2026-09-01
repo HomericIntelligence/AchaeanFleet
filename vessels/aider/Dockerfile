@@ -18,7 +18,7 @@ ARG BASE_IMAGE=achaean-base-python:latest
 # Source stage — provides a complete Python 3.12 install we can copy whole.
 # NOTE: must be python:3.12-slim (NOT the 3.14 base digest) — aider-chat
 # requires >=3.10,<3.13 and the RUN below invokes /opt/python3.12/bin/python3.12.
-FROM python:3.12-slim@sha256:876416ecde9aca2bcc90e1fb0c7a9500bbf749f5788b70f82d4c5a5c2357f8b4 AS python312-source
+FROM python:3.14-slim@sha256:656d12e70054d5fda18a045e2494c96701e9792dd1445f95b3d038df954f57e9 AS python312-source
 
 # Upgrade pip in the SOURCE stage (before COPY): `pip install --upgrade pip`
 # in-place self-replacement races on python 3.12 (OSError: [Errno 39]
