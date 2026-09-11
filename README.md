@@ -9,6 +9,10 @@ Container infrastructure for the HomericIntelligence agent mesh.
 Builds OCI-compliant Docker images for every AI agent type.
 Agent provisioning lives in [Myrmidons](../Myrmidons).
 
+For pinned Codex workers and separate build-tool images, use the
+[Fleet image build contract](vessels/fleet/README.md). These targets require
+explicit wheel bundles and generate OCI SBOM/provenance artifacts before deployment.
+
 ## Architecture
 
 ```

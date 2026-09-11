@@ -6,6 +6,29 @@
 default:
     @just --list
 
+# Fleet build contract tests (stdlib only; no image build or dependency install).
+test-fleet-images:
+    python3 -m unittest discover -s tests -p 'test_fleet_images.py' -v
+
+# Resolve npm lock metadata only; this does not install a runtime or node_modules.
+fleet-lock-codex:
+    cd vessels/fleet && npm install --package-lock-only --ignore-scripts --no-audit --no-fund --cache "${FLEET_NPM_CACHE:-$HOME/.cache/npm}"
+
+# Validate a bundle and print the exact build command, without building.
+[positional-arguments]
+fleet-image-plan +ARGS:
+    python3 -m hephaestus.fleet_image plan "$@"
+
+# Package already-built target-platform wheels and their hash-locked requirements.
+[positional-arguments]
+fleet-image-bundle +ARGS:
+    python3 -m hephaestus.fleet_image bundle "$@"
+
+# Export one architecture to OCI with BuildKit-generated SBOM/provenance.
+[positional-arguments]
+fleet-image-build +ARGS:
+    python3 -m hephaestus.fleet_image build "$@"
+
 # =============================================================================
 # Variables
 # =============================================================================

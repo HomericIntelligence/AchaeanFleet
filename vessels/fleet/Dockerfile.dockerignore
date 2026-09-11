@@ -1,0 +1,10 @@
+**
+!vessels/
+!vessels/fleet/
+!vessels/fleet/Dockerfile
+!vessels/fleet/package.json
+!vessels/fleet/package-lock.json
+!vessels/fleet/entrypoint.sh
+!vessels/fleet/tool-artifacts.json
+!hephaestus/
+!hephaestus/fleet_image.py

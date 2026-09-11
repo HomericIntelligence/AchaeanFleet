@@ -1,0 +1,24 @@
+{
+  "just": {
+    "version": "1.51.0",
+    "linux/amd64": {
+      "url": "https://github.com/casey/just/releases/download/1.51.0/just-1.51.0-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "c8f085ca3e885723c341d06243fc291b5abfdc8bbe3b2c076b117de490387b59"
+    },
+    "linux/arm64": {
+      "url": "https://github.com/casey/just/releases/download/1.51.0/just-1.51.0-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5"
+    }
+  },
+  "pixi": {
+    "version": "0.70.2",
+    "linux/amd64": {
+      "url": "https://github.com/prefix-dev/pixi/releases/download/v0.70.2/pixi-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "9d0d72fc1fa1a8f87bfde943cf25d3575cb352cb516795d4dab21898bd98adea"
+    },
+    "linux/arm64": {
+      "url": "https://github.com/prefix-dev/pixi/releases/download/v0.70.2/pixi-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "19f61d069f7ab963f3b9d6794134f893c83ecd2b7cd698e19268daa3a1fa606b"
+    }
+  }
+}
