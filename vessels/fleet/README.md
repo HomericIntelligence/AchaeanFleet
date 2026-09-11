@@ -3,6 +3,9 @@
 These image sources implement the AchaeanFleet part of the
 [Fleet plan](https://github.com/HomericIntelligence/Odysseus/blob/main/docs/homeric-fleet-plan.md).
 They do not provision workers, manage authentication, or admit work.
+See the [component architecture](../../docs/fleet-images.md) and
+[promotion runbook](../../docs/runbooks/fleet-image-promotion.md) for artifact
+identity, offline HPC distribution, and responsibilities outside the build.
 
 `worker` contains Codex **0.153.4** and an explicitly supplied Hephaestus wheel.
 `build-tools` contains the same Python toolchain and Hephaestus package without
@@ -179,7 +182,8 @@ A separate lifecycle probe identified a live detached synthetic child by its
 nonce, PID, and kernel start time immediately before removing its container.
 It did not signal the child first. After removal, both recorded process identities,
 the cgroup leaf, and its enclosing scope were absent. This establishes that bounded
-container lifecycle check; production supervisor integration remains untested.
+container lifecycle check; production supervisor integration has not passed its
+separate acceptance check.
 
 Both private images were then refreshed from the current Hephaestus snapshot.
 The installed workers started with empty authentication storage and rejected a
@@ -190,12 +194,13 @@ history; they predate this admission guard and must not be deployed.
 
 The capped Podman path produces a local OCI archive. Its export can have a
 different manifest digest from the engine's stored image; retain both identities
-and the archive checksum. It does not satisfy the BuildKit SBOM/provenance
+and the archive checksum. Independent Syft scans produced SPDX documents bound to
+the actual archived bytes. This does not satisfy the BuildKit SBOM/provenance
 attestation gate above. Do not create a successful BuildKit result record for
 such an export. Raw local artifacts remain outside the repository.
 
 Native cluster execution, session isolation, BuildKit attestations, approved
-registry publication, and Fleet workloads remain required gates. No image has
+artifact distribution, and Fleet workloads remain required gates. No image has
 been published or admitted. These local builds do not establish account capacity
 or the 108-agent acceptance run. Future worker changes require another source
 snapshot, wheel build, image build, and installed-worker check.
