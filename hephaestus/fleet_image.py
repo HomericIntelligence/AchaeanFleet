@@ -89,6 +89,7 @@ def verify_export(path: Path, expected_digest: str) -> dict:
     """
     found: set[str] = set()
     image_subjects: set[str] = set()
+    image_configs: dict[str, str] = {}
     statements: list[dict] = []
     with tarfile.open(path, "r") as archive:
         def verify_blob(descriptor: dict) -> None:
@@ -145,13 +146,14 @@ def verify_export(path: Path, expected_digest: str) -> dict:
                         verify_blob(layer)
                 if not attested:
                     image_subjects.add(checksum)
+                    image_configs[checksum] = document["config"]["digest"]
             elif "predicateType" in document:
                 statements.append(document)
 
-        for descriptor in read_json("index.json").get("manifests", []):
-            visit(descriptor)
-    if expected_digest not in found:
-        raise ValueError("BuildKit digest is not present in the exported OCI index")
+        roots = read_json("index.json").get("manifests", [])
+        if len(roots) != 1 or roots[0].get("digest") != expected_digest:
+            raise ValueError("BuildKit digest must identify the single exported OCI output root")
+        visit(roots[0])
     predicate_types: set[str] = set()
     covered: dict[str, set[str]] = {subject: set() for subject in image_subjects}
     for statement in statements:
@@ -166,7 +168,8 @@ def verify_export(path: Path, expected_digest: str) -> dict:
                           not any(kind.startswith("https://slsa.dev/provenance/") for kind in kinds)
                           for kinds in covered.values()):
         raise ValueError("each exported image requires an SPDX SBOM and provenance attestation")
-    return {"predicate_types": sorted(predicate_types), "image_subjects": sorted(image_subjects)}
+    return {"predicate_types": sorted(predicate_types), "image_subjects": sorted(image_subjects),
+            "image_configs": image_configs}
 
 
 def validate_bundle(path: Path, platform: str) -> dict:

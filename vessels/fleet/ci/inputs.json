@@ -1,0 +1,17 @@
+{
+  "schema": "hi/fleet-ci-inputs/v1",
+  "hephaestusRevision": "1ec64a7a948ac10a8d59d232833922ddf9ac8f2c",
+  "hephaestusRepository": "https://github.com/HomericIntelligence/Hephaestus.git",
+  "bases": {
+    "amd64": {
+      "node": "docker.io/library/node@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96",
+      "python": "docker.io/library/python@sha256:2f2e5a876c71a6757f55ec57f2add0225ddaf01c802a33fcc29073943f94d907",
+      "sbom": "docker.io/docker/buildkit-syft-scanner@sha256:187e1892a7752c9384c59aba9517dd8e40610b748c72773e87b63720514463c2"
+    },
+    "arm64": {
+      "node": "docker.io/library/node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f",
+      "python": "docker.io/library/python@sha256:ae8c3b6bb3d02ffffa2bee0bed8c7c99b9478bd042ff4d79a5bbd6eb10398864",
+      "sbom": "docker.io/docker/buildkit-syft-scanner@sha256:d802508fd7d9841805c8e616c9965c5dbca0c6c415093ed506309d1c58bdd6c8"
+    }
+  }
+}

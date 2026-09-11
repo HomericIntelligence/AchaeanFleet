@@ -239,7 +239,7 @@ build-all:
     @echo "=== All images built ==="
 
 # Verify all vessel images exist locally (podman or docker)
-# Note: achaean-aider excluded per #665 (CVE chain); restore by adding 'aider' to the loop below.
+# Aider is enabled with the other legacy vessels (restored by #770).
 verify:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -305,17 +305,27 @@ test: test-shell
     @echo "=== Running image smoke tests ==="
     npx ts-node dagger/pipeline.ts test
 
-# Validate all compose YAML files parse without errors (no images needed)
+# Validate the supported mesh/TLS and standalone smoke combinations (no images needed)
 test-compose:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "=== Validating compose files ==="
-    for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml compose/docker-compose.smoke.yml; do
+    for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml; do
         echo "  Checking $f ..."
-        {{compose_cmd}} -f "$f" config --quiet || { echo "FAIL: $f"; exit 1; }
+        {{compose_cmd}} -f compose/docker-compose.caddy.yml -f "$f" config --quiet
         echo "  OK: $f"
     done
+    {{compose_cmd}} -f compose/docker-compose.smoke.yml config --quiet
     echo "=== All compose files valid ==="
+
+# Build source-pinned Fleet images and run isolated native Linux packaging checks.
+[positional-arguments]
+fleet-ci +ARGS:
+    python3 -m hephaestus.fleet_ci "$@"
+
+# Focused contract checks; actual images/runtime are exercised by fleet-ci.
+test-fleet-ci:
+    python3 -m unittest tests.test_fleet_ci tests.test_fleet_images
 
 # Build worker vessel, start it, probe /health on port 23080, then tear down
 test-smoke:
@@ -791,9 +801,19 @@ clean-all:
 
 # === Containerized CI (podman by default) ===
 
-# Build the CI container image (podman first, docker fallback)
+# Build the CI container image with the selected engine; failures propagate.
 ci-build:
-    podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local . || docker build -f ci/Containerfile -t achaeanfleet-ci:local .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    engine="${CONTAINER_ENGINE:-}"
+    if [[ -z "$engine" ]]; then
+        if command -v podman >/dev/null; then engine=podman; else engine=docker; fi
+    fi
+    args=(build --cpu-period=100000 --cpu-quota=200000 --memory=2g --memory-swap=2g)
+    if [[ "$(basename "$engine")" == podman ]]; then
+        args+=(--ignorefile ci/.dockerignore)
+    fi
+    exec "$engine" "${args[@]}" -f ci/Containerfile -t achaeanfleet-ci:local .
 
 # Run CI lint checks in container
 ci-lint:
@@ -842,3 +862,10 @@ ci-symlink-check:
 # Run all CI checks in container
 ci-all:
     ./scripts/run_ci_local.sh all
+
+# Lightweight source gates; these do not build or publish container images.
+ci-source-check MODE:
+    ./scripts/run_ci_local.sh {{quote(MODE)}}
+
+ci-security-dependency-scan:
+    ./scripts/run_ci_local.sh security-dependency-scan

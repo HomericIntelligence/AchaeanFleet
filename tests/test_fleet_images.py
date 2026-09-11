@@ -196,7 +196,7 @@ class FleetImageTests(unittest.TestCase):
         self.assertTrue(hasattr(fleet_image, "verify_export"),
                         "Build success must verify the exported attestations")
 
-        def export(predicate_types, subject_override=None, damage_layer=False):
+        def export(predicate_types, subject_override=None, damage_layer=False, claimed="root"):
             blobs = {}
 
             def blob(data):
@@ -228,16 +228,24 @@ class FleetImageTests(unittest.TestCase):
                     member = tarfile.TarInfo(name)
                     member.size = len(data)
                     archive.addfile(member, io.BytesIO(data))
-            return path, index["digest"]
+            return path, {"root": index, "attestation": attestation, "statement": statements[0]}[claimed]["digest"]
 
         kinds = ["https://spdx.dev/Document", "https://slsa.dev/provenance/v1"]
         path, expected = export(kinds)
         evidence = fleet_image.verify_export(path, expected)
         self.assertEqual(set(evidence["predicate_types"]), set(kinds))
+        config_digest = "sha256:" + hashlib.sha256(
+            json.dumps({"architecture": "arm64", "os": "linux"}).encode()).hexdigest()
+        self.assertEqual(set(evidence.get("image_configs", {}).values()), {config_digest})
         for predicates, subject in [(kinds[:1], None), (kinds, "0" * 64)]:
             with self.subTest(predicates=predicates, subject=subject):
                 path, expected = export(predicates, subject)
                 with self.assertRaises(ValueError):
+                    fleet_image.verify_export(path, expected)
+        for claimed in ("attestation", "statement"):
+            with self.subTest(claimed=claimed):
+                path, expected = export(kinds, claimed=claimed)
+                with self.assertRaisesRegex(ValueError, "output root"):
                     fleet_image.verify_export(path, expected)
         path, expected = export(kinds, damage_layer=True)
         with self.assertRaisesRegex(ValueError, "OCI blob"):

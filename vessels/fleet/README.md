@@ -103,7 +103,9 @@ The helper preserves raw BuildKit metadata and verifies metadata, configuration,
 and filesystem-layer hashes, image subjects, and required predicate types before writing
 `build-result.json`. This is content binding, not signature verification or SLSA
 certification. A failed build/verification retains diagnostic artifacts without
-writing a successful result. No recipe pushes, loads, starts, or registers an image.
+writing a successful result. This image-build recipe does not push, load, start,
+or register an image. The separate `fleet-ci` recipe loads verified images for
+bounded synthetic runtime checks and removes its own containers afterward.
 
 Keep admission disabled and image references unset until actual builds, scanner
 review, image startup, worker protocol checks, and the approved registry process
@@ -149,13 +151,13 @@ dependency/OCI fixtures, never live provider credentials. They cover offline inp
 validation, command generation, checksums, entrypoint dispatch/version checks, and
 attestation binding.
 
-Fleet is intentionally absent from the legacy vessel smoke matrix while its
-explicit wheel contexts and digest inputs await dedicated CI wiring, tracked in
+Fleet has a dedicated native image/attestation/runtime workflow because its
+explicit wheel contexts do not fit the legacy vessel smoke matrix, tracked in
 [issue #797](https://github.com/HomericIntelligence/AchaeanFleet/issues/797).
-The daemon-free tests run with the existing pytest suite. They do not replace
-the required CI image build and runtime smoke checks before activation.
-The [dedicated CI proposal](ci-proposal.md) records the concrete inputs, commands,
-and remaining runtime-probe contract for human review.
+The coverage guard requires both native Linux architectures and actual build/run
+commands. The daemon-free tests also run with the existing pytest suite. They do
+not replace successful image build and runtime execution. The
+[dedicated CI contract](ci-proposal.md) records inputs, commands, and evidence.
 
 Local arm64 and amd64 image builds were exercised on 2026-09-11 with an existing
 rootless Podman engine. The amd64 build used its pre-existing QEMU handler; this
@@ -182,8 +184,9 @@ A separate lifecycle probe identified a live detached synthetic child by its
 nonce, PID, and kernel start time immediately before removing its container.
 It did not signal the child first. After removal, both recorded process identities,
 the cgroup leaf, and its enclosing scope were absent. This establishes that bounded
-container lifecycle check; production supervisor integration has not passed its
-separate acceptance check.
+container lifecycle check. A later same-kernel production-supervisor probe passed
+its direct contained-exec lifecycle and causal disposal. Worker-to-supervisor
+normal-tool routing remains a separate acceptance check.
 
 Both private images were then refreshed from the current Hephaestus snapshot.
 The installed workers started with empty authentication storage and rejected a

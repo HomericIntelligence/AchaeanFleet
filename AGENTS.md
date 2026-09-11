@@ -21,8 +21,25 @@ AchaeanFleet is container infrastructure for the HomericIntelligence agent mesh.
 
 ### What this repo is
 
-AchaeanFleet builds OCI-compliant Docker images for each AI agent type supported by the mesh.
-It is **infrastructure only** — no agent logic, no ProjectAgamemnon modifications.
+AchaeanFleet builds OCI images for the existing mesh vessels and for Fleet workers
+and build tools. It is **infrastructure only**: Agamemnon owns admission and
+orchestration, Myrmidons owns desired pools, and Hephaestus owns worker execution.
+Odysseus supplies the Fleet web interface.
+
+The legacy vessels use the base-image and sidecar contracts below. The standalone
+`vessels/fleet/Dockerfile` has separate `worker` and `build-tools` targets. It
+installs an actual source-built Hephaestus wheel from a closed, hash-locked bundle.
+Its worker entrypoint is `hephaestus-fleet-worker`; its build-tools entrypoint is
+`just`. It does not use the legacy sidecar, health endpoint, or Compose secrets.
+Follow [Fleet image architecture](docs/fleet-images.md), the
+[build contract](vessels/fleet/README.md), and the
+[promotion runbook](docs/runbooks/fleet-image-promotion.md) for these targets.
+
+Fleet build checks must produce real OCI bytes and verify their image identity,
+SBOM, and provenance. Runtime checks use empty private authentication storage and
+synthetic work only. An image build or test cannot admit tasks or authorize image
+publication; those are separate component decisions. Keep provider credentials,
+host homes, and engine sockets out of image contexts and worker mounts.
 
 ### What this repo is NOT
 
@@ -106,7 +123,7 @@ See `compose/.env.example` for per-agent workspace scope configuration
 
 ## Agamemnon agent sidecar integration
 
-The base images are designed to work with the Agamemnon agent sidecar. The binary is mounted at runtime:
+The legacy base images use the Agamemnon agent sidecar. The binary is mounted at runtime:
 
 ```yaml
 volumes:
@@ -202,14 +219,14 @@ AI binary installed inside the vessel; it is used by the runtime sidecar
 (ProjectAgamemnon) or passed explicitly as `docker run <vessel> <binary> <args>`.
 Do not write plans assuming `entrypoint.sh` auto-launches `$AGENT_PROGRAM`.
 
-The **only** vessel that overrides this is `worker`, which has no AI binary
+Among legacy vessels, `worker` overrides this because it has no AI binary
 to run and instead serves the healthcheck endpoint directly:
 
 ```dockerfile
 CMD ["node", "/app/healthcheck-server.js"]
 ```
 
-When adding a new agent vessel, set `ENV AGENT_PROGRAM=...` (and optionally
+When adding a legacy agent vessel, set `ENV AGENT_PROGRAM=...` (and optionally
 `ENV AGENT_HEADLESS_FLAG=...`) — do **not** add a `CMD`. The runtime sidecar
 will supply the command at container start time.
 

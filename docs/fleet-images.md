@@ -13,14 +13,16 @@ vessel matrix. It consumes a real Hephaestus wheel, the target platform's comple
 hash-locked dependency closure, reviewed base-image digests, and the pinned Codex
 0.153.4 package. `worker` and `build-tools` support Linux amd64 and arm64. Source
 snapshots include relevant uncommitted files through explicit file hashes; a Git
-revision alone cannot identify a dirty build.
+revision alone cannot identify a dirty build. The dedicated CI path instead
+archives only its pinned Hephaestus commit and builds the wheel from that archive.
 
 The image helper validates and freezes those inputs. Its BuildKit path exports
 OCI bytes with SBOM and provenance attestations and checks their content binding.
 It does not publish images, register pools, create credentials, or start workers.
 The existing capped Podman builds produced real private images, OCI exports, and
 separately generated SPDX documents. They did not satisfy the BuildKit attestation
-gate. The [dedicated CI proposal](../vessels/fleet/ci-proposal.md) remains unwired.
+gate. The [dedicated CI workflow](../vessels/fleet/ci-proposal.md) now covers both
+native platforms and targets; its new actual BuildKit/runtime runs remain pending.
 
 ## Artifact identity and distribution
 
@@ -80,7 +82,9 @@ deployable worker release.
 
 Separate synthetic arm64 probes established direct contained exec-server file and
 process behavior and one causal live-child disposal. They used no model turns.
-The native nested sandbox probe failed at a bubblewrap `devpts` mount. Normal model
-tool routing, supervisor integration, account capacity, actual HPC execution, and
+The native nested sandbox probe failed at a bubblewrap `devpts` mount. A subsequent
+same-kernel Hephaestus supervisor probe passed its direct contained-exec lifecycle,
+including actual kernel checks and causal disposal, without a model turn. Normal
+model-tool routing, worker-to-supervisor integration, account capacity, actual HPC execution, and
 the combined 108-agent acceptance remain independent gates. Image references must
 remain disabled for admission until their required gates pass.

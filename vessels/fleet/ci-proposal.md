@@ -1,9 +1,9 @@
-# Proposed dedicated Fleet image checks
+# Dedicated Fleet image checks
 
-Status: Proposed. This is the review input for
-[issue #797](https://github.com/HomericIntelligence/AchaeanFleet/issues/797),
-not an installed workflow. Changes under `.github/workflows/` require human
-review before editing. The legacy vessel matrix does not validate Fleet images.
+The implementation for [issue #797](https://github.com/HomericIntelligence/AchaeanFleet/issues/797)
+is wired in [fleet-images.yml](../../.github/workflows/fleet-images.yml). Its first
+actual BuildKit/runtime runs remain pending. The legacy vessel matrix does not
+validate Fleet images, and passing contract tests cannot substitute for this job.
 
 ## Inputs and job boundaries
 
@@ -20,40 +20,46 @@ review before editing. The legacy vessel matrix does not validate Fleet images.
    Each matrix entry owns a fresh output directory. Keep job concurrency bounded
    by runner capacity; do not assume a host can run the entire matrix at once.
 
-The image job executes these existing commands with its reviewed input paths:
+The job runs on native amd64 and arm64 Linux runners. It reads the reviewed
+source/base/scanner pins in `ci/inputs.json`, archives that exact Hephaestus commit,
+builds its wheel with `ci/build-requirements.txt`, and downloads each platform's
+hash-locked runtime closure. Worktree changes and private files are excluded from
+the Hephaestus source archive. A compatible Buildx builder and native Podman
+runtime are prerequisites for the local equivalent:
 
 ```bash
-just test-fleet-images
-just fleet-image-bundle \
-  --platform "$FLEET_PLATFORM" --wheelhouse "$FLEET_WHEELHOUSE" \
-  --requirements "$FLEET_REQUIREMENTS" \
-  --hephaestus-revision "$HEPHAESTUS_SOURCE_REVISION" \
-  --output "$FLEET_BUNDLE"
-just fleet-image-build \
-  --platform "$FLEET_PLATFORM" --target "$FLEET_TARGET" \
-  --bundle "$FLEET_BUNDLE" --node-base "$FLEET_NODE_BASE" \
-  --runtime-base "$FLEET_PYTHON_BASE" \
-  --sbom-generator "$FLEET_SBOM_GENERATOR" --output "$FLEET_IMAGE_OUTPUT"
+just test-fleet-ci
+just fleet-ci run --platform "$FLEET_PLATFORM" \
+  --source "$HEPHAESTUS_CHECKOUT" --output "$FLEET_CI_OUTPUT" \
+  --engine /usr/bin/podman
 ```
 
 ## Required runtime and artifact checks
 
-The runtime job consumes the exact built image identity and a reviewed Hephaestus
-probe from the same source checkpoint. It must check the pinned Codex version,
+Use `plan` to inspect commands without creating output. Use `prepare` to build
+only the wheel/bundle; `build` continues that prepared output through both image
+targets and runtime checks. Every new preparation requires a fresh output path.
+BuildKit is pinned to verified upstream v0.33.0 registry bytes and capped at two
+CPUs/two GiB using its [documented driver limits](https://docs.docker.com/build/builders/drivers/docker-container/).
+
+The runtime job consumes the exact verified OCI image configuration identity and
+the [packaging probe](ci/runtime_probe.py). It checks the pinned Codex version,
 worker initialization and inventory, private storage, nonroot execution, resource
 limits, orderly shutdown, and refusal of admission without the required execution
 boundary. It uses empty authentication storage and synthetic identities only.
-It must neither start model work nor change account authentication. The reviewed
-probe and isolated launch recipe are still required implementation inputs; the
-image helper does not currently implement this job.
+It never starts a model turn or changes account authentication. Each disposable
+container has one CPU, one GiB, 128 PIDs, no network, a read-only root, dropped
+capabilities, and fresh workspace/state mounts. The probe checks actual effective
+capabilities and no-new-privileges; the host retains engine resource inspection.
+The build-tools check executes a benign `just` recipe. Cleanup requires the
+persisted random ownership label, exact image/CID, and successful removal readback.
 
 Archive the generated OCI bytes, raw builder metadata, content-verification result,
 SBOM and provenance attestations, and unedited runtime output. Fail the job on
 missing predicates, mismatched hashes, unexpected runtime behavior, or incomplete
 cleanup. A standalone SPDX scan does not substitute for the attestation check.
 
-Replace Fleet's pending legacy-matrix exclusion with a guard for its dedicated
-jobs when reviewed CI wiring covers these build and runtime contracts.
+The smoke-matrix test guards Fleet's separate native jobs and actual run command.
 Registry promotion remains a separate approved
 step that preserves the verified image and attestations. Neither these synthetic
 checks nor a passing legacy matrix establishes cluster execution or Fleet capacity.

@@ -33,6 +33,11 @@ registry push, Slurm allocation, pool enablement, or agent task. Follow the
    content, and actual SBOM/provenance predicates before treating the BuildKit gate
    as passed. A standalone Syft SPDX scan of a Podman export records useful package
    evidence but cannot replace those predicates.
+   For the pinned CI checkpoint, `just fleet-ci run --platform "$FLEET_PLATFORM"
+   --source "$HEPHAESTUS_CHECKOUT" --output "$FLEET_CI_OUTPUT"` performs source-wheel
+   preparation, both image builds, and the following synthetic runtime checks.
+   Follow the [dedicated CI contract](../../vessels/fleet/ci-proposal.md) for native
+   runner and builder requirements.
 4. Run the reviewed no-auth runtime checks against that exact image. Verify Codex
    0.153.4, the installed worker entrypoint, nonroot execution, private storage,
    initialization/inventory, current admission refusal, resource limits, and
