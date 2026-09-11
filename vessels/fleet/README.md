@@ -146,6 +146,14 @@ dependency/OCI fixtures, never live provider credentials. They cover offline inp
 validation, command generation, checksums, entrypoint dispatch/version checks, and
 attestation binding.
 
+Fleet is intentionally absent from the legacy vessel smoke matrix while its
+explicit wheel contexts and digest inputs await dedicated CI wiring, tracked in
+[issue #797](https://github.com/HomericIntelligence/AchaeanFleet/issues/797).
+The daemon-free tests run with the existing pytest suite. They do not replace
+the required CI image build and runtime smoke checks before activation.
+The [dedicated CI proposal](ci-proposal.md) records the concrete inputs, commands,
+and remaining runtime-probe contract for human review.
+
 Local arm64 and amd64 image builds were exercised on 2026-09-11 with an existing
 rootless Podman engine. The amd64 build used its pre-existing QEMU handler; this
 does not establish execution on M1 or M2. The arm64 startup probe confirmed

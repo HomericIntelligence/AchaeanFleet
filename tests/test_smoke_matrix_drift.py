@@ -49,7 +49,12 @@ SMOKE_JOB_NAME = "test-smoke-vessels"
 # ``mesh`` is excluded until its pip git dependencies (hephaestus[mesh],
 # telemachy register-epic) are merged to their main branches — the image
 # build would fail in CI before then. Activation tracked in #713.
-EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff", "mesh"}
+# ``fleet`` is an unregistered image checkpoint tracked in #797. It requires
+# explicit platform wheel contexts and digest inputs, which this legacy
+# single-BASE_IMAGE matrix cannot provide. Its contract tests run in pytest;
+# dedicated CI image builds and runtime smoke tests remain required before
+# activation. Replace this exclusion with a dedicated-job coverage guard then.
+EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff", "mesh", "fleet"}
 
 
 def _load_workflow() -> dict:
