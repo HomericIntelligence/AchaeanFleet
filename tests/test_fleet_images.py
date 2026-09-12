@@ -85,6 +85,25 @@ class FleetImageTests(unittest.TestCase):
         self.assertIn("type=oci,dest=" + str(output / "image.oci.tar"), plan["command"])
         self.assertFalse(output.exists())
 
+    def test_each_export_has_a_private_name_for_buildkit_attestation_subjects(self):
+        names = set()
+        for platform in ("linux/amd64", "linux/arm64"):
+            self.manifest["platform"] = platform
+            self.save_manifest()
+            for target in ("worker", "build-tools"):
+                with self.subTest(platform=platform, target=target):
+                    result = self.command("--platform", platform, "--target", target)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    command = json.loads(result.stdout)["command"]
+                    self.assertIn("--tag", command,
+                                  "BuildKit leaves in-toto subjects empty for unnamed OCI exports")
+                    name = command[command.index("--tag") + 1]
+                    self.assertRegex(name, r"^localhost/[a-z0-9/-]+:[a-z0-9._-]+$")
+                    names.add(name)
+                    self.assertNotIn("--push", command)
+                    self.assertNotIn("--load", command)
+        self.assertEqual(len(names), 4, "targets and platforms need distinct private export names")
+
     def test_changed_dependency_is_rejected_before_build(self):
         (self.bundle / "requirements.txt").write_text("unexpected input")
         result = self.command()

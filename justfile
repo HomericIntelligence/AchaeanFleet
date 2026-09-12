@@ -44,7 +44,7 @@ bases := "achaean-base-node achaean-base-python achaean-base-minimal"
 vessels := "claude codex aider goose cline opencode codebuff ampcode worker"
 
 # Auto-detect container runtime: prefer podman, fall back to docker
-container_cmd := `which podman 2>/dev/null && echo podman || echo docker`
+container_cmd := env_var_or_default("CONTAINER_CMD", `command -v podman 2>/dev/null || echo docker`)
 
 # Auto-detect compose command
 compose_cmd := `which podman-compose 2>/dev/null && echo podman-compose || echo "docker compose"`
@@ -182,6 +182,8 @@ runtime:
 build-bases:
     #!/usr/bin/env bash
     set -euo pipefail
+    # Podman otherwise drops the legacy Dockerfile HEALTHCHECK and SHELL metadata.
+    export BUILDAH_FORMAT=docker
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     vcs_ref="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -200,6 +202,7 @@ build-bases:
 build-vessel NAME:
     #!/usr/bin/env bash
     set -euo pipefail
+    export BUILDAH_FORMAT=docker
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     case "{{NAME}}" in
         claude|codex|cline|codebuff|ampcode) base="achaean-base-node" ;;

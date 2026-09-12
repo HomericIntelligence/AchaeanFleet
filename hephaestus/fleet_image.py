@@ -255,6 +255,8 @@ def image_plan(args: argparse.Namespace) -> dict:
         "docker", "buildx", "build", "--platform", args.platform,
         "--file", str(ROOT / "vessels/fleet/Dockerfile"),
         "--target", args.target,
+        # BuildKit uses the export name to populate each in-toto subject.
+        "--tag", f"localhost/homeric-fleet-{args.target}:{args.platform.split('/')[1]}",
         "--build-context", f"hephaestus_bundle={bundle}",
         "--build-arg", f"NODE_BASE_IMAGE={args.node_base}",
         "--build-arg", f"RUNTIME_BASE_IMAGE={args.runtime_base}",

@@ -97,6 +97,12 @@ Run the same arguments with `just fleet-image-build` after a builder is availabl
 The output directory must not exist. Use `--target build-tools` for the tool image.
 Repeat for `linux/amd64` with its wheel bundle and a different output directory.
 
+Each OCI export uses a private `localhost/homeric-fleet-<target>:<architecture>`
+name. BuildKit uses that name to populate the in-toto subject in its SBOM and
+provenance statements. The name is metadata inside the exported archive; the
+recipe does not push it to a registry or load it into an engine. The verifier
+still requires each statement's digest to match the exported image.
+
 The recipe freezes an allowlisted source context and a verified wheel context.
 BuildKit exports `image.oci.tar` with SPDX SBOM and provenance attestations.
 The helper preserves raw BuildKit metadata and verifies metadata, configuration,

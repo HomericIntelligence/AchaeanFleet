@@ -11,6 +11,9 @@
 
 set -euo pipefail
 
+# Legacy vessels require Docker HEALTHCHECK metadata; Podman's OCI default omits it.
+export BUILDAH_FORMAT=docker
+
 TAG="${TAG:-latest}"
 CONTAINER_CMD="${CONTAINER_CMD:-docker}"
 echo "Container runtime: ${CONTAINER_CMD}"

@@ -127,6 +127,11 @@ CONTAINER_CMD=podman just build-all
 CONTAINER_CMD=podman just build-vessel claude
 ```
 
+The `build-bases`, `build-vessel`, and `build-all` recipes select Docker image
+format in Podman so that Dockerfile `HEALTHCHECK` and `SHELL` metadata survive the
+build. Fleet's dedicated BuildKit recipes still export OCI archives with SBOM and
+provenance attestations.
+
 > **Note:** Podman rootless requires that volume mounts for the Agamemnon sidecar use the `:Z`
 > SELinux label on SELinux-enforcing hosts. The Compose files in `compose/` already include `:Z`
 > where needed.
