@@ -24,7 +24,10 @@ PRUNED_IDS=(
 )
 
 TRIVY="${TRIVY:-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image}"
-SCAN_ARGS=(--severity HIGH,CRITICAL --ignore-unfixed)
+# The quotes around "HIGH,CRITICAL" are load-bearing: trivy takes it as a single
+# --severity value, and shellcheck (SC2054) otherwise misreads the comma as an
+# attempt to separate array elements. Do not drop them.
+SCAN_ARGS=(--severity "HIGH,CRITICAL" --ignore-unfixed)
 
 scan() {
   local image="$1"
