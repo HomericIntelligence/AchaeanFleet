@@ -341,6 +341,23 @@ pip index versions aider-chat
    just verify
    ```
 
+**Native platform selection for copied interpreters**
+
+Aider copies Python 3.12 from an official source stage into the native shared base.
+Pin that source to an immutable multi-platform index containing Linux amd64 and
+arm64 images; a single-platform digest can copy the wrong interpreter into the
+runtime. Keep the Python release compatible with Aider's interpreter constraint.
+When updating this pin, refresh the primary registry input fixtures in
+`tests/fixtures/aider-python-registry.json` and run:
+
+```bash
+just --command python3 -m pytest tests/test_aider_python_platforms.py -v
+```
+
+The fixture's body strings preserve exact registry response bytes for digest and
+platform checks. They are dependency inputs, not build or runtime evidence. Build
+and verify the affected image on both native architectures before qualification.
+
 **Automated Dependabot PRs**
 
 Dependabot is configured in `.github/dependabot.yml` to open monthly PRs for Docker base image

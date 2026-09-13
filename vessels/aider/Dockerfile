@@ -15,10 +15,10 @@
 # only).
 ARG BASE_IMAGE=achaean-base-python:latest
 
-# Source stage — provides a complete Python 3.12 install we can copy whole.
+# Source stage — the immutable index selects native amd64 or arm64 Python 3.12.14.
 # NOTE: must be python:3.12-slim (NOT the 3.14 base digest) — aider-chat
 # requires >=3.10,<3.13 and the RUN below invokes /opt/python3.12/bin/python3.12.
-FROM python:3.12-slim@sha256:876416ecde9aca2bcc90e1fb0c7a9500bbf749f5788b70f82d4c5a5c2357f8b4 AS python312-source
+FROM python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea AS python312-source
 
 # Upgrade pip in the SOURCE stage (before COPY): `pip install --upgrade pip`
 # in-place self-replacement races on python 3.12 (OSError: [Errno 39]
