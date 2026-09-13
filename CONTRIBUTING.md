@@ -521,21 +521,18 @@ That workflow has no path filters and runs for pull requests, pushes to `main`, 
 `merge_group` events. Renaming a listed job, adding a condition that skips it, or removing one of
 those triggers can leave a required context pending and block every pull request or queue group.
 
-### Merge Queue Activation
+### Merge Queue Validation
 
-Merge-queue workflow support is repository-owned, but the live ruleset is not. After the readiness
-change for [issue #722](https://github.com/HomericIntelligence/AchaeanFleet/issues/722) merges and
-passes strict review, a human operator must update the existing `homeric-main-baseline` ruleset for
-`refs/heads/main`. Preserve every existing rule, bypass actor, required context, and enforcement
-setting, and add this rule:
+The live `homeric-main-baseline` ruleset for `refs/heads/main` already has a merge queue.
+Its configuration, read on 2026-09-12, retains all 12 required contexts above and this queue rule:
 
 ```json
 {
   "type": "merge_queue",
   "parameters": {
     "check_response_timeout_minutes": 60,
-    "grouping_strategy": "ALLGREEN",
-    "max_entries_to_build": 10,
+    "grouping_strategy": "HEADGREEN",
+    "max_entries_to_build": 2,
     "max_entries_to_merge": 5,
     "merge_method": "SQUASH",
     "min_entries_to_merge": 1,
@@ -544,9 +541,14 @@ setting, and add this rule:
 }
 ```
 
-Activation is deliberately separate from the implementation pull request. After activation, read
-the live ruleset back and verify one representative pull request enters the `main` queue, emits all
-12 required contexts from a `merge_group` / `checks_requested` workflow run, and merges by squash.
+The required workflow must emit all 12 contexts on each `merge_group` / `checks_requested`
+commit. Its `merge-gate` job reports the full matrix result. The separate `merge-queue-smoke`
+check adds quick validation and cannot replace any required context or that aggregate result.
+
+Workflow changes do not change the live ruleset. Preserve its required contexts, bypass actors
+and queue limits. After the workflow correction is merged, verify a representative queued pull
+request emits the complete required matrix on the actual queue commit before it merges by
+squash. Local workflow guards and PR checks do not establish that queue execution occurred.
 
 ### Never Push Directly to Main
 
