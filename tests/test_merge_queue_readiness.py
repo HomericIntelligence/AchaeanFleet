@@ -29,7 +29,7 @@ REQUIRED_CONTEXTS = {
 }
 
 MERGE_GATE_CONTEXT = "merge-gate"
-FULL_REQUIRED_EVENTS = frozenset({"pull_request", "push", "merge_group"})
+FULL_REQUIRED_EVENTS = frozenset({"merge_group", "pull_request", "push"})
 FULL_REQUIRED_WORKFLOW = WORKFLOWS_DIR / "_required.yml"
 MERGE_QUEUE_SMOKE_WORKFLOW = WORKFLOWS_DIR / "merge-queue-smoke.yml"
 
@@ -147,7 +147,7 @@ def test_job_condition_allows_full_required_events_is_fail_closed(
     condition: str,
     expected: bool,
 ) -> None:
-    """Only direct event checks safe for PR, push and queue groups may pass."""
+    """Only direct event checks proven safe for PR, queue, and push may pass."""
     assert _job_condition_allows_full_required_events(condition) is expected
 
 
@@ -176,6 +176,24 @@ def test_security_events_write_is_scoped_to_security_secrets_scan() -> None:
         "security-events" not in job.get("permissions", {})
         for job_id, job in jobs.items()
         if job_id != "security-secrets-scan"
+    )
+
+
+def test_merge_group_runs_gitleaks_without_publishing_sarif() -> None:
+    """Queue commits must scan secrets without the unsupported SARIF side effect."""
+    workflow = _load_workflows()[FULL_REQUIRED_WORKFLOW]
+    job = workflow["jobs"]["security-secrets-scan"]
+    assert "if" not in job
+
+    steps = {
+        step["name"]: step
+        for step in job["steps"]
+        if "name" in step
+    }
+    assert "if" not in steps["Run Gitleaks"]
+    assert steps["Upload Gitleaks SARIF"]["if"] == (
+        "always() && github.event_name != 'merge_group' "
+        "&& hashFiles('gitleaks.sarif') != ''"
     )
 
 
@@ -211,7 +229,7 @@ def test_required_job_condition_cannot_exclude_full_required_events(
     monkeypatch: pytest.MonkeyPatch,
     condition: str,
 ) -> None:
-    """A trigger cannot compensate for a job condition that skips a required event."""
+    """A trigger cannot compensate for a condition that skips a required event."""
     path = Path("conditioned-required-check.yml")
     workflows = {
         path: {
@@ -231,7 +249,7 @@ def test_required_job_condition_cannot_exclude_full_required_events(
     monkeypatch.setitem(globals(), "_load_workflows", lambda: workflows)
 
     with pytest.raises(AssertionError, match="must allow"):
-        test_required_context_workflows_cover_pr_push_and_queue()
+        test_required_context_workflow_has_event_parity_without_smoke_carrier()
 
 
 def test_required_context_workflow_graph_rejects_duplicate_integration_tests_producer(
@@ -241,7 +259,11 @@ def test_required_context_workflow_graph_rejects_duplicate_integration_tests_pro
     workflows = _load_workflows()
     # Inject only into the in-memory graph; do not write a workflow file.
     duplicate_workflows = {
-        **workflows,
+        **{
+            path: workflow
+            for path, workflow in workflows.items()
+            if path != MERGE_QUEUE_SMOKE_WORKFLOW
+        },
         Path("duplicate-required-check.yml"): {
             "on": {
                 "pull_request": {"branches": ["main"]},
@@ -259,12 +281,14 @@ def test_required_context_workflow_graph_rejects_duplicate_integration_tests_pro
     monkeypatch.setitem(globals(), "_load_workflows", lambda: duplicate_workflows)
 
     with pytest.raises(AssertionError, match="duplicate.*integration-tests"):
-        test_required_context_workflows_cover_pr_push_and_queue()
+        test_required_context_workflow_has_event_parity_without_smoke_carrier()
 
 
-def test_required_context_workflows_cover_pr_push_and_queue() -> None:
-    """Every protected context must run on the actual queued merge commit."""
+def test_required_context_workflow_has_event_parity_without_smoke_carrier() -> None:
+    """Run one full required workflow for PR, queue, and main commits."""
     workflows = _load_workflows()
+    assert MERGE_QUEUE_SMOKE_WORKFLOW not in workflows
+
     producers = _required_context_producers(workflows)
 
     duplicate_producers = {
@@ -290,7 +314,7 @@ def test_required_context_workflows_cover_pr_push_and_queue() -> None:
             )
             assert _job_condition_allows_full_required_events(condition), (
                 f"{path} job {job_id} ({context}) condition {condition!r} "
-                "must allow pull_request, push and merge_group events"
+                "must allow pull_request, merge_group, and push events"
             )
 
     producer_paths = {
@@ -298,6 +322,9 @@ def test_required_context_workflows_cover_pr_push_and_queue() -> None:
         for context_producers in producers.values()
         for path, _job_id, _job in context_producers
     }
+    assert producer_paths == {FULL_REQUIRED_WORKFLOW}
+
+    contexts_by_event: dict[str, frozenset[str]] = {}
     for path in sorted(producer_paths):
         triggers = workflows[path].get("on")
         assert isinstance(triggers, dict), f"Expected event mapping in {path}"
@@ -309,24 +336,31 @@ def test_required_context_workflows_cover_pr_push_and_queue() -> None:
             f"{path} must preserve push coverage for main"
         )
         assert triggers.get("merge_group", {}).get("types") == ["checks_requested"], (
-            f"{path} must emit required checks for merge_group/checks_requested"
+            f"{path} must run for merge_group/checks_requested"
         )
         assert set(triggers["merge_group"]) == {"types"}, (
             f"{path} must not filter queued merge commits"
         )
 
+        emitted_contexts = frozenset(producers)
+        contexts_by_event["pull_request"] = emitted_contexts
+        contexts_by_event["merge_group"] = emitted_contexts
 
-def test_optional_smoke_cannot_duplicate_a_required_or_aggregate_context() -> None:
-    """An optional smoke success must not share the full matrix's check identity."""
-    workflows = _load_workflows()
-    smoke = workflows[MERGE_QUEUE_SMOKE_WORKFLOW]
-    smoke_triggers = smoke.get("on")
-    assert isinstance(smoke_triggers, dict), "Expected an event mapping in merge-queue smoke"
-    assert smoke_triggers.get("merge_group", {}).get("types") == ["checks_requested"], (
-        "merge-queue smoke must run for merge_group/checks_requested"
-    )
-    assert "pull_request" not in smoke_triggers
-    assert "push" not in smoke_triggers
+        concurrency = workflows[path].get("concurrency")
+        assert isinstance(concurrency, dict), f"Expected concurrency mapping in {path}"
+        group = concurrency.get("group")
+        assert isinstance(group, str), f"Expected concurrency group string in {path}"
+        assert "github.event_name" in group, (
+            f"{path} concurrency must separate pull_request and merge_group runs"
+        )
+        assert "github.sha" in group, (
+            f"{path} concurrency must identify the exact event commit"
+        )
+
+    assert contexts_by_event == {
+        "pull_request": frozenset(REQUIRED_CONTEXTS),
+        "merge_group": frozenset(REQUIRED_CONTEXTS),
+    }
 
     merge_gate_producers = [
         (path, job_id)
@@ -336,10 +370,7 @@ def test_optional_smoke_cannot_duplicate_a_required_or_aggregate_context() -> No
     ]
     assert merge_gate_producers == [
         (FULL_REQUIRED_WORKFLOW, "merge-gate"),
-    ], "Only the complete required matrix may emit merge-gate"
+    ], "The real required workflow must be the only merge-gate producer"
 
     full_gate = workflows[FULL_REQUIRED_WORKFLOW]["jobs"]["merge-gate"]
     assert full_gate.get("if") == "always()"
-    smoke_gate = smoke["jobs"]["merge-gate"]
-    assert smoke_gate.get("name") == "merge-queue-smoke"
-    assert "if" not in smoke_gate, "merge-queue smoke must not skip merge groups"

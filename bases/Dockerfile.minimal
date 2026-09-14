@@ -48,26 +48,19 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     chmod +x /usr/local/lib/node_modules/npm/bin/npm-cli.js \
              /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
-# Upgrade npm to get picomatch>=4.0.4 (CVE-2026-33671 fix) and
-# sigstore>=4.1.1 (CVE-2026-48815 fix)
-RUN npm install -g npm@11.18.0
+# Re-pin npm to 11.19.1. This is a strict upgrade over the 11.19.0 bundled in
+# node:26-slim and over the previously pinned 11.18.0, and it is required
+# because npm's bundled `tar` is a trivy-gated dependency:
+#   - picomatch>=4.0.4  (CVE-2026-33671 fix)  -> 11.18.0+ and still 4.0.4 here
+#   - sigstore>=4.1.1   (CVE-2026-48815 fix)  -> 11.18.0+ and still 4.1.1 here
+#   - tar>=7.5.21       (CVE-2026-73566 fix)  -> only 11.19.1+ (bundles ^7.5.22)
+# npm 11.18.0/11.19.0 both declare `tar: ^7.5.19`, which resolves to the
+# vulnerable 7.5.19 and fails the trivy gate. Verified: npm 11.19.1 bundles
+# tar 7.5.22 with picomatch 4.0.4 and sigstore 4.1.1 unchanged.
+RUN npm install -g npm@11.19.1
 
 # Install Yarn
 RUN npm install -g yarn@1.22.22
-
-# npm still bundles tar 7.5.19; pin its compatible security update until npm
-# includes the CVE-2026-73566 fix. Preserve npm's other bundled dependencies.
-ENV NPM_TAR_VERSION=7.5.21
-ARG NPM_TAR_SHA256=bcedf25a21daecd1a18fb5e19ab855b7d79ec8ef1da175e8ba85cfc0ed0069d1
-RUN curl -fsSL --retry 3 "https://registry.npmjs.org/tar/-/tar-${NPM_TAR_VERSION}.tgz" -o /tmp/npm-tar.tgz \
-    && echo "${NPM_TAR_SHA256}  /tmp/npm-tar.tgz" | sha256sum --check \
-    && mkdir /tmp/npm-tar \
-    && tar -xzf /tmp/npm-tar.tgz -C /tmp/npm-tar \
-    && node -e 'const before=require("/usr/local/lib/node_modules/npm/node_modules/tar/package.json");const after=require("/tmp/npm-tar/package/package.json");if(after.version!==process.env.NPM_TAR_VERSION||JSON.stringify(before.dependencies)!==JSON.stringify(after.dependencies))throw Error("npm tar dependency contract changed")' \
-    && rm -rf /usr/local/lib/node_modules/npm/node_modules/tar \
-    && mv /tmp/npm-tar/package /usr/local/lib/node_modules/npm/node_modules/tar \
-    && rm -rf /tmp/npm-tar /tmp/npm-tar.tgz \
-    && node -e 'const tar=require("/usr/local/lib/node_modules/npm/node_modules/tar");if(typeof tar.create!=="function"||typeof tar.extract!=="function")throw Error("npm tar load failed")'
 
 # Create non-root user
 ARG USER_ID=1000

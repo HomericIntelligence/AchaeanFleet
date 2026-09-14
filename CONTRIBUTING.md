@@ -559,8 +559,8 @@ Its configuration, read on 2026-09-12, retains all 12 required contexts above an
 ```
 
 The required workflow must emit all 12 contexts on each `merge_group` / `checks_requested`
-commit. Its `merge-gate` job reports the full matrix result. The separate `merge-queue-smoke`
-check adds quick validation and cannot replace any required context or that aggregate result.
+commit. Its `merge-gate` job reports the full matrix result. The former smoke-only workflow
+has been removed; pull requests, queued commits, and pushes to `main` use the required matrix.
 
 Workflow changes do not change the live ruleset. Preserve its required contexts, bypass actors
 and queue limits. After the workflow correction is merged, verify a representative queued pull

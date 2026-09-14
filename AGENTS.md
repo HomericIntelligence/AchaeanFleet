@@ -248,3 +248,23 @@ for alloc-scoped values — Nomad does not interpolate them at runtime.
    the workspace scope this agent requires
 5. Add to the matrix in `.github/workflows/ci.yml`
 6. Add vessel entry in `dagger/pipeline.ts`
+
+## Design Philosophy
+
+The fleet layout above follows design principles inherited from
+**ProjectOdyssey**:
+
+- **Single source of truth for images (DRY).** Image recipes live here. Upstream
+  source is consumed at pinned revisions or explicit verified snapshots.
+  AchaeanFleet owns image definition and approved publication to GHCR; a local
+  Fleet build does not authorize or perform publication.
+- **Minimal runtime (KISS / POLA).** Ship the tools required by the declared
+  runtime. Legacy vessels use the base entrypoint and their existing health-check
+  configuration. Fleet workers and build tools follow their separate entrypoint and private-storage
+  contracts in [Fleet image architecture](docs/fleet-images.md).
+- **Pin and verify (reproducibility).** Keep base images and dependency inputs
+  pinned. Run the applicable drift/pin tests and scan actual built images before
+  promotion. Source checks alone do not establish runtime or scanner results.
+- **Shared delivery boundaries (DRY).** Legacy vessels use the shared matrix;
+  Fleet uses its dedicated native-platform image and attestation checks. Both
+  require verified artifacts and approved promotion before publication or use.
