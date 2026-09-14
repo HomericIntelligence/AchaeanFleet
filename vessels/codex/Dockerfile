@@ -20,15 +20,15 @@ LABEL git-sha=${GIT_SHA}
 USER root
 
 # Install OpenAI Codex CLI (version pinned for reproducibility — issue #2)
-RUN npm install -g @openai/codex@0.120.0
+RUN npm install -g @openai/codex@0.153.4
 
 # Verify installation
-RUN codex --version
+RUN test "$(codex --version)" = "codex-cli 0.153.4"
 
 USER agent
 
 ENV AGENT_PROGRAM=codex
-ENV AGENT_HEADLESS_FLAG=--yes
+ENV AGENT_HEADLESS_FLAG=exec
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:23010/health 2>/dev/null || exit 1

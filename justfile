@@ -6,6 +6,29 @@
 default:
     @just --list
 
+# Fleet build contract tests (stdlib only; no image build or dependency install).
+test-fleet-images:
+    python3 -m unittest discover -s tests -p 'test_fleet_images.py' -v
+
+# Resolve npm lock metadata only; this does not install a runtime or node_modules.
+fleet-lock-codex:
+    cd vessels/fleet && npm install --package-lock-only --ignore-scripts --no-audit --no-fund --cache "${FLEET_NPM_CACHE:-$HOME/.cache/npm}"
+
+# Validate a bundle and print the exact build command, without building.
+[positional-arguments]
+fleet-image-plan +ARGS:
+    python3 -m hephaestus.fleet_image plan "$@"
+
+# Package already-built target-platform wheels and their hash-locked requirements.
+[positional-arguments]
+fleet-image-bundle +ARGS:
+    python3 -m hephaestus.fleet_image bundle "$@"
+
+# Export one architecture to OCI with BuildKit-generated SBOM/provenance.
+[positional-arguments]
+fleet-image-build +ARGS:
+    python3 -m hephaestus.fleet_image build "$@"
+
 # =============================================================================
 # Variables
 # =============================================================================
@@ -21,7 +44,7 @@ bases := "achaean-base-node achaean-base-python achaean-base-minimal"
 vessels := "claude codex aider goose cline opencode codebuff ampcode worker"
 
 # Auto-detect container runtime: prefer podman, fall back to docker
-container_cmd := `which podman 2>/dev/null && echo podman || echo docker`
+container_cmd := env_var_or_default("CONTAINER_CMD", `command -v podman 2>/dev/null || echo docker`)
 
 # Auto-detect compose command
 compose_cmd := `which podman-compose 2>/dev/null && echo podman-compose || echo "docker compose"`
@@ -159,6 +182,8 @@ runtime:
 build-bases:
     #!/usr/bin/env bash
     set -euo pipefail
+    # Podman otherwise drops the legacy Dockerfile HEALTHCHECK and SHELL metadata.
+    export BUILDAH_FORMAT=docker
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     vcs_ref="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -177,6 +202,7 @@ build-bases:
 build-vessel NAME:
     #!/usr/bin/env bash
     set -euo pipefail
+    export BUILDAH_FORMAT=docker
     container_cmd="$(which podman 2>/dev/null || echo docker)"
     case "{{NAME}}" in
         claude|codex|cline|codebuff|ampcode) base="achaean-base-node" ;;
@@ -216,7 +242,7 @@ build-all:
     @echo "=== All images built ==="
 
 # Verify all vessel images exist locally (podman or docker)
-# Note: achaean-aider excluded per #665 (CVE chain); restore by adding 'aider' to the loop below.
+# Aider is enabled with the other legacy vessels (restored by #770).
 verify:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -282,17 +308,27 @@ test: test-shell
     @echo "=== Running image smoke tests ==="
     npx ts-node dagger/pipeline.ts test
 
-# Validate all compose YAML files parse without errors (no images needed)
+# Validate the supported mesh/TLS and standalone smoke combinations (no images needed)
 test-compose:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "=== Validating compose files ==="
-    for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml compose/docker-compose.smoke.yml; do
+    for f in compose/docker-compose.claude-only.yml compose/docker-compose.mesh.yml; do
         echo "  Checking $f ..."
-        {{compose_cmd}} -f "$f" config --quiet || { echo "FAIL: $f"; exit 1; }
+        {{compose_cmd}} -f compose/docker-compose.caddy.yml -f "$f" config --quiet
         echo "  OK: $f"
     done
+    {{compose_cmd}} -f compose/docker-compose.smoke.yml config --quiet
     echo "=== All compose files valid ==="
+
+# Build source-pinned Fleet images and run isolated native Linux packaging checks.
+[positional-arguments]
+fleet-ci +ARGS:
+    python3 -m hephaestus.fleet_ci "$@"
+
+# Focused contract checks; actual images/runtime are exercised by fleet-ci.
+test-fleet-ci:
+    python3 -m unittest tests.test_fleet_ci tests.test_fleet_images
 
 # Build worker vessel, start it, probe /health on port 23080, then tear down
 test-smoke:
@@ -768,9 +804,19 @@ clean-all:
 
 # === Containerized CI (podman by default) ===
 
-# Build the CI container image (podman first, docker fallback)
+# Build the CI container image with the selected engine; failures propagate.
 ci-build:
-    podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local . || docker build -f ci/Containerfile -t achaeanfleet-ci:local .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    engine="${CONTAINER_ENGINE:-}"
+    if [[ -z "$engine" ]]; then
+        if command -v podman >/dev/null; then engine=podman; else engine=docker; fi
+    fi
+    args=(build --cpu-period=100000 --cpu-quota=200000 --memory=2g --memory-swap=2g)
+    if [[ "$(basename "$engine")" == podman ]]; then
+        args+=(--ignorefile ci/.dockerignore)
+    fi
+    exec "$engine" "${args[@]}" -f ci/Containerfile -t achaeanfleet-ci:local .
 
 # Run CI lint checks in container
 ci-lint:
@@ -819,3 +865,10 @@ ci-symlink-check:
 # Run all CI checks in container
 ci-all:
     ./scripts/run_ci_local.sh all
+
+# Lightweight source gates; these do not build or publish container images.
+ci-source-check MODE:
+    ./scripts/run_ci_local.sh {{quote(MODE)}}
+
+ci-security-dependency-scan:
+    ./scripts/run_ci_local.sh security-dependency-scan

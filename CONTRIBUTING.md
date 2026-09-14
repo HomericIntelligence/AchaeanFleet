@@ -341,6 +341,23 @@ pip index versions aider-chat
    just verify
    ```
 
+**Native platform selection for copied interpreters**
+
+Aider copies Python 3.12 from an official source stage into the native shared base.
+Pin that source to an immutable multi-platform index containing Linux amd64 and
+arm64 images; a single-platform digest can copy the wrong interpreter into the
+runtime. Keep the Python release compatible with Aider's interpreter constraint.
+When updating this pin, refresh the primary registry input fixtures in
+`tests/fixtures/aider-python-registry.json` and run:
+
+```bash
+just --command python3 -m pytest tests/test_aider_python_platforms.py -v
+```
+
+The fixture's body strings preserve exact registry response bytes for digest and
+platform checks. They are dependency inputs, not build or runtime evidence. Build
+and verify the affected image on both native architectures before qualification.
+
 **Automated Dependabot PRs**
 
 Dependabot is configured in `.github/dependabot.yml` to open monthly PRs for Docker base image
@@ -521,21 +538,18 @@ That workflow has no path filters and runs for pull requests, pushes to `main`, 
 `merge_group` events. Renaming a listed job, adding a condition that skips it, or removing one of
 those triggers can leave a required context pending and block every pull request or queue group.
 
-### Merge Queue Activation
+### Merge Queue Validation
 
-Merge-queue workflow support is repository-owned, but the live ruleset is not. After the readiness
-change for [issue #722](https://github.com/HomericIntelligence/AchaeanFleet/issues/722) merges and
-passes strict review, a human operator must update the existing `homeric-main-baseline` ruleset for
-`refs/heads/main`. Preserve every existing rule, bypass actor, required context, and enforcement
-setting, and add this rule:
+The live `homeric-main-baseline` ruleset for `refs/heads/main` already has a merge queue.
+Its configuration, read on 2026-09-12, retains all 12 required contexts above and this queue rule:
 
 ```json
 {
   "type": "merge_queue",
   "parameters": {
     "check_response_timeout_minutes": 60,
-    "grouping_strategy": "ALLGREEN",
-    "max_entries_to_build": 10,
+    "grouping_strategy": "HEADGREEN",
+    "max_entries_to_build": 2,
     "max_entries_to_merge": 5,
     "merge_method": "SQUASH",
     "min_entries_to_merge": 1,
@@ -544,9 +558,14 @@ setting, and add this rule:
 }
 ```
 
-Activation is deliberately separate from the implementation pull request. After activation, read
-the live ruleset back and verify one representative pull request enters the `main` queue, emits all
-12 required contexts from a `merge_group` / `checks_requested` workflow run, and merges by squash.
+The required workflow must emit all 12 contexts on each `merge_group` / `checks_requested`
+commit. Its `merge-gate` job reports the full matrix result. The former smoke-only workflow
+has been removed; pull requests, queued commits, and pushes to `main` use the required matrix.
+
+Workflow changes do not change the live ruleset. Preserve its required contexts, bypass actors
+and queue limits. After the workflow correction is merged, verify a representative queued pull
+request emits the complete required matrix on the actual queue commit before it merges by
+squash. Local workflow guards and PR checks do not establish that queue execution occurred.
 
 ### Never Push Directly to Main
 

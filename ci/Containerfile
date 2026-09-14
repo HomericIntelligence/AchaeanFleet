@@ -1,69 +1,34 @@
-# Containerfile for achaeanfleet-ci — CI image for AchaeanFleet.
-#
-# Provides:
-# - Python 3.13 base + pixi v0.70.2 (pinned release, checksum-verified)
-# - gitleaks 8.30.1 (secrets scan)
-# - Non-root user 'ci' (uid 1000) for rootless Podman compatibility
-#
-# The locked pixi project environment is NOT baked in: the repo is mounted at
-# /workspace at runtime and the env lives under /workspace/.pixi (gitignored).
-# run_ci_local.sh mounts a persistent host pixi cache (~/.cache/pixi) so
-# 'pixi install --locked' is fast on warm runs.
-#
-# Build (OCI-compliant — works with both podman and docker):
-#   podman build --ignorefile ci/.dockerignore -f ci/Containerfile -t achaeanfleet-ci:local .
-#   docker build -f ci/Containerfile -t achaeanfleet-ci:local .
-
-# ============================================================================
-# Stage 0: pixi binary — pinned GitHub release, checksum-verified
-# ============================================================================
-FROM python:3.13-slim@sha256:6771159cd4fa5d9bba1258caf0b82e6b73458c694d178ad97c5e925c2d0e1a91 AS pixi
-
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL --retry 5 --retry-all-errors https://github.com/prefix-dev/pixi/releases/download/v0.70.2/pixi-x86_64-unknown-linux-musl.tar.gz -o /tmp/pixi.tar.gz \
-    && echo "9d0d72fc1fa1a8f87bfde943cf25d3575cb352cb516795d4dab21898bd98adea  /tmp/pixi.tar.gz" | sha256sum --check \
-    && tar xzf /tmp/pixi.tar.gz -C /usr/local/bin \
-    && rm /tmp/pixi.tar.gz \
-    && pixi --version
-
-# ============================================================================
-# Stage 1: Runtime — minimal image
-# ============================================================================
+# Native amd64/arm64 CI tools. The project environment is installed from pixi.lock.
+FROM node:26-slim@sha256:4ebb5ace66f15a24c14c492e01a8beeed4fddf970a856109f5126e703e5fe503 AS node
 FROM python:3.13-slim@sha256:6771159cd4fa5d9bba1258caf0b82e6b73458c694d178ad97c5e925c2d0e1a91
 
 LABEL org.opencontainers.image.title="achaeanfleet-ci"
-LABEL org.opencontainers.image.description="CI container for AchaeanFleet — linting, testing, security scans"
-LABEL org.opencontainers.image.vendor="AchaeanFleet"
+LABEL org.opencontainers.image.description="Native bounded AchaeanFleet CI tools"
 LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
-
-ENV DEBIAN_FRONTEND=noninteractive \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    git \
-    curl \
-    ca-certificates \
-    make \
-    jq \
-    yamllint \
-    shellcheck \
-    just \
+    git curl ca-certificates make jq yamllint shellcheck bats libatomic1 \
     && rm -rf /var/lib/apt/lists/*
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
-COPY --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
+ARG TARGETARCH
+COPY ci/install_tools.py ci/tool-artifacts.json /opt/ci-install/
+RUN python /opt/ci-install/install_tools.py --platform "linux/${TARGETARCH}" \
+      --artifacts /opt/ci-install/tool-artifacts.json --destination /usr/local/bin \
+    && pixi --version && just --version && hadolint --version \
+    && test "$(gitleaks version)" = '8.30.1' \
+    && docker-compose version && trivy --version && nomad version
 
-# gitleaks (secrets scan) — same pin as the workflow (GITLEAKS_VERSION 8.30.1)
-RUN curl -sSfL --retry 5 --retry-all-errors https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
-    | tar -xz -C /usr/local/bin gitleaks \
-    && gitleaks version
-
-# Create non-root user for rootless Podman compatibility
-RUN groupadd -r ci && useradd -r -g ci -u 1000 -m -s /bin/bash ci \
-    && mkdir -p /home/ci/.cache \
-    && chown -R ci:ci /home/ci
-
+COPY ci/package.json ci/package-lock.json /opt/ci-tools/
+RUN cd /opt/ci-tools && npm ci --ignore-scripts --omit=dev \
+    && ln -s /opt/ci-tools/node_modules/.bin/markdownlint-cli2 /usr/local/bin/markdownlint-cli2 \
+    && markdownlint-cli2 --version \
+    && groupadd --gid 1000 ci \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash ci \
+    && mkdir -p /home/ci/.cache && chown -R 1000:1000 /home/ci
 WORKDIR /workspace
-
-USER ci
+USER 1000:1000

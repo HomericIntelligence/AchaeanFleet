@@ -34,6 +34,39 @@ base_images:
 # ---------------------------------------------------------------------------
 tools:
 
+  codex:
+    version: "0.153.4"
+    source: "https://registry.npmjs.org/@openai/codex/0.153.4"
+    used_by:
+      - vessels/codex/Dockerfile
+      - vessels/fleet/package.json
+      - vessels/fleet/package-lock.json
+    checksums: null  # npm lockfile records registry integrity for all platforms
+
+  fleet-just:
+    version: "1.51.0"
+    source: "https://github.com/casey/just/releases/download/1.51.0/SHA256SUMS"
+    used_by:
+      - vessels/fleet/Dockerfile
+      - vessels/fleet/tool-artifacts.json
+    checksums:
+      amd64:
+        sha256: "c8f085ca3e885723c341d06243fc291b5abfdc8bbe3b2c076b117de490387b59"
+      arm64:
+        sha256: "ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5"
+
+  fleet-pixi:
+    version: "0.70.2"
+    source: "https://github.com/prefix-dev/pixi/releases/tag/v0.70.2"
+    used_by:
+      - vessels/fleet/Dockerfile
+      - vessels/fleet/tool-artifacts.json
+    checksums:
+      amd64:
+        sha256: "9d0d72fc1fa1a8f87bfde943cf25d3575cb352cb516795d4dab21898bd98adea"
+      arm64:
+        sha256: "19f61d069f7ab963f3b9d6794134f893c83ecd2b7cd698e19268daa3a1fa606b"
+
   goose:
     version: "1.31.1"
     source: "https://github.com/block/goose/releases/tag/v1.31.1"
@@ -74,8 +107,8 @@ tools:
         sha256: "578648e463a11c1b6db6010cbf41eafed6bee79466fcffa1bb446672cf7945ea"
 
   npm:
-    version: "11.18.0"
-    source: "https://registry.npmjs.org/npm/-/npm-11.18.0.tgz"
+    version: "11.19.1"
+    source: "https://registry.npmjs.org/npm/-/npm-11.19.1.tgz"
     used_by:
       - bases/Dockerfile.minimal
       - bases/Dockerfile.node

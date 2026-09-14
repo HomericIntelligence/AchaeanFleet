@@ -1,11 +1,8 @@
-# Minimal ignorefile for the CI image build context.
-# NOTE: pixi.toml / pixi.lock / pyproject.toml / uv.lock must NOT be ignored —
-# the CI image bakes the locked environment from them.
-.git
-.gitignore
-.github
-docs
-*.md
-node_modules
-.venv
-.pixi
+# CI tooling image needs no repository source, home, or credential files.
+**
+!ci/
+!ci/Containerfile
+!ci/install_tools.py
+!ci/tool-artifacts.json
+!ci/package.json
+!ci/package-lock.json

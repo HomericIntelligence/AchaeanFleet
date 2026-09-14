@@ -1,0 +1,130 @@
+name: Fleet Images
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'vessels/fleet/**'
+      - 'hephaestus/fleet*.py'
+      - 'tests/test_fleet*.py'
+      - 'tests/test_smoke_matrix_drift.py'
+      - '.github/workflows/fleet-images.yml'
+      - 'justfile'
+  push:
+    branches: [main]
+    paths:
+      - 'vessels/fleet/**'
+      - 'hephaestus/fleet*.py'
+      - '.github/workflows/fleet-images.yml'
+      - 'justfile'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-images-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  fleet-images:
+    name: Fleet images (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+            artifact: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            artifact: arm64
+    defaults:
+      run:
+        shell: bash
+        working-directory: achaean-fleet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          path: achaean-fleet
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Read immutable Hephaestus source input
+        id: source
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          revision = json.loads(Path('vessels/fleet/ci/inputs.json').read_text())['hephaestusRevision']
+          if not re.fullmatch(r'[0-9a-f]{40}', revision):
+              raise ValueError('Hephaestus requires a full source commit')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'revision={revision}\n')
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: HomericIntelligence/Hephaestus
+          ref: ${{ steps.source.outputs.revision }}
+          path: hephaestus-source
+          persist-credentials: false
+      - name: Install native task and runtime tools
+        env:
+          FLEET_PLATFORM: ${{ matrix.platform }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/fleet-tools"
+          python3 -m hephaestus.fleet_image install-tools --platform "$FLEET_PLATFORM" \
+            --artifacts vessels/fleet/tool-artifacts.json --destination "$RUNNER_TEMP/fleet-tools"
+          echo "$RUNNER_TEMP/fleet-tools" >> "$GITHUB_PATH"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman
+          podman --version
+      - name: Configure bounded pinned BuildKit
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4.2.0
+        with:
+          driver: docker-container
+          buildkitd-flags: --debug
+          driver-opts: |
+            image=moby/buildkit@sha256:6c2fa84a6b61ccd72899dde4239f8d5717f05f9a8ca6f3cad185fb1a95a94de3
+            memory=2g
+            memory-swap=2g
+            cpu-period=100000
+            cpu-quota=200000
+          buildkitd-config-inline: |
+            [worker.oci]
+              max-parallelism = 2
+      - name: Check artifact contracts
+        run: just test-fleet-ci
+      - name: Build attested images and run empty-auth native checks
+        env:
+          FLEET_PLATFORM: ${{ matrix.platform }}
+        run: |
+          just fleet-ci run --platform "$FLEET_PLATFORM" \
+            --source "$GITHUB_WORKSPACE/hephaestus-source" \
+            --output "$RUNNER_TEMP/fleet-output" --engine /usr/bin/podman
+      - name: Retain actual image and runtime evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: fleet-images-${{ matrix.artifact }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/fleet-output/source.tar
+            ${{ runner.temp }}/fleet-output/source-manifest.json
+            ${{ runner.temp }}/fleet-output/prepare-result.json
+            ${{ runner.temp }}/fleet-output/ci-result.json
+            ${{ runner.temp }}/fleet-output/requirements.txt
+            ${{ runner.temp }}/fleet-output/dist/*.whl
+            ${{ runner.temp }}/fleet-output/bundle/bundle.json
+            ${{ runner.temp }}/fleet-output/logs/*
+            ${{ runner.temp }}/fleet-output/*/image.oci.tar
+            ${{ runner.temp }}/fleet-output/*/build*.json
+            ${{ runner.temp }}/fleet-output/*/runtime-smoke/*.json
+            ${{ runner.temp }}/fleet-output/*/runtime-smoke/*.stdout
+            ${{ runner.temp }}/fleet-output/*/runtime-smoke/*.stderr
+            ${{ runner.temp }}/fleet-output/*/runtime-smoke/state/startup.log

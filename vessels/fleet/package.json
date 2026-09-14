@@ -1,0 +1,8 @@
+{
+  "name": "achaean-fleet-codex-runtime",
+  "version": "0.153.4",
+  "private": true,
+  "dependencies": {
+    "@openai/codex": "0.153.4"
+  }
+}

@@ -11,9 +11,6 @@ Design notes
   a silent pass on a missing structure would defeat the purpose.
 - ``worker`` is excluded: it has its own HTTP health-poll smoke test
   (``test-smoke`` job).
-- ``aider`` is excluded: currently disabled in CI — see issue #665.  When
-  aider is re-enabled, remove it from ``DISABLED_VESSELS`` and add the
-  matrix row in ci.yml; this test will then enforce coverage automatically.
 - ``codebuff`` is excluded from the read-only smoke matrix: the ``codebuff``
   npm package is a self-updating launcher that downloads its ~48 MB runtime
   on first invocation and cannot persist/execute it under
@@ -39,7 +36,6 @@ SMOKE_JOB_NAME = "test-smoke-vessels"
 
 # Vessels excluded from the smoke matrix intentionally:
 #   worker      — has a dedicated HTTP /health smoke job (test-smoke)
-#   aider       — disabled in CI per #665; re-enable there first
 #   hello-world — C++ E2E integration test binary, not an AI-agent vessel;
 #                 it has its own CMD and is not part of the agent mesh smoke set
 #   codebuff    — self-updating launcher that re-downloads its runtime on every
@@ -49,7 +45,23 @@ SMOKE_JOB_NAME = "test-smoke-vessels"
 # ``mesh`` is excluded until its pip git dependencies (hephaestus[mesh],
 # telemachy register-epic) are merged to their main branches — the image
 # build would fail in CI before then. Activation tracked in #713.
-EXCLUDED_VESSELS = {"worker", "aider", "hello-world", "codebuff", "mesh"}
+# ``fleet`` has its own native build/attestation/runtime workflow, guarded below;
+# its closed wheel context cannot use the legacy single-BASE_IMAGE matrix.
+EXCLUDED_VESSELS = {"worker", "hello-world", "codebuff", "mesh", "fleet"}
+
+
+def test_fleet_dedicated_ci_covers_both_native_platforms_and_actual_runtime():
+    path = REPO_ROOT / ".github/workflows/fleet-images.yml"
+    assert path.is_file(), "Fleet requires a dedicated actual-image CI gate"
+    workflow = yaml.safe_load(path.read_text())
+    job = workflow["jobs"]["fleet-images"]
+    rows = job["strategy"]["matrix"]["include"]
+    assert {(row["platform"], row["runner"]) for row in rows} == {
+        ("linux/amd64", "ubuntu-24.04"), ("linux/arm64", "ubuntu-24.04-arm")}
+    assert job.get("continue-on-error") is not True
+    runs = [step.get("run", "") for step in job["steps"]]
+    assert any("just fleet-ci run" in run for run in runs), "planning/unit tests cannot replace actual image/runtime execution"
+    assert any(step.get("uses", "").startswith("docker/setup-buildx-action@") for step in job["steps"])
 
 
 def _load_workflow() -> dict:
