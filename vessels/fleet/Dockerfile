@@ -35,6 +35,7 @@ RUN python3 -c 'import sys; assert sys.version_info[:2] == (3, 13)' \
        > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends git build-essential pkg-config ca-certificates \
+       libpcre2-8-0=10.42-1+deb12u1 \
     && rm -rf /var/lib/apt/lists/*
 COPY hephaestus/fleet_image.py /opt/fleet-image.py
 COPY vessels/fleet/tool-artifacts.json /opt/fleet-tool-artifacts.json

@@ -22,6 +22,8 @@ The build requires three actual registry digest references:
 - `--runtime-base`: **Python 3.13 slim bookworm**, including its manifest digest.
   The Dockerfile checks Python and Debian versions. Its toolchain stage installs
   Git/compiler packages from the fixed Debian snapshot `20260909T000000Z`.
+  It also installs `libpcre2-8-0=10.42-1+deb12u1` explicitly, so an older version
+  inherited from the runtime base is upgraded.
 - `--sbom-generator`: a digest-pinned BuildKit-compatible SBOM scanner, such as the
   BuildKit Syft scanner. Resolve and review this digest before building.
 
