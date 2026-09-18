@@ -16,13 +16,22 @@ snapshots include relevant uncommitted files through explicit file hashes; a Git
 revision alone cannot identify a dirty build. The dedicated CI path instead
 archives only its pinned Hephaestus commit and builds the wheel from that archive.
 
+The [CI input manifest](../vessels/fleet/ci/inputs.json) now selects the merged
+worker checkpoint from [Hephaestus #3287](https://github.com/HomericIntelligence/Hephaestus/pull/3287).
+Changing this pin requires a fresh source archive, source-built wheel and
+hash-locked bundle for each platform. Both targets consume that wheel, so all
+four native target/platform combinations need new OCI exports and corresponding
+runtime, scanner, SBOM and provenance evidence. Retain earlier artifacts with
+their original source bindings.
+
 The image helper validates and freezes those inputs. Its BuildKit path exports
 OCI bytes with SBOM and provenance attestations and checks their content binding.
 It does not publish images, register pools, create credentials, or start workers.
 The existing capped Podman builds produced real private images, OCI exports, and
 separately generated SPDX documents. They did not satisfy the BuildKit attestation
 gate. The [dedicated CI workflow](../vessels/fleet/ci-proposal.md) now covers both
-native platforms and targets; its new actual BuildKit/runtime runs remain pending.
+native platforms and targets. Successful runs qualify their recorded source
+revision; the newly selected worker still requires its own BuildKit/runtime runs.
 
 ## Artifact identity and distribution
 

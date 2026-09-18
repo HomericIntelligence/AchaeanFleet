@@ -1,6 +1,6 @@
 {
   "schema": "hi/fleet-ci-inputs/v1",
-  "hephaestusRevision": "1ec64a7a948ac10a8d59d232833922ddf9ac8f2c",
+  "hephaestusRevision": "ce29bd8732cceaadcd958d0b58586be81a4de73f",
   "hephaestusRepository": "https://github.com/HomericIntelligence/Hephaestus.git",
   "bases": {
     "amd64": {
