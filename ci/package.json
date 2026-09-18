@@ -1,0 +1,13 @@
+{
+  "name": "achaeanfleet-ci-tools",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "markdownlint-cli2": "0.23.2"
+  },
+  "overrides": {
+    "markdownlint-cli2": {
+      "smol-toml": "1.7.1"
+    }
+  }
+}

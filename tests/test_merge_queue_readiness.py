@@ -248,7 +248,7 @@ def test_required_job_condition_cannot_exclude_full_required_events(
     }
     monkeypatch.setitem(globals(), "_load_workflows", lambda: workflows)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match="must allow"):
         test_required_context_workflow_has_event_parity_without_smoke_carrier()
 
 
@@ -337,6 +337,9 @@ def test_required_context_workflow_has_event_parity_without_smoke_carrier() -> N
         )
         assert triggers.get("merge_group", {}).get("types") == ["checks_requested"], (
             f"{path} must run for merge_group/checks_requested"
+        )
+        assert set(triggers["merge_group"]) == {"types"}, (
+            f"{path} must not filter queued merge commits"
         )
 
         emitted_contexts = frozenset(producers)

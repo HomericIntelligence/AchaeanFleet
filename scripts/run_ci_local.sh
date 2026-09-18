@@ -11,7 +11,7 @@
 # Container engine: auto-detected (podman first, docker fallback).
 # Override: CONTAINER_ENGINE=docker ./scripts/run_ci_local.sh
 #
-# Image: uses 'achaeanfleet-ci:local' if available, falls back to GHCR image.
+# Image: requires the locally built 'achaeanfleet-ci:local' image; never pulls a fallback.
 # Build locally: just ci-build  (or: podman build -f ci/Containerfile -t achaeanfleet-ci:local .)
 
 set -euo pipefail
@@ -87,38 +87,31 @@ select_image() {
 run_step() {
     local desc="$1"; shift
     log_step "$desc"
-    if ! "$@"; then
-        log_error "FAILED: $desc"
-        exit 1
-    fi
+    "$@"
     log_info "OK: $desc"
 }
 
 run_in_container() {
     local cmd="$1"
-    local caches=""
-    local stale_guard=""
-    if [ -d "${PROJECT_ROOT}/.pixi" ]; then
-        mkdir -p "${HOME}/.cache/pixi"
-        caches="-v ${HOME}/.cache/pixi:/home/ci/.cache/pixi:Z"
-        # Stale-env guard: envs created on the host have shebangs pointing at
-        # the host path; inside the container the repo lives at /workspace, so
-        # any .pixi env whose shebangs do not reference /workspace is stale and
-        # must be removed so pixi reinstalls with container-correct paths.
-        stale_guard='if [ -d .pixi ] && ! grep -rl "/workspace/.pixi" .pixi/envs/*/bin/ > /dev/null 2>&1; then rm -rf .pixi; fi'
+    local ci_home="${CI_HOME:-${XDG_CACHE_HOME:-${HOME}/.cache}/achaeanfleet-ci/home}"
+    mkdir -p "$ci_home"
+    chmod 700 "$ci_home"
+    local -a engine_options=()
+    if [[ "$(basename "${CONTAINER_ENGINE}")" == podman ]]; then
+        engine_options+=("--userns=keep-id:uid=1000,gid=1000" --http-proxy=false)
     fi
-    # shellcheck disable=SC2086
-    "${CONTAINER_ENGINE}" run --rm --userns=keep-id:uid=1000,gid=1000 $caches \
+    "${CONTAINER_ENGINE}" run --rm "${engine_options[@]}" \
+        --label "hi.achaeanfleet.ci=${CI_RUN_ID:-local}" \
+        --user=1000:1000 --cpus="${CI_CPUS:-2}" \
+        --memory="${CI_MEMORY:-2g}" --memory-swap="${CI_MEMORY:-2g}" \
+        --pids-limit=256 --cap-drop=ALL --security-opt=no-new-privileges \
+        -e HOME=/home/ci -v "${ci_home}:/home/ci:Z" \
         -v "${PROJECT_ROOT}:/workspace:Z" -w /workspace \
-        "${IMAGE}" bash -lc "${stale_guard:+${stale_guard}; }$cmd"
+        "${IMAGE}" bash -euo pipefail -c "$cmd"
 }
 
 run_pixi() {
-    run_in_container "pixi install --locked --quiet && $1"
-}
-
-run_uv() {
-    run_in_container "uv run $1"
+    run_in_container "pixi install --locked --environment dev && pixi run --environment dev $1"
 }
 
 # ============================================================================
@@ -126,63 +119,74 @@ run_uv() {
 # ============================================================================
 
 run_lint() {
-    # Lint (hadolint + yamllint + nomad validate)
-    run_in_container "pixi install --locked --quiet && (hadolint */Dockerfile 2>/dev/null || hadolint Dockerfile 2>/dev/null || true) && yamllint -c .yamllint.yaml . 2>/dev/null || yamllint . 2>/dev/null || true"
+    run_pixi "pre-commit run --all-files"
 }
 
 run_markdownlint() {
-    # Markdown lint
-    run_in_container "pixi install --locked --quiet && (pixi run markdownlint-cli2 . 2>/dev/null || pixi run markdownlint . 2>/dev/null || true)"
+    run_in_container 'markdownlint-cli2 "**/*.md" "#node_modules" "#.pixi" "#.ci-state"'
 }
 
 run_pixi-check() {
-    # pixi lockfile consistency
-    run_in_container "pixi install --locked"
+    run_in_container "pixi install --locked --environment dev"
 }
 
 run_unit-tests() {
-    # Unit tests (bats)
-    run_in_container "pixi install --locked --quiet && (bats tests/entrypoint.bats 2>/dev/null || find tests -name '*.bats' -exec bats {} \; 2>/dev/null || echo 'no bats tests')"
+    run_pixi "python -m pytest tests/ -v && pixi run --environment dev bats -r tests"
 }
 
 run_integration-tests() {
-    # Compose validation
-    run_in_container "pixi install --locked --quiet && (pixi run validate 2>/dev/null || true)"
+    run_in_container 'for overlay in mesh claude-only; do docker-compose -f compose/docker-compose.caddy.yml -f "compose/docker-compose.${overlay}.yml" config --quiet; done; docker-compose -f compose/docker-compose.smoke.yml config --quiet'
 }
 
 run_schema-validation() {
-    # Schema validation
-    run_in_container "pixi install --locked --quiet && (pixi run validate 2>/dev/null || true)"
+    run_pixi "python -m pytest tests/test_nomad_specs.py tests/test_nomad_mesh_spec.py tests/test_pod_specs.py -v"
+    run_in_container 'for file in nomad/*.hcl; do if grep -q "^job " "$file"; then nomad job validate "$file"; fi; done'
 }
 
 run_security-secrets-scan() {
-    # Secrets scan (gitleaks)
-    run_in_container "gitleaks detect --no-banner --redact --source . 2>&1 | tail -5; exit ${PIPESTATUS[0]}"
+    run_in_container "gitleaks detect --no-banner --redact --source ."
 }
 
 run_security-dependency-scan() {
-    # Trivy scan (advisory)
-    run_in_container "(trivy fs --scanners vuln . 2>/dev/null || true)"
+    run_in_container "trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --skip-dirs .ci-state --skip-dirs .pixi ."
 }
 
 run_deps-version-sync() {
-    # Dependency version sync check
-    run_in_container "pixi install --locked"
+    run_pixi "python -m pytest tests/test_dockerfile_pins.py tests/test_dockerfile_sha256_pins.py tests/test_dockerfile_version_pins.py -v"
 }
 
 run_forbid-suppressions() {
-    # No silent failure suppressions
-    run_in_container "! grep -rE '|| true|set +e' scripts/run_ci_local.sh || echo 'forbid-suppressions OK'"
+    run_pixi "pre-commit run forbid-or-true --all-files && pixi run --environment dev pre-commit run forbid-continue-on-error --all-files && pixi run --environment dev pre-commit run forbid-advisory-warnings --all-files"
 }
 
 run_justfile-check() {
-    # justfile syntax check
     run_in_container "just --evaluate > /dev/null"
 }
 
 run_symlink-check() {
-    # Symlink integrity
-    run_in_container "git ls-files -s | grep '^120000' > /dev/null 2>&1 || echo 'no symlinks'"
+    run_in_container "bash scripts/check-symlinks.sh"
+}
+
+run_structure() {
+    run_pixi "python scripts/check_ci_structure.py $1"
+}
+
+run_all() {
+    run_step "Lint" run_lint
+    run_step "Markdown" run_markdownlint
+    run_step "Locked environment" run_pixi-check
+    run_step "Python and shell tests" run_unit-tests
+    run_step "Compose integration" run_integration-tests
+    run_step "Deployment schemas" run_schema-validation
+    run_step "Secrets" run_security-secrets-scan
+    run_step "Dependencies" run_security-dependency-scan
+    run_step "Version pins" run_deps-version-sync
+    run_step "Suppression policy" run_forbid-suppressions
+    run_step "Just syntax" run_justfile-check
+    run_step "Symlink integrity" run_symlink-check
+    for mode in build test package install release; do
+        run_step "$mode source gate" run_structure "$mode"
+    done
 }
 
 # ============================================================================
@@ -193,6 +197,7 @@ detect_engine
 select_image
 
 case "${SUBSET}" in
+    all) run_all ;;
     lint) run_lint ;;
     markdownlint) run_markdownlint ;;
     pixi-check) run_pixi-check ;;
@@ -205,6 +210,7 @@ case "${SUBSET}" in
     forbid-suppressions) run_forbid-suppressions ;;
     justfile-check) run_justfile-check ;;
     symlink-check) run_symlink-check ;;
+    build|test|package|install|release) run_structure "$SUBSET" ;;
 
     *)
     log_error "Unknown subset '${SUBSET}'"

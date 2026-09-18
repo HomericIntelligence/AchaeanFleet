@@ -19,11 +19,16 @@ LABEL git-sha=${GIT_SHA}
 
 USER root
 
-# Install Cline CLI (version pinned for reproducibility — issue #2)
-RUN npm install -g cline@2.14.0
+# Keep the existing CLI while fixing ink-picture's vulnerable Sharp closure.
+# The lock includes both Linux architectures and npm verifies each integrity.
+COPY vessels/cline/package.json vessels/cline/package-lock.json /opt/achaean-cline/
+RUN npm ci --omit=dev --prefix /opt/achaean-cline \
+    && ln -s /opt/achaean-cline/node_modules/.bin/cline /usr/local/bin/cline
 
-# Verify installation
-RUN cline --version
+# Verify the installed native image library, including the patched libheif.
+COPY vessels/cline/verify-runtime.cjs /opt/achaean-cline/verify-runtime.cjs
+RUN cline --version \
+    && node /opt/achaean-cline/verify-runtime.cjs
 
 USER agent
 

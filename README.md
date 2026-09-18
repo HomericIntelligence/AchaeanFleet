@@ -9,14 +9,31 @@ Container infrastructure for the HomericIntelligence agent mesh.
 Builds OCI-compliant Docker images for every AI agent type.
 Agent provisioning lives in [Myrmidons](../Myrmidons).
 
+For pinned Codex workers and separate build-tool images, use the
+[Fleet image build contract](vessels/fleet/README.md). These targets require
+explicit wheel bundles and generate OCI SBOM/provenance artifacts before deployment.
+
 ## Architecture
+
+There are two image contracts. The legacy mesh vessels inherit a base image and
+use the Agamemnon sidecar shown below. Fleet workers use a standalone Hephaestus
+entrypoint, pinned Codex, and a source-built wheel bundle. Fleet build-tools images
+run registered `just` recipes and contain no Codex program.
+
+Agamemnon owns Fleet admission and durable orchestration; Keystone carries work
+and events; Myrmidons owns desired pools; Hephaestus supervises execution; Odysseus
+provides the web interface. AchaeanFleet supplies verified image artifacts.
+See [Fleet image architecture](docs/fleet-images.md) and the
+[promotion runbook](docs/runbooks/fleet-image-promotion.md) for build inputs,
+private authentication mounts, digest distribution, and remaining acceptance gates.
+The legacy Compose quick start below does not deploy Fleet.
 
 ```
                         ┌─────────────────────────────────────────┐
-                        │            AchaeanFleet images           │
+                        │        Legacy AchaeanFleet vessels       │
                         │                                          │
-  bases/                │  achaean-base-node    (Node 20 + tmux)   │
-  ├─ Dockerfile.node    │  achaean-base-python  (Python 3.12)      │
+  bases/                │  achaean-base-node    (Node + tmux)      │
+  ├─ Dockerfile.node    │  achaean-base-python  (Python + Node)    │
   ├─ Dockerfile.python  │  achaean-base-minimal (Alpine + tmux)    │
   └─ Dockerfile.minimal │                                          │
                         │  vessels (each FROM a base):             │
@@ -110,6 +127,11 @@ CONTAINER_CMD=podman just build-all
 CONTAINER_CMD=podman just build-vessel claude
 ```
 
+The `build-bases`, `build-vessel`, and `build-all` recipes select Docker image
+format in Podman so that Dockerfile `HEALTHCHECK` and `SHELL` metadata survive the
+build. Fleet's dedicated BuildKit recipes still export OCI archives with SBOM and
+provenance attestations.
+
 > **Note:** Podman rootless requires that volume mounts for the Agamemnon sidecar use the `:Z`
 > SELinux label on SELinux-enforcing hosts. The Compose files in `compose/` already include `:Z`
 > where needed.
@@ -148,7 +170,7 @@ echo -n "sk-proj-..."      > compose/secrets/openai_api_key
 chmod 600 compose/secrets/*
 ```
 
-Each container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key`
+Each legacy container's `entrypoint.sh` reads `/run/secrets/anthropic_api_key`
 (or `openai_api_key`) and exports the value into the environment before handing off
 to the agent. Leave `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` blank in `.env`.
 
@@ -215,8 +237,9 @@ LOG_MAX_FILES=5    # number of rotated files to keep (default: 3)
 
 ## Agamemnon agent sidecar
 
-All containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.
+Legacy mesh containers expect the Agamemnon agent sidecar mounted at `/app/agent-sidecar:ro`.
 The binary lives in ProjectAgamemnon and is never copied into images at build time.
+Fleet worker and build-tools images use the standalone entrypoints described above.
 Configure its path via `AGAMEMNON_URL` in `compose/.env`.
 
 ## Testing

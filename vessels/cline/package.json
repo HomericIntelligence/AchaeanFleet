@@ -1,0 +1,11 @@
+{
+  "name": "achaean-cline-runtime",
+  "version": "2.14.0",
+  "private": true,
+  "dependencies": {
+    "cline": "2.14.0"
+  },
+  "overrides": {
+    "sharp": "0.35.4"
+  }
+}

@@ -28,29 +28,6 @@
 # scripts/verify-trivyignore-prune.sh (rebuilds + scans without --ignorefile);
 # the CI "Trivy scan vessel image (gate)" jobs are the authoritative gate.
 
-# CVE-2026-39823
-# Category: other
-# Rationale: Go stdlib URL canonicalization — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29 that bundles a patched Go toolchain.
-# Exploitability: none — yq in the achaean-worker vessel processes only local YAML files and does not handle attacker-controlled URLs.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39823
-
-# CVE-2026-39825
-# Category: other
-# Rationale: Go stdlib net/http ReverseProxy query parameter forwarding — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
-# Exploitability: none — yq in the achaean-worker vessel is a YAML processor; it does not act as an HTTP reverse proxy and does not forward query parameters.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39825
-
-# CVE-2026-39826
-# Category: other
-# Rationale: Go stdlib html/template XSS via trusted template author script tag — embedded in /usr/local/bin/yq (mikefarah/yq v4.53.2 built with Go 1.26.2). Fixed in Go 1.25.10 / 1.26.3; no newer yq release available as of 2026-05-29.
-# Exploitability: none — yq in the achaean-worker vessel processes YAML, not HTML templates; the html/template code path is unreachable in this usage.
-# Expires: 2026-08-27
-# Reviewer: @mvillmow  PR #658
-CVE-2026-39826
 
 # CVE-2026-39822
 # Category: other
@@ -99,14 +76,6 @@ CVE-2026-69152
 # Expires: 2026-11-05
 # Reviewer: @mvillmow  PR #746
 CVE-2026-69192
-
-# CVE-2026-73566
-# Category: npm
-# Rationale: tar 7.5.19 DoS via crafted long-path archive — bundled with npm 11.18.0's dependency tree in achaean-base-* images (fixed in tar 7.5.21, ships in newer npm releases than the pinned 11.18.0). npm's bundled module tree cannot be overridden without forking npm; the dagger/ lockfile override (tar ^7.5.21) covers only the CI pipeline, not the image.
-# Exploitability: none — bundled tar input is npm-internal, never attacker-controlled in the vessel runtime.
-# Expires: 2026-11-21
-# Reviewer: @mvillmow  PR #TBD (issue #760 rescan)
-CVE-2026-73566
 
 # CVE-2026-56852
 # Category: other

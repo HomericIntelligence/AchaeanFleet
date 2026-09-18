@@ -1,6 +1,9 @@
 # AchaeanFleet Image Tagging Strategy
 
-Every push to `main` produces **three tags per image**, built once and published atomically.
+The legacy vessel publication pipeline produces **three tags per image**, built
+once and published atomically. Fleet worker/build-tool targets have a separate
+[artifact and promotion contract](fleet-images.md); the legacy pipeline does not
+publish those targets.
 
 ## Tag formats
 

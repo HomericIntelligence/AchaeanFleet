@@ -47,6 +47,8 @@ repos:
     rev: v2.12.0
     hooks:
       - id: hadolint
+        # Dockerfile-specific ignore files contain patterns, not Docker syntax.
+        exclude: '\.dockerignore$'
         args:
           - --ignore=DL3008
           - --ignore=DL3013
