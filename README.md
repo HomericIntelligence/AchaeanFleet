@@ -11,6 +11,13 @@ Agent provisioning lives in [Myrmidons](../Myrmidons).
 
 ## Architecture
 
+The standalone [Athena tool image](vessels/athena-tools/README.md) supplies pinned
+tools and offline dependencies for a Hephaestus worker. The authenticated Codex
+app-server stays outside the tool container. Agamemnon owns task admission and
+decisions; Odysseus displays the resulting work and logs. This image has its own
+ARM64 build recipe and joins the existing build, scan, smoke and publication
+gates. It does not add a Compose agent service or an orchestration authority.
+
 ```
                         ┌─────────────────────────────────────────┐
                         │            AchaeanFleet images           │

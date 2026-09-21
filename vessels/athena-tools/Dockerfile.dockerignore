@@ -1,0 +1,11 @@
+**
+!Dockerfile
+!prepare_workspace.py
+!workspace.just
+!inputs/
+!inputs/codex-arm64.tgz
+!inputs/just-arm64.tar.gz
+!inputs/uv-arm64.tar.gz
+!inputs/uv.lock
+!inputs/pyproject.toml
+!inputs/.python-version

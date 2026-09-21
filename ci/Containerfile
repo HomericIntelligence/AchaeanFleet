@@ -54,6 +54,19 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 
 COPY --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
 
+# Real offline workspace tests use uv; keep the existing AMD64 CI architecture.
+# Pin is shared with the hosted test job and versions.yml:athena_tools.
+ARG UV_VERSION=0.12.10
+ARG UV_AMD64_SHA256=173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+RUN curl --fail --location --proto '=https' --connect-timeout 20 --max-time 180 \
+    "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" \
+    -o /tmp/uv.tar.gz \
+    && echo "${UV_AMD64_SHA256}  /tmp/uv.tar.gz" | sha256sum --check \
+    && mkdir /tmp/uv \
+    && tar -xzf /tmp/uv.tar.gz -C /tmp/uv --strip-components=1 \
+    && install -m 0755 /tmp/uv/uv /usr/local/bin/uv \
+    && rm -rf /tmp/uv /tmp/uv.tar.gz
+
 # gitleaks (secrets scan) — same pin as the workflow (GITLEAKS_VERSION 8.30.1)
 RUN curl -sSfL --retry 5 --retry-all-errors https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
     | tar -xz -C /usr/local/bin gitleaks \
