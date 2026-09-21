@@ -11,7 +11,7 @@
 # Container engine: auto-detected (podman first, docker fallback).
 # Override: CONTAINER_ENGINE=docker ./scripts/run_ci_local.sh
 #
-# Image: uses 'achaeanfleet-ci:local' if available, falls back to GHCR image.
+# Image: requires the locally built 'achaeanfleet-ci:local' image.
 # Build locally: just ci-build  (or: podman build -f ci/Containerfile -t achaeanfleet-ci:local .)
 
 set -euo pipefail
@@ -87,10 +87,9 @@ select_image() {
 run_step() {
     local desc="$1"; shift
     log_step "$desc"
-    if ! "$@"; then
-        log_error "FAILED: $desc"
-        exit 1
-    fi
+    # Do not put the function call in a conditional: Bash would disable
+    # errexit inside it and a later successful command could hide failure.
+    "$@"
     log_info "OK: $desc"
 }
 
@@ -110,15 +109,11 @@ run_in_container() {
     # shellcheck disable=SC2086
     "${CONTAINER_ENGINE}" run --rm --userns=keep-id:uid=1000,gid=1000 $caches \
         -v "${PROJECT_ROOT}:/workspace:Z" -w /workspace \
-        "${IMAGE}" bash -lc "${stale_guard:+${stale_guard}; }$cmd"
+        "${IMAGE}" bash -euo pipefail -c "${stale_guard:+${stale_guard}; }$cmd"
 }
 
 run_pixi() {
-    run_in_container "pixi install --locked --quiet && $1"
-}
-
-run_uv() {
-    run_in_container "uv run $1"
+    run_in_container "pixi install --locked --environment dev --quiet && pixi run --environment dev $1"
 }
 
 # ============================================================================
@@ -126,13 +121,11 @@ run_uv() {
 # ============================================================================
 
 run_lint() {
-    # Lint (hadolint + yamllint + nomad validate)
-    run_in_container "pixi install --locked --quiet && (hadolint */Dockerfile 2>/dev/null || hadolint Dockerfile 2>/dev/null || true) && yamllint -c .yamllint.yaml . 2>/dev/null || yamllint . 2>/dev/null || true"
+    run_pixi "pre-commit run --all-files --show-diff-on-failure"
 }
 
 run_markdownlint() {
-    # Markdown lint
-    run_in_container "pixi install --locked --quiet && (pixi run markdownlint-cli2 . 2>/dev/null || pixi run markdownlint . 2>/dev/null || true)"
+    run_in_container "markdownlint-cli2 '**/*.md' '#node_modules' '#.pixi' '#.git'"
 }
 
 run_pixi-check() {
@@ -141,38 +134,40 @@ run_pixi-check() {
 }
 
 run_unit-tests() {
-    # Unit tests (bats)
-    run_in_container "pixi install --locked --quiet && (bats tests/entrypoint.bats 2>/dev/null || find tests -name '*.bats' -exec bats {} \; 2>/dev/null || echo 'no bats tests')"
+    run_pixi "python -m pytest tests/ -v"
+    run_pixi "bats -r tests"
 }
 
 run_integration-tests() {
-    # Compose validation
-    run_in_container "pixi install --locked --quiet && (pixi run validate 2>/dev/null || true)"
+    # Caddy supplies the networks referenced by these stacks, as in hosted CI.
+    run_in_container 'for stack in claude-only mesh; do
+        docker-compose -f compose/docker-compose.caddy.yml -f "compose/docker-compose.${stack}.yml" config --quiet
+    done
+    docker-compose -f compose/docker-compose.smoke.yml config --quiet'
 }
 
 run_schema-validation() {
-    # Schema validation
-    run_in_container "pixi install --locked --quiet && (pixi run validate 2>/dev/null || true)"
+    run_pixi "python -m pytest tests/test_nomad_specs.py tests/test_nomad_mesh_spec.py tests/test_nomad_vault_integration.py tests/test_pod_specs.py -v"
+    # Only job specs are accepted by nomad validate; vault-policy.hcl is a policy.
+    run_in_container 'for job in nomad/*.nomad.hcl; do nomad validate "$job"; done'
 }
 
 run_security-secrets-scan() {
-    # Secrets scan (gitleaks)
-    run_in_container "gitleaks detect --no-banner --redact --source . 2>&1 | tail -5; exit ${PIPESTATUS[0]}"
+    run_in_container "gitleaks detect --no-banner --redact --source ."
 }
 
 run_security-dependency-scan() {
-    # Trivy scan (advisory)
-    run_in_container "(trivy fs --scanners vuln . 2>/dev/null || true)"
+    run_in_container "trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 ."
 }
 
 run_deps-version-sync() {
-    # Dependency version sync check
-    run_in_container "pixi install --locked"
+    run_pixi "python -m pytest tests/test_dockerfile_pins.py tests/test_dockerfile_version_pins.py tests/test_dockerfile_sha256_pins.py -v"
 }
 
 run_forbid-suppressions() {
-    # No silent failure suppressions
-    run_in_container "! grep -rE '|| true|set +e' scripts/run_ci_local.sh || echo 'forbid-suppressions OK'"
+    run_pixi "pre-commit run forbid-or-true --all-files"
+    run_pixi "pre-commit run forbid-continue-on-error --all-files"
+    run_pixi "pre-commit run forbid-advisory-warnings --all-files"
 }
 
 run_justfile-check() {
@@ -181,8 +176,7 @@ run_justfile-check() {
 }
 
 run_symlink-check() {
-    # Symlink integrity
-    run_in_container "git ls-files -s | grep '^120000' > /dev/null 2>&1 || echo 'no symlinks'"
+    run_in_container "bash scripts/check-symlinks.sh"
 }
 
 # ============================================================================
@@ -193,6 +187,13 @@ detect_engine
 select_image
 
 case "${SUBSET}" in
+    all)
+        for subset in lint markdownlint pixi-check unit-tests integration-tests \
+            schema-validation security-secrets-scan security-dependency-scan \
+            deps-version-sync forbid-suppressions justfile-check symlink-check; do
+            run_step "$subset" "run_${subset}"
+        done
+        ;;
     lint) run_lint ;;
     markdownlint) run_markdownlint ;;
     pixi-check) run_pixi-check ;;
