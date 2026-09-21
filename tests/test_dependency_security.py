@@ -10,6 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ADM_ZIP_FIXED = (0, 6, 1)
+SMOL_TOML_FIXED = (1, 7, 1)
 
 
 def version_floor(value: str) -> tuple[int, ...]:
@@ -39,3 +40,15 @@ class DependencySecurityTests(unittest.TestCase):
         for path, entry in packages.items():
             with self.subTest(path=path):
                 self.assertGreaterEqual(version_floor(entry["version"]), ADM_ZIP_FIXED)
+
+    def test_locked_ci_smol_toml_excludes_affected_versions(self) -> None:
+        """Every CI TOML parser instance must include the CVE-2026-85730 fix."""
+        lock = json.loads((ROOT / "ci/package-lock.json").read_text())
+        packages = {
+            path: entry for path, entry in lock["packages"].items()
+            if path.endswith("/smol-toml")
+        }
+        self.assertTrue(packages, "The CI TOML dependency is absent from the lock")
+        for path, entry in packages.items():
+            with self.subTest(path=path):
+                self.assertGreaterEqual(version_floor(entry["version"]), SMOL_TOML_FIXED)

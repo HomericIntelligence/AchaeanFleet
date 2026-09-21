@@ -7,7 +7,6 @@ containerized linters, scanners, Python tests or BATS tests have passed.
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess
