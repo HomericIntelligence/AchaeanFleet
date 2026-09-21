@@ -800,7 +800,7 @@ jobs:
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             IMAGE_VERSION=git-${{ env.SHORT_SHA }}
             GOOSE_VERSION=1.31.1
-            YQ_VERSION=v4.53.3
+            YQ_VERSION=v4.53.6
             OPENCODE_VERSION=v1.4.3
           push: false
           load: true
@@ -1075,7 +1075,7 @@ jobs:
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             GOOSE_VERSION=1.31.1
-            YQ_VERSION=v4.53.3
+            YQ_VERSION=v4.53.6
             OPENCODE_VERSION=v1.4.3
           push: false
           load: true
