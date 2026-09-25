@@ -186,6 +186,8 @@ build-vessel NAME:
         mesh)                                base="achaean-claude" ;;
         # hello-world is a standalone ubuntu build — no base image needed
         hello-world)                         base="__none__" ;;
+        # Ported first-party runtime vessels — self-contained multi-stage builds
+        hermes|nestor|agamemnon|charybdis|keystone|odyssey|scylla|argus-exporter|argus-jetstream-consumer|atlas|nats-loki-bridge) base="__none__" ;;
         *) echo "Unknown vessel: {{NAME}}"; exit 1 ;;
     esac
     echo "Container runtime: ${container_cmd}"
