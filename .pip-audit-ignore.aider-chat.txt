@@ -9,9 +9,11 @@
 #
 # Review procedure: see docs/runbooks/dependency-audit-allowlists.md
 # Issue: HomericIntelligence/AchaeanFleet#655
-# Cross-reference: .trivyignore also suppresses 1 overlapping ID (GHSA-69x8-hrgq-fjj8)
-#   for Trivy container scans. When removing an ID, search both files.
-#   See docs/runbooks/dependency-audit-allowlists.md for dual-file guidance.
+# Cross-reference: .trivyignore previously suppressed the overlapping ID
+# GHSA-69x8-hrgq-fjj8 for Trivy container scans; it was pruned on 2026-08-23
+# (issue #760) after a fresh scan of the rebuilt achaean-aider image showed the
+# patched litellm (>=1.83.10 override) clears it. When removing an ID, search
+# both files. See docs/runbooks/dependency-audit-allowlists.md for dual-file guidance.
 #
 # CI consumer: .github/workflows/ci.yml "Audit Python dependencies (aider-chat)" step.
 # NOTE: that step is currently disabled (aider vessel disabled in #665). Restore it
