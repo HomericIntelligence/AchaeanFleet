@@ -209,6 +209,18 @@ build-vessel NAME:
         -t "achaean-{{NAME}}:latest" .
     echo "Done: achaean-{{NAME}}:latest"
 
+# Prepare immutable public inputs in an explicit directory (no container start).
+athena-tools-inputs DIRECTORY:
+    bash scripts/build-athena-tools.sh inputs {{quote(DIRECTORY)}}
+
+# Linux only; the operator owns VM/disk admission and finite lifecycle cleanup.
+athena-tools-build DIRECTORY:
+    bash scripts/build-athena-tools.sh build {{quote(DIRECTORY)}}
+
+# Real offline dependency tests; uv must be present, absence is a failure.
+athena-tools-test:
+    pixi run python -m pytest tests/test_athena_tools.py -v
+
 # Build all images (bases then vessels) via shell script
 build-all:
     @echo "=== Building all AchaeanFleet images ({{container_cmd}}) ==="

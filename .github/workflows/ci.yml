@@ -162,6 +162,9 @@ jobs:
 
   lint:
     name: Lint Dockerfiles and YAML
+    env:
+      UV_VERSION: '0.12.10'
+      UV_AMD64_SHA256: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -256,6 +259,13 @@ jobs:
           config: .hadolint.yaml
           failure-threshold: error
 
+      - name: Lint vessels/athena-tools/Dockerfile
+        uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6  # v3.4.0
+        with:
+          dockerfile: vessels/athena-tools/Dockerfile
+          config: .hadolint.yaml
+          failure-threshold: error
+
       - name: Install yamllint
         run: pip install yamllint
 
@@ -277,6 +287,17 @@ jobs:
 
       - name: Install dependencies
         run: pixi install
+
+      - name: Install verified uv for offline workspace tests
+        run: |
+          set -euo pipefail
+          curl --fail --location --proto '=https' --connect-timeout 20 --max-time 180 \
+            "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" \
+            -o "$RUNNER_TEMP/uv.tar.gz"
+          echo "${UV_AMD64_SHA256}  $RUNNER_TEMP/uv.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/athena-test-uv"
+          tar -xzf "$RUNNER_TEMP/uv.tar.gz" -C "$RUNNER_TEMP/athena-test-uv" --strip-components=1
+          echo "$RUNNER_TEMP/athena-test-uv" >> "$GITHUB_PATH"
 
       - name: Run pytest
         run: pixi run pytest
@@ -716,7 +737,7 @@ jobs:
 
   build-vessels:
     name: Build Vessel Images
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.vessel.runner || 'ubuntu-24.04' }}
     needs: [build-bases]
     permissions:
       contents: read
@@ -756,6 +777,12 @@ jobs:
           - name: achaean-hello-world
             dockerfile: vessels/hello-world/Dockerfile
             base: ''
+          - name: achaean-athena-tools
+            dockerfile: vessels/athena-tools/Dockerfile
+            base: ''
+            runner: ubuntu-24.04-arm
+            context: .athena-tools-build
+            buildfile: .athena-tools-build/Dockerfile
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -778,6 +805,10 @@ jobs:
         if: matrix.vessel.base != ''
         run: docker image inspect ${{ matrix.vessel.base }}:latest --format '{{.Id}}'
 
+      - name: Prepare immutable Athena tool inputs
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        run: bash scripts/build-athena-tools.sh inputs .athena-tools-build
+
       - name: Set up Docker Buildx (docker driver — shares daemon image store)
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4.2.0
         with:
@@ -794,8 +825,8 @@ jobs:
       - name: Build vessel image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
         with:
-          context: .
-          file: ${{ matrix.vessel.dockerfile }}
+          context: ${{ matrix.vessel.context || '.' }}
+          file: ${{ matrix.vessel.buildfile || matrix.vessel.dockerfile }}
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             IMAGE_VERSION=git-${{ env.SHORT_SHA }}
@@ -877,6 +908,18 @@ jobs:
         with:
           sarif_file: trivy-vessel.sarif
           category: trivy-${{ matrix.vessel.name }}
+
+      - name: Export scanned Athena tool image
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        run: docker save achaean-athena-tools:latest -o /tmp/athena-tools-scanned.tar
+
+      - name: Retain scanned Athena tool image
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: athena-tools-scanned
+          path: /tmp/athena-tools-scanned.tar
+          retention-days: 2
 
   distribute-certs:
     name: Distribute TLS certs (main only)
@@ -994,7 +1037,8 @@ jobs:
 
   test-smoke-vessels:
     name: Smoke Test AI Vessel Entrypoint (${{ matrix.vessel.name }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.vessel.runner || 'ubuntu-latest' }}
+    needs: [build-vessels]
     # Required check — add to branch protection required status checks in GitHub settings
     strategy:
       fail-fast: false
@@ -1050,6 +1094,15 @@ jobs:
             base: achaean-base-node
             base_dockerfile: bases/Dockerfile.node
             dockerfile: vessels/ampcode/Dockerfile
+          - name: achaean-athena-tools
+            dockerfile: vessels/athena-tools/Dockerfile
+            base: ''
+            runner: ubuntu-24.04-arm
+            context: .athena-tools-build
+            buildfile: .athena-tools-build/Dockerfile
+            program: /opt/codex-bin/codex
+            version_flag: --version
+            base_dockerfile: ''
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -1059,6 +1112,7 @@ jobs:
           driver: docker
 
       - name: Build base image (${{ matrix.vessel.base }})
+        if: matrix.vessel.base != ''
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
         with:
           context: .
@@ -1068,10 +1122,11 @@ jobs:
           tags: ${{ matrix.vessel.base }}:latest
 
       - name: Build vessel image (${{ matrix.vessel.name }})
+        if: matrix.vessel.name != 'achaean-athena-tools'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
         with:
-          context: .
-          file: ${{ matrix.vessel.dockerfile }}
+          context: ${{ matrix.vessel.context || '.' }}
+          file: ${{ matrix.vessel.buildfile || matrix.vessel.dockerfile }}
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             GOOSE_VERSION=1.31.1
@@ -1080,6 +1135,17 @@ jobs:
           push: false
           load: true
           tags: ${{ matrix.vessel.name }}:latest
+
+      - name: Download scanned Athena tool image
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: athena-tools-scanned
+          path: /tmp
+
+      - name: Load scanned Athena tool image
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        run: docker load -i /tmp/athena-tools-scanned.tar
 
       - name: Smoke test — binary reachable and invokable via entrypoint
         # Exercises entrypoint.sh (exec "$@" path) end-to-end WITHOUT --entrypoint=""
@@ -1102,6 +1168,38 @@ jobs:
             "$VESSEL_IMAGE" \
             "$VESSEL_PROGRAM" "$VESSEL_VERSION_FLAG"
           echo "Entrypoint smoke test passed: $VESSEL_PROGRAM $VESSEL_VERSION_FLAG"
+
+      - name: Check out the pinned Athena validation source
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: HomericIntelligence/Athena
+          ref: 3ba737517e2234729bcc7eb45b6ec0e3531efdf0
+          path: .athena-tools-validation
+          persist-credentials: false
+
+      - name: Validate Athena with a private offline environment
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          source_dir="$PWD/.athena-tools-validation"
+          snapshot=$(git -C "$source_dir" archive HEAD | sha256sum | cut -d ' ' -f 1)
+          image=$(docker image inspect achaean-athena-tools:latest --format '{{.Id}}')
+          mkdir -p "$source_dir/.fleet-runtime/"{home,xdg/config,xdg/cache,xdg/data,tmp}
+          sudo chown -R 1000:1000 "$source_dir"
+          timeout --signal=TERM --kill-after=30s 1100s docker run --rm \
+            --read-only --network none --cap-drop ALL --security-opt no-new-privileges \
+            --user 1000:1000 --cpus 1 --memory 1g --memory-swap 1g --pids-limit 128 \
+            --mount "type=bind,src=$source_dir,dst=/workspace" --workdir /workspace \
+            --entrypoint /usr/bin/env "$image" -i PATH=/usr/bin:/bin \
+            HOME=/workspace/.fleet-runtime/home \
+            XDG_CONFIG_HOME=/workspace/.fleet-runtime/xdg/config \
+            XDG_CACHE_HOME=/workspace/.fleet-runtime/xdg/cache \
+            XDG_DATA_HOME=/workspace/.fleet-runtime/xdg/data \
+            TMPDIR=/workspace/.fleet-runtime/tmp TMP=/workspace/.fleet-runtime/tmp \
+            timeout --signal=TERM --kill-after=15s 1000s \
+            just --justfile /opt/athena/workspace.just check "$snapshot" "$image"
 
   build-goose-multiarch:
     name: Build Goose Vessel (Multi-Arch)
@@ -1153,8 +1251,8 @@ jobs:
 
   push-to-registry:
     name: Push to GHCR
-    runs-on: ubuntu-latest
-    needs: [build-vessels]
+    runs-on: ${{ matrix.vessel.runner || 'ubuntu-latest' }}
+    needs: [build-vessels, test-smoke-vessels]
     if: |
       (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
       github.event.inputs.force_push == 'true' ||
@@ -1201,6 +1299,12 @@ jobs:
           - name: achaean-hello-world
             dockerfile: vessels/hello-world/Dockerfile
             base: ''
+          - name: achaean-athena-tools
+            dockerfile: vessels/athena-tools/Dockerfile
+            base: ''
+            runner: ubuntu-24.04-arm
+            context: .athena-tools-build
+            buildfile: .athena-tools-build/Dockerfile
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -1265,11 +1369,12 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push vessel image
+        if: matrix.vessel.name != 'achaean-athena-tools'
         id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
         with:
-          context: .
-          file: ${{ matrix.vessel.dockerfile }}
+          context: ${{ matrix.vessel.context || '.' }}
+          file: ${{ matrix.vessel.buildfile || matrix.vessel.dockerfile }}
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             IMAGE_VERSION=git-${{ env.SHORT_SHA }}
@@ -1277,13 +1382,35 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Download scanned Athena tool image
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: athena-tools-scanned
+          path: /tmp
+
+      - name: Push scanned Athena tool image
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        id: athena_push
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          docker load -i /tmp/athena-tools-scanned.tar
+          while IFS= read -r tag; do
+            docker tag achaean-athena-tools:latest "$tag"
+            docker push "$tag"
+          done <<< "$TAGS"
+          reference=$(docker inspect achaean-athena-tools:latest --format '{{index .RepoDigests 0}}')
+          echo "digest=${reference##*@}" >> "$GITHUB_OUTPUT"
+
       - name: Record vessel image digest
         id: digest
         shell: bash
         env:
           VESSEL_NAME: ${{ matrix.vessel.name }}
           COMMIT_SHA: ${{ github.sha }}
-          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+          BUILD_DIGEST: ${{ steps.athena_push.outputs.digest || steps.build.outputs.digest }}
           REGISTRY: ghcr.io/homericintelligence
         run: |
           set -euo pipefail
@@ -1455,6 +1582,7 @@ jobs:
             "achaean-ampcode"
             "achaean-worker"
             "achaean-hello-world"
+            "achaean-athena-tools"
             "achaean-base-node"
             "achaean-base-python"
             "achaean-base-minimal"

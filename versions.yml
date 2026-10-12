@@ -8,6 +8,24 @@
 # already verifies them at build time).  For tools without checksum
 # verification, add them as part of the next version bump.
 
+# Standalone tool image. These pins do not change existing agent vessels.
+athena_tools:
+  platform: "linux/arm64"
+  python_image: "python:3.13.15-slim-bookworm@sha256:ae8c3b6bb3d02ffffa2bee0bed8c7c99b9478bd042ff4d79a5bbd6eb10398864"
+  debian_snapshot: "20260920T000000Z"
+  git: "1:2.39.5-0+deb12u3"
+  codex: "0.153.4"
+  codex_arm64_sha256: "439c0dd0d6923f607b4e5cd1e3079c12f0b86f6e5007f07e377d6ad25e2d7bb9"
+  just: "1.51.0"
+  just_arm64_sha256: "ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5"
+  uv: "0.12.10"
+  uv_arm64_sha256: "9ff6b9d4665edcdd3a88dcc73cd1eb641754deb927f14e8c62ebfde6bf4f5f5e"
+  uv_amd64_sha256: "173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b"
+  athena_revision: "3ba737517e2234729bcc7eb45b6ec0e3531efdf0"
+  lock_sha256: "c42df8b53694e9a434da9c75bf6e83cf7518260aba0dfd10bd403f902668d78b"
+  project_sha256: "304611c94811981ea79df8f31ddb06547307dcf13112167c2842d0caeaf3f0d0"
+  python_sha256: "861b3dd8083d28f336ef70f6755bc399538ddad627b1d095820ca34cb953cf14"
+
 # ---------------------------------------------------------------------------
 # Base image digests (updated weekly by .github/workflows/digest-bump.yml)
 # ---------------------------------------------------------------------------
