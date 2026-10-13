@@ -1,5 +1,5 @@
 # Independent ARM64 tool image; pins are mirrored in versions.yml.
-FROM python:3.13.15-slim-bookworm@sha256:ae8c3b6bb3d02ffffa2bee0bed8c7c99b9478bd042ff4d79a5bbd6eb10398864 AS tools
+FROM python:3.14.8-slim-bookworm@sha256:48b13b003dda20b16f9442b8475aa05fe21bf6579a8c881db92ffb4d8fd20f83 AS tools
 
 ARG GIT_VERSION=1:2.39.5-0+deb12u3
 ARG DEBIAN_SNAPSHOT=20261012T000000Z
@@ -9,10 +9,17 @@ ARG JUST_VERSION=1.51.0
 ARG JUST_ARM64_SHA256=ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5
 ARG UV_VERSION=0.12.10
 ARG UV_ARM64_SHA256=9ff6b9d4665edcdd3a88dcc73cd1eb641754deb927f14e8c62ebfde6bf4f5f5e
-ARG ATHENA_REVISION=3ba737517e2234729bcc7eb45b6ec0e3531efdf0
-ARG ATHENA_LOCK_SHA256=c42df8b53694e9a434da9c75bf6e83cf7518260aba0dfd10bd403f902668d78b
-ARG ATHENA_PROJECT_SHA256=304611c94811981ea79df8f31ddb06547307dcf13112167c2842d0caeaf3f0d0
-ARG ATHENA_PYTHON_SHA256=861b3dd8083d28f336ef70f6755bc399538ddad627b1d095820ca34cb953cf14
+# Athena revision 3ba7375 (2026-09-28) locked virtualenv 21.6.1, which fails
+# CVE-2026-102925 / CVE-2026-102930 / CVE-2026-102937 (fixed in 21.7.13).
+# a010a02 (2026-10-09) is the newest upstream uv.lock and resolves virtualenv
+# 21.14.5. Upstream raised requires-python to >=3.14.8,<3.15 at the same time,
+# so the interpreter floor moves with it and the base image moves from 3.13.15
+# to 3.14.8. The old base also carried 7 fixable HIGH findings; the new one has
+# none under the gate's --ignore-unfixed / severity HIGH,CRITICAL settings.
+ARG ATHENA_REVISION=a010a0239ba44e0a8e17d55bfff777cc42b6dea1
+ARG ATHENA_LOCK_SHA256=44af437c6c9a05f9a24d2fc062ce6e39996975193fda355d0ad082a343b65c40
+ARG ATHENA_PROJECT_SHA256=cf9bd202b019ed41223330dfc66cdea05ab7794bcd118764c5fb813d244dd1b8
+ARG ATHENA_PYTHON_SHA256=5abd4dc1efa09469b88916c8e4e027a8c266a9b6d06f43ac9da3e30cd00b4ab5
 
 # Keep ordinary apt signature and expiry verification enabled. An expired
 # snapshot must be updated and reviewed, never accepted through a bypass.
