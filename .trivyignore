@@ -524,3 +524,37 @@ CVE-2026-89161
 CVE-2026-78667
 CVE-2026-78669
 CVE-2026-97031
+
+# CVE-2026-59723
+# Category: npm
+# Rationale: cline 2.14.0 is installed globally in achaean-cline; the fix needs
+# cline 3.0.30 or newer, which is a major-version bump. The advisory covers
+# cross-origin WebSocket hijacking of the Cline Hub dashboard /browser endpoint.
+# The Fleet vessel never runs that dashboard: vessels/cline/Dockerfile sets
+# AGENT_PROGRAM=cline and the agent runs headless, the Dockerfile declares no
+# EXPOSE, and compose/ maps no port for the vessel. Revisit when the 2.x line is
+# superseded or a backport reaches 2.x.
+# Exploitability: none — no Cline Hub dashboard listener exists in this runtime,
+# so the vulnerable endpoint is never bound.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807
+CVE-2026-59723
+
+# GHSA-rgj7-g3m4-5g8c, GHSA-wq5f-xc86-pv6w
+# Category: npm
+# Rationale: sharp 0.34.5 is a transitive dependency of cline 2.14.0 and
+# carries libheif and librsvg advisories fixed in sharp 0.35.4 and 0.35.5. The
+# cline 3.x line drops the sharp dependency, so the upstream remedy exists, but
+# taking it now is a net regression: scanning the cline 3.0.71 dependency tree
+# on 2026-10-13 with Trivy 0.74.0 shows it pulls simple-git 3.36.0
+# (CVE-2026-102826, CVE-2026-102827, CVE-2026-102828) and @simple-git/argv-parser
+# 1.1.1 (CVE-2026-102829) plus undici 5.29.0 (CVE-2026-12151, CVE-2026-1526,
+# CVE-2026-2229) — seven additional fixable HIGH findings against the two
+# here. Revisit when a cline 3.x release ships without those regressions.
+# Exploitability: low — sharp is used for local image processing; this vessel
+# runs cline headless against a workspace checkout, so no attacker-supplied
+# image reaches libheif or librsvg.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807
+GHSA-rgj7-g3m4-5g8c
+GHSA-wq5f-xc86-pv6w
