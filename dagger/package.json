@@ -17,8 +17,9 @@
     "ts-node": "^10.9.0",
     "typescript": "^7.0.2"
   },
-  "//overrides": "Force Dagger's transitive security fixes while retaining @dagger.io/dagger@0.21.8. protobufjs>=7.6.5 clears GHSA-j3f2-48v5-ccww (infinite-loop DoS); tar>=7.5.21 clears GHSA-r292-9mhp-454m (stack-overflow DoS); uuid>=11.1.1 clears GHSA-w5hq-g745-h8pq (buffer bounds check; jaeger-client only uses uuid.v4(), CJS-compatible in v11). sdk-node 0.220.0 clears the HIGH OpenTelemetry chain; adm-zip 0.6.1 includes the GHSA-7q85-xj36-vmfc fix and retains the GHSA-xcpc-8h2w-3j85 fix. Lockfile and CI audit prove the compatibility boundary.",
+  "//overrides": "Force Dagger's transitive security fixes while retaining @dagger.io/dagger@0.21.8. protobufjs>=7.6.5 clears GHSA-j3f2-48v5-ccww (infinite-loop DoS); tar>=7.5.21 clears GHSA-r292-9mhp-454m (stack-overflow DoS); uuid>=11.1.1 clears GHSA-w5hq-g745-h8pq (buffer bounds check; jaeger-client only uses uuid.v4(), CJS-compatible in v11). sdk-node 0.220.0 clears the HIGH OpenTelemetry chain; adm-zip 0.6.1 includes the GHSA-7q85-xj36-vmfc fix and retains the GHSA-xcpc-8h2w-3j85 fix. @grpc/grpc-js>=1.14.5 clears CVE-2026-101916 (peer certificate validation bypass) and the GHSA-f596-whhp-79r4 error-message disclosure; the OpenTelemetry OTLP gRPC exporters declare ^1.14.3, so the floor is inside their range and no adapter change is required. Lockfile and CI audit prove the compatibility boundary.",
   "overrides": {
+    "@grpc/grpc-js": "^1.14.5",
     "adm-zip": "0.6.1",
     "@opentelemetry/core": "^2.8.0",
     "@opentelemetry/propagator-jaeger": "^2.9.0",

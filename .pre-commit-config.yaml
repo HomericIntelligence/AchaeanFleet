@@ -42,11 +42,19 @@ repos:
   #   DL3046: useradd without -l — UID 1000 is standard, image size impact is acceptable
   #   DL3059: Multiple consecutive RUN — intentional grouping in base images
   #   DL4006: SHELL pipefail — piped RUN commands in base/vessel images are intentional
+  #
+  # `exclude` drops Docker's .dockerignore files. identify tags any path whose
+  # name begins with `Dockerfile` as type `dockerfile`, so
+  # `vessels/athena-tools/Dockerfile.dockerignore` reached hadolint as a
+  # Dockerfile and failed to parse its first line (`*`). hadolint cannot lint a
+  # .dockerignore file; the build-context exclusion is enforced by the
+  # "Lint Dockerfiles and YAML" workflow job instead.
   # ---------------------------------------------------------------------------
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint
+        exclude: '\.dockerignore$'
         args:
           - --ignore=DL3008
           - --ignore=DL3013

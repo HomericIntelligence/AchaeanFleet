@@ -3,7 +3,7 @@ name = "achaean-fleet"
 version = "0.1.0"
 description = "Container infrastructure for the HomericIntelligence agent mesh"
 channels = ["conda-forge"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "linux-aarch64"]
 
 [dependencies]
 just       = ">=1.13"
@@ -20,7 +20,9 @@ push        = "just push"
 pytest      = "python -m pytest tests/ -v --cov=. --cov-report=term-missing"
 test-python = "python -m pytest tests/ -v"
 
-[feature.dev.dependencies]
+# conda-forge does not publish bats-core for linux-aarch64; the CI image
+# supplies Debian BATS there. Preserve the existing AMD64 dev dependency.
+[feature.dev.target.linux-64.dependencies]
 bats-core = ">=1.11.0"
 
 [environments]

@@ -10,8 +10,10 @@ import http.server
 import io
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
+from urllib.parse import urlsplit
 import shutil
 import subprocess
 import sys
@@ -458,3 +460,150 @@ def test_ci_uv_pins_match_version_manifest():
     assert {name: lint_env[name] for name in expected} == expected
     ci_args = _dockerfile_args(ROOT / "ci" / "Containerfile")
     assert {name: ci_args[name] for name in expected} == expected
+
+
+def test_smoke_validation_ref_is_read_from_the_dockerfile_pin():
+    """The athena-tools smoke job must not hold its own copy of the revision.
+
+    The image binds ATHENA_REVISION into /opt/athena/inputs.json, and
+    prepare_workspace.py rejects any workspace whose dependency files do not
+    match that binding. A second literal copy of the SHA in ci.yml therefore
+    fails the smoke test on every pin bump while the image build stays green,
+    which is exactly what happened when the pin moved to a010a023.
+    """
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text())
+    steps = workflow["jobs"]["test-smoke-vessels"]["steps"]
+    resolve = next(
+        step for step in steps
+        if str(step.get("name", "")).startswith("Resolve the pinned Athena")
+    )
+    checkout = next(
+        step for step in steps
+        if str(step.get("name", "")).startswith("Check out the pinned Athena")
+    )
+    assert "ATHENA_REVISION" in resolve["run"]
+    assert checkout["with"]["ref"] == "${{ steps.%s.outputs.ref }}" % resolve["id"]
+    for key, value in checkout["with"].items():
+        assert not re.fullmatch(r"[0-9a-f]{40}", str(value)), (
+            f"ci.yml hardcodes {key}={value}; read it from the recipe pin instead"
+        )
+
+
+# Recipes Athena runs in its own required checks. Asserting them here would
+# duplicate a slower, weaker copy of Athena's CI: this job gives the container
+# --cpus 1 --memory 1g --pids-limit 128 --network none on an emulated ARM64
+# runner, where Athena's suite reached 19% in 16.6 minutes of a 20-minute step.
+ATHENA_OWN_RECIPES = ("test", "static", "markdownlint", "workflow-check", "package")
+
+
+def test_workspace_check_scope_stays_within_the_offline_environment():
+    """The admitted tool route asserts the offline environment, not Athena's CI.
+
+    Preparation already runs `uv sync --locked --offline` and re-checks the
+    snapshot, digest, and dependency-file bindings, so `check` only needs to
+    validate Athena's content on the prepared tree and its uv pins.
+    """
+    recipe = (ROOT / "vessels" / "athena-tools" / "workspace.just").read_text()
+    body = recipe.split("check SNAPSHOT IMAGE:", 1)[1]
+    invoked = re.search(r"--justfile\s+\S+\s+([^\n\\]+)", body)
+    assert invoked is not None, "check must invoke an Athena recipe"
+
+    recipes = invoked.group(1).split()
+    assert recipes == ["validate", "uv-pins"], (
+        f"workspace.just check now runs {recipes}; Athena's own required checks "
+        f"already cover {', '.join(ATHENA_OWN_RECIPES)}"
+    )
+
+
+def test_workspace_check_keeps_the_validator_skip_scoped():
+    """The validator skip must stay limited to the prepared runtime directory."""
+    recipe = (ROOT / "vessels" / "athena-tools" / "workspace.just").read_text()
+    match = re.search(
+        r'ATHENA_VALIDATE_IGNORED_PATHS="([^"]+)"', recipe
+    )
+    assert match is not None, "check must declare the runtime scratch directory"
+    assert match.group(1) == ".fleet-runtime"
+
+
+DEBIAN_SNAPSHOT_MAX_AGE_DAYS = 30
+
+
+def test_snapshot_valid_until_exemption_stays_scoped_and_signed():
+    """Exempting Valid-Until must not weaken signature checking, and must apply
+    to the snapshot sources only.
+
+    The clock is disabled per source with `[check-valid-until=no]`, the form
+    sources.list(5) documents for repositories that are not updated by design.
+    The Debian archive signature still covers every index and package.
+    """
+    dockerfile = (ROOT / "vessels" / "athena-tools" / "Dockerfile").read_text()
+
+    # Capture every `deb` source, bracketed or not, so a line that loses its
+    # options entirely is still checked rather than silently skipped.
+    entries = re.findall(r"deb\s+(\[[^\]]*\])?\s*(https?://\S+)", dockerfile)
+    assert len(entries) == 2, (
+        f"expected the bookworm and bookworm-security snapshot sources, found "
+        f"{[uri for _, uri in entries]}"
+    )
+
+    forbidden = {
+        "trusted",
+        "allow-insecure",
+        "allow-weak",
+        "allow-downgrade-to-insecure",
+        "allow-unauthenticated",
+    }
+    for options, uri in entries:
+        # Compare the parsed host, not a substring: "snapshot.debian.org" also
+        # matches https://example.invalid/?r=snapshot.debian.org.
+        assert urlsplit(uri).hostname == "snapshot.debian.org", (
+            f"unexpected apt source in this image: {uri}"
+        )
+        pairs = dict(
+            option.split("=", 1)
+            for option in (options or "").strip("[]").split()
+            if "=" in option
+        )
+        assert pairs.get("check-valid-until") == "no", (
+            f"{uri} does not carry check-valid-until=no; an expired snapshot "
+            f"will fail the build again"
+        )
+        assert not (set(pairs) & forbidden), (
+            f"{uri} disables apt-secure via {sorted(set(pairs) & forbidden)}"
+        )
+
+    # The exemption must stay per source, never a blanket override.
+    assert not re.search(r"Acquire::Check-Valid-Until", dockerfile), (
+        "Valid-Until must be disabled per source, not through a global override"
+    )
+
+    # Signing must stay mandatory: no unauthenticated apt invocations, and no
+    # keyring pointed at nothing.
+    for pattern in (
+        r"--allow-unauthenticated",
+        r"--allow-insecure-repositories",
+        r"signed-by\s*=\s*/dev/null",
+    ):
+        assert not re.search(pattern, dockerfile, re.IGNORECASE), (
+            f"{pattern} would disable signature verification for the snapshot"
+        )
+
+
+def test_snapshot_pin_is_reviewed_on_a_sustainable_cadence():
+    """Keep the 'update and review' obligation on a timescale a human can meet.
+
+    The removed Valid-Until clock failed the build about every five days, which
+    nobody can review against. A month matches the existing digest-bump cadence,
+    and Trivy remains the gate that catches an outdated snapshot's packages.
+    """
+    manifest = yaml.safe_load((ROOT / "versions.yml").read_text())["athena_tools"]
+    stamp = manifest["debian_snapshot"]
+    assert re.fullmatch(r"\d{8}T\d{6}Z", stamp), f"unexpected snapshot pin: {stamp}"
+
+    taken = datetime.strptime(stamp, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+    age = datetime.now(timezone.utc) - taken
+    assert age < timedelta(days=DEBIAN_SNAPSHOT_MAX_AGE_DAYS), (
+        f"DEBIAN_SNAPSHOT {stamp} is {age.days} days old; advance it past "
+        f"{DEBIAN_SNAPSHOT_MAX_AGE_DAYS} days so the image keeps receiving "
+        f"security updates"
+    )

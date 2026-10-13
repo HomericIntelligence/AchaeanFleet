@@ -1,24 +1,58 @@
 # Independent ARM64 tool image; pins are mirrored in versions.yml.
-FROM python:3.13.15-slim-bookworm@sha256:ae8c3b6bb3d02ffffa2bee0bed8c7c99b9478bd042ff4d79a5bbd6eb10398864 AS tools
+FROM python:3.14.8-slim-bookworm@sha256:48b13b003dda20b16f9442b8475aa05fe21bf6579a8c881db92ffb4d8fd20f83 AS tools
 
 ARG GIT_VERSION=1:2.39.5-0+deb12u3
-ARG DEBIAN_SNAPSHOT=20260920T000000Z
+ARG DEBIAN_SNAPSHOT=20261012T000000Z
 ARG CODEX_VERSION=0.153.4
 ARG CODEX_ARM64_SHA256=439c0dd0d6923f607b4e5cd1e3079c12f0b86f6e5007f07e377d6ad25e2d7bb9
 ARG JUST_VERSION=1.51.0
 ARG JUST_ARM64_SHA256=ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5
 ARG UV_VERSION=0.12.10
 ARG UV_ARM64_SHA256=9ff6b9d4665edcdd3a88dcc73cd1eb641754deb927f14e8c62ebfde6bf4f5f5e
-ARG ATHENA_REVISION=3ba737517e2234729bcc7eb45b6ec0e3531efdf0
-ARG ATHENA_LOCK_SHA256=c42df8b53694e9a434da9c75bf6e83cf7518260aba0dfd10bd403f902668d78b
-ARG ATHENA_PROJECT_SHA256=304611c94811981ea79df8f31ddb06547307dcf13112167c2842d0caeaf3f0d0
-ARG ATHENA_PYTHON_SHA256=861b3dd8083d28f336ef70f6755bc399538ddad627b1d095820ca34cb953cf14
+# Athena revision 3ba7375 (2026-09-28) locked virtualenv 21.6.1, which fails
+# CVE-2026-102925 / CVE-2026-102930 / CVE-2026-102937 (fixed in 21.7.13).
+# a010a02 (2026-10-09) is the newest upstream uv.lock and resolves virtualenv
+# 21.14.5. Upstream raised requires-python to >=3.14.8,<3.15 at the same time,
+# so the interpreter floor moves with it and the base image moves from 3.13.15
+# to 3.14.8. The old base also carried 7 fixable HIGH findings; the new one has
+# none under the gate's --ignore-unfixed / severity HIGH,CRITICAL settings.
+#
+# eb8ff6c (2026-10-13, Athena #346) adds the validator seam this image's
+# workspace preparation depends on: scripts/validate_skills.py now skips
+# top-level directories the consumer declares through
+# ATHENA_VALIDATE_IGNORED_PATHS, which workspace.just sets to .fleet-runtime.
+# Without it the offline uv cache that prepare_workspace.py is required to
+# place inside the workspace is walked by the validator, which then fails on
+# undecodable binaries and vendored library source. That change touched only
+# scripts/ and tests/, so the three upstream checksums below are unchanged.
+ARG ATHENA_REVISION=eb8ff6c07813019581bb6a747ff7f3265f50b5f3
+ARG ATHENA_LOCK_SHA256=44af437c6c9a05f9a24d2fc062ce6e39996975193fda355d0ad082a343b65c40
+ARG ATHENA_PROJECT_SHA256=cf9bd202b019ed41223330dfc66cdea05ab7794bcd118764c5fb813d244dd1b8
+ARG ATHENA_PYTHON_SHA256=5abd4dc1efa09469b88916c8e4e027a8c266a9b6d06f43ac9da3e30cd00b4ab5
 
-# Keep ordinary apt signature and expiry verification enabled. An expired
-# snapshot must be updated and reviewed, never accepted through a bypass.
+# Install git from the pinned Debian snapshot.
+#
+# Signature verification stays on. Only the Valid-Until replay clock is disabled,
+# and only for these two source lines, using the per-source option
+# sources.list(5) documents for repositories that are "not updated any more by
+# design".
+#
+# Valid-Until is inherited from the live security archive's release cadence, not
+# from the snapshot, so a snapshot's InRelease goes stale about six days after its
+# timestamp even though the archived bytes never change. That makes the clock a
+# pure nuisance here: it cannot detect tampering, which is what the Debian archive
+# signature covers, and it cannot tell you the pinned content is wrong, because the
+# content is immutable. What it really signals is "you may be pinning an old
+# snapshot", and that risk is gated by the Trivy scan of the built image, which is
+# a required check. Enforcing the clock instead meant the build failed every few
+# days with `E: Release file ... is expired` and apt-get exit 100.
+#
+# The review obligation is kept, on a timescale a human or a monthly bump can
+# actually meet: tests/test_athena_tools.py fails once DEBIAN_SNAPSHOT is older
+# than 30 days.
 RUN test "$(dpkg --print-architecture)" = arm64 \
     && rm /etc/apt/sources.list.d/debian.sources \
-    && printf 'deb https://snapshot.debian.org/archive/debian/%s/ bookworm main\ndeb https://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
+    && printf 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/%s/ bookworm main\ndeb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
         "$DEBIAN_SNAPSHOT" "$DEBIAN_SNAPSHOT" > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends "git=${GIT_VERSION}" \

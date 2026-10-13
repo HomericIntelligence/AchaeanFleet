@@ -831,7 +831,7 @@ jobs:
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             IMAGE_VERSION=git-${{ env.SHORT_SHA }}
             GOOSE_VERSION=1.31.1
-            YQ_VERSION=v4.53.3
+            YQ_VERSION=v4.53.6
             OPENCODE_VERSION=v1.4.3
           push: false
           load: true
@@ -1130,7 +1130,7 @@ jobs:
           build-args: |
             BASE_IMAGE=${{ matrix.vessel.base }}:latest
             GOOSE_VERSION=1.31.1
-            YQ_VERSION=v4.53.3
+            YQ_VERSION=v4.53.6
             OPENCODE_VERSION=v1.4.3
           push: false
           load: true
@@ -1169,12 +1169,22 @@ jobs:
             "$VESSEL_PROGRAM" "$VESSEL_VERSION_FLAG"
           echo "Entrypoint smoke test passed: $VESSEL_PROGRAM $VESSEL_VERSION_FLAG"
 
+      - name: Resolve the pinned Athena validation revision
+        # Read the revision from the recipe rather than repeating it here. The
+        # image binds ATHENA_REVISION into /opt/athena/inputs.json and
+        # prepare_workspace.py refuses a workspace whose dependency files do not
+        # match that binding, so a second hardcoded copy of the SHA silently
+        # turns every athena-tools pin bump into a smoke-test failure.
+        if: matrix.vessel.name == 'achaean-athena-tools'
+        id: athena-validation
+        run: echo "ref=$(sed -n 's/^ARG ATHENA_REVISION=//p' vessels/athena-tools/Dockerfile)" >> "$GITHUB_OUTPUT"
+
       - name: Check out the pinned Athena validation source
         if: matrix.vessel.name == 'achaean-athena-tools'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           repository: HomericIntelligence/Athena
-          ref: 3ba737517e2234729bcc7eb45b6ec0e3531efdf0
+          ref: ${{ steps.athena-validation.outputs.ref }}
           path: .athena-tools-validation
           persist-credentials: false
 
