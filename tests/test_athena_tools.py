@@ -13,6 +13,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
+from urllib.parse import urlsplit
 import shutil
 import subprocess
 import sys
@@ -553,7 +554,9 @@ def test_snapshot_valid_until_exemption_stays_scoped_and_signed():
         "allow-unauthenticated",
     }
     for options, uri in entries:
-        assert "snapshot.debian.org" in uri, (
+        # Compare the parsed host, not a substring: "snapshot.debian.org" also
+        # matches https://example.invalid/?r=snapshot.debian.org.
+        assert urlsplit(uri).hostname == "snapshot.debian.org", (
             f"unexpected apt source in this image: {uri}"
         )
         pairs = dict(
