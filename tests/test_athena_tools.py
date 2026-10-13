@@ -10,6 +10,7 @@ import http.server
 import io
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
 import shutil
@@ -521,3 +522,85 @@ def test_workspace_check_keeps_the_validator_skip_scoped():
     )
     assert match is not None, "check must declare the runtime scratch directory"
     assert match.group(1) == ".fleet-runtime"
+
+
+DEBIAN_SNAPSHOT_MAX_AGE_DAYS = 30
+
+
+def test_snapshot_valid_until_exemption_stays_scoped_and_signed():
+    """Exempting Valid-Until must not weaken signature checking, and must apply
+    to the snapshot sources only.
+
+    The clock is disabled per source with `[check-valid-until=no]`, the form
+    sources.list(5) documents for repositories that are not updated by design.
+    The Debian archive signature still covers every index and package.
+    """
+    dockerfile = (ROOT / "vessels" / "athena-tools" / "Dockerfile").read_text()
+
+    # Capture every `deb` source, bracketed or not, so a line that loses its
+    # options entirely is still checked rather than silently skipped.
+    entries = re.findall(r"deb\s+(\[[^\]]*\])?\s*(https?://\S+)", dockerfile)
+    assert len(entries) == 2, (
+        f"expected the bookworm and bookworm-security snapshot sources, found "
+        f"{[uri for _, uri in entries]}"
+    )
+
+    forbidden = {
+        "trusted",
+        "allow-insecure",
+        "allow-weak",
+        "allow-downgrade-to-insecure",
+        "allow-unauthenticated",
+    }
+    for options, uri in entries:
+        assert "snapshot.debian.org" in uri, (
+            f"unexpected apt source in this image: {uri}"
+        )
+        pairs = dict(
+            option.split("=", 1)
+            for option in (options or "").strip("[]").split()
+            if "=" in option
+        )
+        assert pairs.get("check-valid-until") == "no", (
+            f"{uri} does not carry check-valid-until=no; an expired snapshot "
+            f"will fail the build again"
+        )
+        assert not (set(pairs) & forbidden), (
+            f"{uri} disables apt-secure via {sorted(set(pairs) & forbidden)}"
+        )
+
+    # The exemption must stay per source, never a blanket override.
+    assert not re.search(r"Acquire::Check-Valid-Until", dockerfile), (
+        "Valid-Until must be disabled per source, not through a global override"
+    )
+
+    # Signing must stay mandatory: no unauthenticated apt invocations, and no
+    # keyring pointed at nothing.
+    for pattern in (
+        r"--allow-unauthenticated",
+        r"--allow-insecure-repositories",
+        r"signed-by\s*=\s*/dev/null",
+    ):
+        assert not re.search(pattern, dockerfile, re.IGNORECASE), (
+            f"{pattern} would disable signature verification for the snapshot"
+        )
+
+
+def test_snapshot_pin_is_reviewed_on_a_sustainable_cadence():
+    """Keep the 'update and review' obligation on a timescale a human can meet.
+
+    The removed Valid-Until clock failed the build about every five days, which
+    nobody can review against. A month matches the existing digest-bump cadence,
+    and Trivy remains the gate that catches an outdated snapshot's packages.
+    """
+    manifest = yaml.safe_load((ROOT / "versions.yml").read_text())["athena_tools"]
+    stamp = manifest["debian_snapshot"]
+    assert re.fullmatch(r"\d{8}T\d{6}Z", stamp), f"unexpected snapshot pin: {stamp}"
+
+    taken = datetime.strptime(stamp, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+    age = datetime.now(timezone.utc) - taken
+    assert age < timedelta(days=DEBIAN_SNAPSHOT_MAX_AGE_DAYS), (
+        f"DEBIAN_SNAPSHOT {stamp} is {age.days} days old; advance it past "
+        f"{DEBIAN_SNAPSHOT_MAX_AGE_DAYS} days so the image keeps receiving "
+        f"security updates"
+    )

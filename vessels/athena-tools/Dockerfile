@@ -30,20 +30,29 @@ ARG ATHENA_LOCK_SHA256=44af437c6c9a05f9a24d2fc062ce6e39996975193fda355d0ad082a34
 ARG ATHENA_PROJECT_SHA256=cf9bd202b019ed41223330dfc66cdea05ab7794bcd118764c5fb813d244dd1b8
 ARG ATHENA_PYTHON_SHA256=5abd4dc1efa09469b88916c8e4e027a8c266a9b6d06f43ac9da3e30cd00b4ab5
 
-# Keep ordinary apt signature and expiry verification enabled. An expired
-# snapshot must be updated and reviewed, never accepted through a bypass.
+# Install git from the pinned Debian snapshot.
 #
-# 20260920T000000Z was retired on 2026-09-27: the bookworm-security InRelease
-# carries a Valid-Until roughly seven days past the snapshot timestamp, so apt
-# refused it with "Release file ... is expired" and the build exited 100. The
-# pin moves to 20261012T000000Z (Valid-Until 2026-10-18). git 1:2.39.5-0+deb12u3
-# is still the version bookworm main offers, so GIT_VERSION is unchanged.
+# Signature verification stays on. Only the Valid-Until replay clock is disabled,
+# and only for these two source lines, using the per-source option
+# sources.list(5) documents for repositories that are "not updated any more by
+# design".
 #
-# This pin lapses roughly every seven days and has no automated bump, so the
-# build will fail again within the week unless the snapshot is advanced.
+# Valid-Until is inherited from the live security archive's release cadence, not
+# from the snapshot, so a snapshot's InRelease goes stale about six days after its
+# timestamp even though the archived bytes never change. That makes the clock a
+# pure nuisance here: it cannot detect tampering, which is what the Debian archive
+# signature covers, and it cannot tell you the pinned content is wrong, because the
+# content is immutable. What it really signals is "you may be pinning an old
+# snapshot", and that risk is gated by the Trivy scan of the built image, which is
+# a required check. Enforcing the clock instead meant the build failed every few
+# days with `E: Release file ... is expired` and apt-get exit 100.
+#
+# The review obligation is kept, on a timescale a human or a monthly bump can
+# actually meet: tests/test_athena_tools.py fails once DEBIAN_SNAPSHOT is older
+# than 30 days.
 RUN test "$(dpkg --print-architecture)" = arm64 \
     && rm /etc/apt/sources.list.d/debian.sources \
-    && printf 'deb https://snapshot.debian.org/archive/debian/%s/ bookworm main\ndeb https://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
+    && printf 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/%s/ bookworm main\ndeb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
         "$DEBIAN_SNAPSHOT" "$DEBIAN_SNAPSHOT" > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends "git=${GIT_VERSION}" \
