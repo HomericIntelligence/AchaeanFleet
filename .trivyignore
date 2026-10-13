@@ -30,10 +30,10 @@
 
 # CVE-2026-39822
 # Category: other
-# Rationale: Go stdlib os.Root symlink-following fix exists in Go 1.26.5, but the GitHub CLI binary in achaean-claude is still built with Go 1.26.4. yq was repaired independently by the v4.53.6 upgrade and no longer relies on this suppression. Tracking the remaining gh repair in #720/#779.
-# Exploitability: low — os.Root traversal requires an attacker able to pre-place symlinks in directories gh opens via os.Root; gh runs as a developer CLI with no attacker-controlled filesystem input path in this vessel runtime.
-# Expires: 2026-10-12
-# Reviewer: @mvillmow  PR #721
+# Rationale: Go stdlib os.Root symlink-following, fixed in Go 1.26.5. Two vendored binaries in achaean-claude are still affected. (1) gitleaks v8.30.1 — the latest published release, pinned in ci/Containerfile — is built with Go 1.24.11; re-verified 2026-10-13 with Trivy 0.74.0 (`trivy rootfs` on the release tarball) and no newer release exists. (2) gh was installed unpinned from GitHub's apt repo; latest gh v2.102.0 (2026-09-30) is built with Go 1.27.1 and carries the fix, so the gh copy should clear on the next achaean-claude rebuild. PR #807 does not rebuild achaean-claude (Build Vessel Images is skipped), so the finding could not be re-scanned here and the entry is renewed rather than removed. yq was repaired independently by the v4.53.6 upgrade and no longer relies on this suppression. Tracking the remaining repair in #720/#779.
+# Exploitability: low — os.Root traversal requires an attacker able to pre-place symlinks in directories gh opens via os.Root; gh runs as a developer CLI with no attacker-controlled filesystem input path in this vessel runtime. The gitleaks binary is a CI secret scanner with no untrusted filesystem input.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807 (re-review)
 CVE-2026-39822
 
 # CVE-2026-56864
@@ -92,12 +92,13 @@ CVE-2026-73566
 # Reviewer: @mvillmow  PR #746
 GHSA-f88m-g3jw-g9cj
 
-# golang stdlib + golang.org/x/net cluster compiled into the gitleaks binary
-# (pre-commit golang hook env) shipped in the achaean-claude vessel image.
-# Fixed in Go 1.26.6 / 1.25.13 toolchains; no released gitleaks build vendors
-# a newer stdlib yet. Not reachable from our secret-scan usage (no untrusted
-# network input). Same cluster already suppressed on Scylla.
-# Expires: 2026-10-14 | Reviewer: mvillmow | Category: ci-image-tooling (gitleaks)
+# CVE-2026-33818, CVE-2026-39821, CVE-2026-46600, CVE-2026-56853,
+# CVE-2026-56858, CVE-2026-56859, CVE-2026-56860, CVE-2026-56862
+# Category: other
+# Rationale: golang.org/x/net cluster and golang stdlib compiled into the gitleaks binary (v8.30.1, pinned in ci/Containerfile) shipped in the achaean-claude vessel image. Fixed in Go 1.26.6 / 1.25.13 toolchains; no released gitleaks build vendors a newer stdlib. Re-verified 2026-10-13 with Trivy 0.74.0 against the v8.30.1 release tarball (`trivy rootfs`): every listed CVE still fires and v8.30.1 (2026-03-21) is still the latest published release. This entry previously used a single non-conforming `# Expires:` line, so the expiry check in ci.yml never matched it; it is now in the required six-field form and is actively enforced. Same binary as CVE-2026-39822. Not reachable from our secret-scan usage (no untrusted network input). Same cluster already suppressed on Scylla.
+# Exploitability: low — gitleaks scans repository checkouts for secret patterns; no untrusted network input or attacker-supplied filesystem tree reaches it.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807 (re-review)
 CVE-2026-33818
 CVE-2026-39821
 CVE-2026-46600
@@ -410,3 +411,72 @@ CVE-2026-23949
 # Expires: 2026-11-16
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-24049
+
+# CVE-2026-93687
+# Category: npm
+# Rationale: braces 3.0.3 is the latest published braces release and npm
+# registry metadata reports no fixed version; Trivy lists the finding with an
+# empty Fixed Version, so the `security-dependency-scan` gate fires it. Chain is
+# markdownlint-cli2@0.23.2 (exact pin) -> micromatch@4.0.8 -> braces@^3.0.3.
+# Clearing it needs either a braces 3.0.4 release or a markdownlint-cli2 release
+# that drops the micromatch dependency; neither exists. Verified 2026-10-13
+# against registry.npmjs.org.
+# Exploitability: low — braces expands glob patterns. The only consumer is the
+# Markdownlint toolchain in ci/, and its inputs are repository-controlled globs
+# from .markdownlint.yaml; no attacker-supplied pattern reaches it.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807
+CVE-2026-93687
+
+# CVE-2026-102276, CVE-2026-102278
+# Category: npm
+# Rationale: brace-expansion 5.0.9 is bundled inside the npm CLI's own
+# node_modules at /usr/local/lib/node_modules/npm/node_modules/brace-expansion
+# in achaean-base-node, achaean-base-minimal and achaean-base-python. npm's
+# bundled tree cannot be overridden without forking npm. Fix floors are 5.0.10
+# (CVE-2026-102276) and 5.0.11 (CVE-2026-102278). Verified 2026-10-13 against
+# the published npm tarballs: 11.19.1 (the pin in bases/Dockerfile.*),
+# 12.0.0 and 12.2.0 (current latest) all bundle brace-expansion 5.0.9, so no
+# released npm clears the floors. Same bundled-npm situation as CVE-2026-14257.
+# Exploitability: none — brace-expansion is called with patterns that npm itself
+# constructs internally; no attacker-controlled glob reaches the bundled copy in
+# these base images.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807
+CVE-2026-102276
+CVE-2026-102278
+
+# CVE-2026-19534
+# Category: npm
+# Rationale: undici 6.28.0 is bundled inside the npm CLI's own node_modules at
+# /usr/local/lib/node_modules/npm/node_modules/undici in achaean-base-node,
+# achaean-base-minimal and achaean-base-python. Fixed in 6.28.1. npm's bundled
+# tree cannot be overridden without forking npm. Verified 2026-10-13 against the
+# published npm tarballs: 11.19.1 (the pin), 12.0.0 and 12.2.0 all bundle
+# undici 6.28.0.
+# Exploitability: low — the advisory needs a remote server to negotiate an
+# unrequested WebSocket subprotocol. npm is used only to install from pinned,
+# checksum-verified public registries in these images; no attacker-controlled
+# registry host is contacted.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807
+CVE-2026-19534
+
+# CVE-2026-97687, CVE-2026-97689
+# Category: python
+# Rationale: urllib3 2.7.0 is not a standalone install in achaean-base-python.
+# It is vendored inside pip 26.2.1 at
+# /usr/local/lib/python3.14/site-packages/pip/_vendor/urllib3, which the
+# digest-pinned python:3.14-slim base provides. Fixed in 2.8.0. 26.2.1 is the
+# newest published pip, so no pip release carries the fix yet, and a vendored
+# dependency only moves when upstream pip re-vendors it. Confirmed 2026-10-13
+# against pip's vendor.txt at tag 26.2.1 (`urllib3==2.7.0`) and the Trivy
+# target table, which lists pip-26.2.1, msgpack and setuptools as the only
+# python packages in the image.
+# Exploitability: low — pip is a developer CLI in the image. CVE-2026-97687
+# needs a TLS-intercepting HTTPS proxy the operator must configure, and
+# CVE-2026-97689 needs an attacker-controlled endpoint for pip to download from.
+# Expires: 2027-01-11
+# Reviewer: @mvillmow  PR #807
+CVE-2026-97687
+CVE-2026-97689
