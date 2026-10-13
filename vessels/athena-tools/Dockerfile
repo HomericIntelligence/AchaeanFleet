@@ -2,7 +2,7 @@
 FROM python:3.13.15-slim-bookworm@sha256:ae8c3b6bb3d02ffffa2bee0bed8c7c99b9478bd042ff4d79a5bbd6eb10398864 AS tools
 
 ARG GIT_VERSION=1:2.39.5-0+deb12u3
-ARG DEBIAN_SNAPSHOT=20260920T000000Z
+ARG DEBIAN_SNAPSHOT=20261012T000000Z
 ARG CODEX_VERSION=0.153.4
 ARG CODEX_ARM64_SHA256=439c0dd0d6923f607b4e5cd1e3079c12f0b86f6e5007f07e377d6ad25e2d7bb9
 ARG JUST_VERSION=1.51.0
@@ -16,6 +16,15 @@ ARG ATHENA_PYTHON_SHA256=861b3dd8083d28f336ef70f6755bc399538ddad627b1d095820ca34
 
 # Keep ordinary apt signature and expiry verification enabled. An expired
 # snapshot must be updated and reviewed, never accepted through a bypass.
+#
+# 20260920T000000Z was retired on 2026-09-27: the bookworm-security InRelease
+# carries a Valid-Until roughly seven days past the snapshot timestamp, so apt
+# refused it with "Release file ... is expired" and the build exited 100. The
+# pin moves to 20261012T000000Z (Valid-Until 2026-10-18). git 1:2.39.5-0+deb12u3
+# is still the version bookworm main offers, so GIT_VERSION is unchanged.
+#
+# This pin lapses roughly every seven days and has no automated bump, so the
+# build will fail again within the week unless the snapshot is advanced.
 RUN test "$(dpkg --print-architecture)" = arm64 \
     && rm /etc/apt/sources.list.d/debian.sources \
     && printf 'deb https://snapshot.debian.org/archive/debian/%s/ bookworm main\ndeb https://snapshot.debian.org/archive/debian-security/%s/ bookworm-security main\n' \
