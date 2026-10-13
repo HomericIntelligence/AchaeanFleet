@@ -485,3 +485,39 @@ def test_smoke_validation_ref_is_read_from_the_dockerfile_pin():
         assert not re.fullmatch(r"[0-9a-f]{40}", str(value)), (
             f"ci.yml hardcodes {key}={value}; read it from the recipe pin instead"
         )
+
+
+# Recipes Athena runs in its own required checks. Asserting them here would
+# duplicate a slower, weaker copy of Athena's CI: this job gives the container
+# --cpus 1 --memory 1g --pids-limit 128 --network none on an emulated ARM64
+# runner, where Athena's suite reached 19% in 16.6 minutes of a 20-minute step.
+ATHENA_OWN_RECIPES = ("test", "static", "markdownlint", "workflow-check", "package")
+
+
+def test_workspace_check_scope_stays_within_the_offline_environment():
+    """The admitted tool route asserts the offline environment, not Athena's CI.
+
+    Preparation already runs `uv sync --locked --offline` and re-checks the
+    snapshot, digest, and dependency-file bindings, so `check` only needs to
+    validate Athena's content on the prepared tree and its uv pins.
+    """
+    recipe = (ROOT / "vessels" / "athena-tools" / "workspace.just").read_text()
+    body = recipe.split("check SNAPSHOT IMAGE:", 1)[1]
+    invoked = re.search(r"--justfile\s+\S+\s+([^\n\\]+)", body)
+    assert invoked is not None, "check must invoke an Athena recipe"
+
+    recipes = invoked.group(1).split()
+    assert recipes == ["validate", "uv-pins"], (
+        f"workspace.just check now runs {recipes}; Athena's own required checks "
+        f"already cover {', '.join(ATHENA_OWN_RECIPES)}"
+    )
+
+
+def test_workspace_check_keeps_the_validator_skip_scoped():
+    """The validator skip must stay limited to the prepared runtime directory."""
+    recipe = (ROOT / "vessels" / "athena-tools" / "workspace.just").read_text()
+    match = re.search(
+        r'ATHENA_VALIDATE_IGNORED_PATHS="([^"]+)"', recipe
+    )
+    assert match is not None, "check must declare the runtime scratch directory"
+    assert match.group(1) == ".fleet-runtime"
