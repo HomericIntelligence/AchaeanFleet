@@ -458,3 +458,30 @@ def test_ci_uv_pins_match_version_manifest():
     assert {name: lint_env[name] for name in expected} == expected
     ci_args = _dockerfile_args(ROOT / "ci" / "Containerfile")
     assert {name: ci_args[name] for name in expected} == expected
+
+
+def test_smoke_validation_ref_is_read_from_the_dockerfile_pin():
+    """The athena-tools smoke job must not hold its own copy of the revision.
+
+    The image binds ATHENA_REVISION into /opt/athena/inputs.json, and
+    prepare_workspace.py rejects any workspace whose dependency files do not
+    match that binding. A second literal copy of the SHA in ci.yml therefore
+    fails the smoke test on every pin bump while the image build stays green,
+    which is exactly what happened when the pin moved to a010a023.
+    """
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text())
+    steps = workflow["jobs"]["test-smoke-vessels"]["steps"]
+    resolve = next(
+        step for step in steps
+        if str(step.get("name", "")).startswith("Resolve the pinned Athena")
+    )
+    checkout = next(
+        step for step in steps
+        if str(step.get("name", "")).startswith("Check out the pinned Athena")
+    )
+    assert "ATHENA_REVISION" in resolve["run"]
+    assert checkout["with"]["ref"] == "${{ steps.%s.outputs.ref }}" % resolve["id"]
+    for key, value in checkout["with"].items():
+        assert not re.fullmatch(r"[0-9a-f]{40}", str(value)), (
+            f"ci.yml hardcodes {key}={value}; read it from the recipe pin instead"
+        )
