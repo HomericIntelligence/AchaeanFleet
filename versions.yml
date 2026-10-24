@@ -92,8 +92,8 @@ tools:
         sha256: "88a1016bc1d657375a35864e4f44b6f333df8ff97b559f51bba0adcb2169df09"
 
   npm:
-    version: "11.18.0"
-    source: "https://registry.npmjs.org/npm/-/npm-11.18.0.tgz"
+    version: "11.19.1"
+    source: "https://registry.npmjs.org/npm/-/npm-11.19.1.tgz"
     used_by:
       - bases/Dockerfile.minimal
       - bases/Dockerfile.node
