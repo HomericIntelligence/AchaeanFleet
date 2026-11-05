@@ -95,6 +95,34 @@ def test_unreadable_metadata_is_not_fatal_for_the_publisher() -> None:
     assert "PATCH" not in fake.methods()
 
 
+class DeniedVisibilityChange(FakeGhcr):
+    """Read the package, but refuse to change its visibility."""
+
+    def __call__(self, request: Any) -> bytes:
+        if "/packages/container/" in request.full_url and request.get_method() == "PATCH":
+            self.requests.append(request)
+            raise urllib.error.HTTPError(
+                request.full_url,
+                404,
+                "Not Found",
+                {},
+                io.BytesIO(b'{"message":"Not Found"}'),
+            )
+        return super().__call__(request)
+
+
+def test_denied_visibility_change_defers_to_the_anonymous_probe() -> None:
+    fake = DeniedVisibilityChange(visibility="private")
+
+    assert (
+        publish_check.ensure_public(
+            owner=OWNER, image=IMAGE, token="workflow", fetch=fake
+        )
+        == "unknown"
+    )
+    assert "PATCH" in fake.methods()
+
+
 def test_anonymous_pull_is_rejected_for_a_private_package() -> None:
     fake = FakeGhcr(anonymous=False)
 
