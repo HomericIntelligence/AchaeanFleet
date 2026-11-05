@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import importlib.util
 import io
 import urllib.error
@@ -34,9 +35,10 @@ class FakeGhcr:
     def __call__(self, request: Any) -> bytes:
         self.requests.append(request)
         if "/token?scope=" in request.full_url:
-            if not self.accepts or request.get_header("Authorization") != (
-                f"Bearer {self.credential}"
-            ):
+            expected = "Basic " + base64.b64encode(
+                f"git:{self.credential}".encode()
+            ).decode()
+            if not self.accepts or request.get_header("Authorization") != expected:
                 raise urllib.error.HTTPError(
                     request.full_url,
                     403,
@@ -63,7 +65,23 @@ def test_pull_token_requests_only_the_repository_pull_scope() -> None:
         "https://ghcr.io/token?scope=repository:"
         f"{NAMESPACE}/{IMAGE}:pull&service=ghcr.io"
     )
-    assert request.get_header("Authorization") == "Bearer consumer"
+    assert request.get_header("Authorization") == "Basic " + base64.b64encode(
+        b"git:consumer"
+    ).decode()
+
+
+def test_token_endpoint_uses_basic_auth_like_a_container_client() -> None:
+    fake = FakeGhcr()
+
+    publish_check.pull_token(
+        namespace=NAMESPACE, image=IMAGE, credential="consumer", fetch=fake
+    )
+
+    authorization = fake.requests[0].get_header("Authorization")
+    assert authorization.startswith("Basic ")
+    assert base64.b64decode(authorization.removeprefix("Basic ")).decode() == (
+        "git:consumer"
+    )
 
 
 def test_manifest_probe_carries_the_minted_token() -> None:
