@@ -32,7 +32,7 @@ class NativeCIImageContract(unittest.TestCase):
         self.assertTrue(path.is_file(), "The CI image needs its own locked markdown CLI dependency")
         manifest = json.loads(path.read_text())
         self.assertTrue(manifest["private"])
-        self.assertEqual(manifest["dependencies"]["markdownlint-cli2"], "0.23.2")
+        self.assertEqual(manifest["dependencies"]["markdownlint-cli2"], "0.24.0")
         self.assertEqual(manifest["engines"]["node"], ">=22 <23")
 
 

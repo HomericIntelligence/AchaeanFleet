@@ -1,0 +1,36 @@
+# Telemachy CI image: native Linux amd64/arm64 toolchain for Telemachy's
+# required checks. Project dependencies come from Telemachy's pixi.lock at
+# run time; this image only carries the tools the checks invoke.
+FROM node:26-slim@sha256:4ebb5ace66f15a24c14c492e01a8beeed4fddf970a856109f5126e703e5fe503 AS node
+FROM python:3.13-slim@sha256:6771159cd4fa5d9bba1258caf0b82e6b73458c694d178ad97c5e925c2d0e1a91
+
+LABEL org.opencontainers.image.title="achaean-telemachy-ci"
+LABEL org.opencontainers.image.description="Native Telemachy lint, test, package and security tools"
+LABEL org.opencontainers.image.source="https://github.com/HomericIntelligence/AchaeanFleet"
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
+    PIXI_CACHE_DIR=/home/ci/.cache/pixi
+
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    git curl ca-certificates make jq shellcheck libatomic1 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+
+ARG TARGETARCH
+COPY install_tools.py tool-artifacts.json /opt/ci-install/
+RUN python /opt/ci-install/install_tools.py --platform "linux/${TARGETARCH}" \
+      --artifacts /opt/ci-install/tool-artifacts.json --destination /usr/local/bin \
+    && pixi --version && just --version && gitleaks version && nats-server --version
+
+# Telemachy's npm tool closure is pinned separately from this repository's
+# own CI closure so the two images keep independent audit results.
+COPY package.json package-lock.json /opt/ci-tools/
+RUN cd /opt/ci-tools && npm ci --ignore-scripts --omit=dev \
+    && ln -s /opt/ci-tools/node_modules/.bin/markdownlint-cli2 /usr/local/bin/markdownlint-cli2 \
+    && markdownlint-cli2 --version \
+    && groupadd --gid 1000 ci \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash ci \
+    && mkdir -p /home/ci/.cache && chown -R 1000:1000 /home/ci
+WORKDIR /workspace
+USER 1000:1000

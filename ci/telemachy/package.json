@@ -1,0 +1,12 @@
+{
+  "name": "telemachy-ci-tools",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "markdownlint-cli2": "0.24.0"
+  },
+  "overrides": {
+    "re2js": "2.9.1",
+    "katex": "0.19.1"
+  }
+}

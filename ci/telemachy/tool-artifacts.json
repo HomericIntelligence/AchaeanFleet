@@ -1,0 +1,58 @@
+{
+  "pixi": {
+    "version": "0.70.2",
+    "linux/amd64": {
+      "url": "https://github.com/prefix-dev/pixi/releases/download/v0.70.2/pixi-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "9d0d72fc1fa1a8f87bfde943cf25d3575cb352cb516795d4dab21898bd98adea",
+      "format": "tar.gz"
+    },
+    "linux/arm64": {
+      "url": "https://github.com/prefix-dev/pixi/releases/download/v0.70.2/pixi-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "19f61d069f7ab963f3b9d6794134f893c83ecd2b7cd698e19268daa3a1fa606b",
+      "format": "tar.gz"
+    }
+  },
+  "just": {
+    "version": "1.51.0",
+    "linux/amd64": {
+      "url": "https://github.com/casey/just/releases/download/1.51.0/just-1.51.0-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "c8f085ca3e885723c341d06243fc291b5abfdc8bbe3b2c076b117de490387b59",
+      "format": "tar.gz"
+    },
+    "linux/arm64": {
+      "url": "https://github.com/casey/just/releases/download/1.51.0/just-1.51.0-aarch64-unknown-linux-musl.tar.gz",
+      "sha256": "ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5",
+      "format": "tar.gz"
+    }
+  },
+  "gitleaks": {
+    "version": "8.30.1",
+    "linux/amd64": {
+      "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+      "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+      "format": "tar.gz",
+      "member": "gitleaks"
+    },
+    "linux/arm64": {
+      "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_arm64.tar.gz",
+      "sha256": "e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080",
+      "format": "tar.gz",
+      "member": "gitleaks"
+    }
+  },
+  "nats-server": {
+    "version": "2.10.24",
+    "linux/amd64": {
+      "url": "https://github.com/nats-io/nats-server/releases/download/v2.10.24/nats-server-v2.10.24-linux-amd64.tar.gz",
+      "sha256": "ee6500f364e3a741b496ae0296c04f2a9d53bbaabac457104ac74596b4a59d85",
+      "format": "tar.gz",
+      "member": "nats-server-v2.10.24-linux-amd64/nats-server"
+    },
+    "linux/arm64": {
+      "url": "https://github.com/nats-io/nats-server/releases/download/v2.10.24/nats-server-v2.10.24-linux-arm64.tar.gz",
+      "sha256": "a4ae6c46ef545a13a3214bc35696b2806e05b60742f7ed5b2082d3c2f5af854f",
+      "format": "tar.gz",
+      "member": "nats-server-v2.10.24-linux-arm64/nats-server"
+    }
+  }
+}
