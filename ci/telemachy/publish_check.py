@@ -61,11 +61,25 @@ def _send(request: urllib.request.Request, fetch: Fetch) -> bytes:
         ) from error
 
 
+def credential_from_environment() -> str:
+    """Return Telemachy's registry credential without ever echoing it."""
+    credential = os.environ.get(CREDENTIAL_ENV, "")
+    if not credential:
+        raise PublicationError(
+            f"set {CREDENTIAL_ENV} to the value of the {CREDENTIAL_SECRET} secret. "
+            "The package is private because organization policy forbids public "
+            "container packages, so a publish that only the publishing repository "
+            "can read is not consumable."
+        )
+    return credential
+
+
 def pull_token(
-    *, namespace: str, image: str, credential: str, fetch: Fetch | None = None
+    *, namespace: str, image: str, credential: str | None = None, fetch: Fetch | None = None
 ) -> str:
     """Return a GHCR pull token minted from Telemachy's credential."""
     fetch = fetch or default_fetch
+    credential = credential or credential_from_environment()
     url = f"{REGISTRY}/token?scope=repository:{namespace}/{image}:pull&service=ghcr.io"
     request = urllib.request.Request(url, headers={"Authorization": f"Bearer {credential}"})
     try:
@@ -88,7 +102,7 @@ def pull_token(
 
 
 def assert_manifest(
-    *, namespace: str, image: str, tag: str, credential: str, fetch: Fetch | None = None
+    *, namespace: str, image: str, tag: str, credential: str | None = None, fetch: Fetch | None = None
 ) -> None:
     """Assert the credential resolves one published tag."""
     fetch = fetch or default_fetch
@@ -145,18 +159,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="print the visibility GitHub reports, without changing it",
     )
     arguments = parser.parse_args(argv)
-
-    credential = os.environ.get(CREDENTIAL_ENV, "")
-    if not credential:
-        print(
-            f"Publication check failed: set {CREDENTIAL_ENV} to the value of the "
-            f"{CREDENTIAL_SECRET} secret. The package is private because "
-            "organization policy forbids public container packages, so a publish "
-            "that only the publishing repository can read is not consumable.",
-            file=sys.stderr,
-        )
-        return 1
-
     namespace = arguments.owner.lower()
     try:
         if arguments.report_visibility:
@@ -168,12 +170,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             print(f"Package visibility: {visibility or 'not readable by this token'}")
         for tag in arguments.tags:
-            assert_manifest(
-                namespace=namespace,
-                image=arguments.image,
-                tag=tag,
-                credential=credential,
-            )
+            assert_manifest(namespace=namespace, image=arguments.image, tag=tag)
             print(f"Credential pull OK: {namespace}/{arguments.image}:{tag}")
     except PublicationError as error:
         print(f"Publication check failed: {error}", file=sys.stderr)
