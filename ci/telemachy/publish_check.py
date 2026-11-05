@@ -14,6 +14,7 @@ required checks.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import sys
@@ -74,14 +75,32 @@ def credential_from_environment() -> str:
     return credential
 
 
+def _basic_authorization(credential: str, username: str) -> str:
+    """Encode the credential exactly as ``docker login`` does.
+
+    GHCR accepts a classic token only as the password half of Basic auth; a
+    bearer header is refused even for a valid token, so the mint path must
+    match the pull path Telemachy's jobs actually use.
+    """
+    encoded = base64.b64encode(f"{username}:{credential}".encode()).decode()
+    return f"Basic {encoded}"
+
+
 def pull_token(
-    *, namespace: str, image: str, credential: str | None = None, fetch: Fetch | None = None
+    *,
+    namespace: str,
+    image: str,
+    credential: str | None = None,
+    username: str = "git",
+    fetch: Fetch | None = None,
 ) -> str:
     """Return a GHCR pull token minted from Telemachy's credential."""
     fetch = fetch or default_fetch
     credential = credential or credential_from_environment()
     url = f"{REGISTRY}/token?scope=repository:{namespace}/{image}:pull&service=ghcr.io"
-    request = urllib.request.Request(url, headers={"Authorization": f"Bearer {credential}"})
+    request = urllib.request.Request(
+        url, headers={"Authorization": _basic_authorization(credential, username)}
+    )
     try:
         token = json.loads(_send(request, fetch)).get("token")
     except PublicationError as error:
@@ -102,12 +121,22 @@ def pull_token(
 
 
 def assert_manifest(
-    *, namespace: str, image: str, tag: str, credential: str | None = None, fetch: Fetch | None = None
+    *,
+    namespace: str,
+    image: str,
+    tag: str,
+    credential: str | None = None,
+    username: str = "git",
+    fetch: Fetch | None = None,
 ) -> None:
     """Assert the credential resolves one published tag."""
     fetch = fetch or default_fetch
     token = pull_token(
-        namespace=namespace, image=image, credential=credential, fetch=fetch
+        namespace=namespace,
+        image=image,
+        credential=credential,
+        username=username,
+        fetch=fetch,
     )
     _send(
         urllib.request.Request(
@@ -154,6 +183,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--tags", nargs="+", required=True, help="published tags Telemachy consumes"
     )
     parser.add_argument(
+        "--username",
+        default=os.environ.get("GHCR_PULL_USER", "git"),
+        help="registry username paired with the credential (default: git)",
+    )
+    parser.add_argument(
         "--report-visibility",
         action="store_true",
         help="print the visibility GitHub reports, without changing it",
@@ -170,7 +204,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             print(f"Package visibility: {visibility or 'not readable by this token'}")
         for tag in arguments.tags:
-            assert_manifest(namespace=namespace, image=arguments.image, tag=tag)
+            assert_manifest(
+                namespace=namespace,
+                image=arguments.image,
+                tag=tag,
+                username=arguments.username,
+            )
             print(f"Credential pull OK: {namespace}/{arguments.image}:{tag}")
     except PublicationError as error:
         print(f"Publication check failed: {error}", file=sys.stderr)
