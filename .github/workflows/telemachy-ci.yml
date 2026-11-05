@@ -85,15 +85,17 @@ jobs:
           done
           echo "::notice title=Telemachy CI image::${REGISTRY}/${IMAGE}:ci -> ${DIGEST}"
 
-      # Telemachy is a public repository and pulls this image without package
-      # credentials, so an authenticated inspect alone does not prove the
-      # artifact is consumable. GHCR creates container packages as private.
-      - name: Assert anonymous pulls of the published image
+      # Organization policy forbids public container packages, so the image
+      # stays private and Telemachy's required jobs pull it with a credential.
+      # An authenticated inspect by this workflow proves nothing about that
+      # credential, so the publish only completes once Telemachy's own token can
+      # resolve every consumed tag.
+      - name: Assert the consumer credential can pull the published image
         env:
-          # The workflow token cannot read organization package metadata, so
-          # visibility changes need an opt-in classic PAT. Without it the
-          # anonymous probe below still enforces the public contract.
-          GH_TOKEN: ${{ secrets.PACKAGES_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
+          GHCR_PULL_TOKEN: ${{ secrets.TELEMACHY_GHCR_TOKEN }}
+          # The workflow token cannot read organization package metadata; the
+          # report is informational and must never gate the publish.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA_TAG: ${{ steps.tags.outputs.sha_tag }}
         run: |
           set -euo pipefail
@@ -101,4 +103,4 @@ jobs:
             --owner "${GITHUB_REPOSITORY_OWNER}" \
             --image "${IMAGE}" \
             --tags ci "${SHA_TAG}" \
-            --ensure-public
+            --report-visibility

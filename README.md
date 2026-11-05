@@ -111,16 +111,17 @@ publishes the image from
 on manual dispatch. Telemachy pulls the `:ci` alias and does not build the
 image itself.
 
-Telemachy is a public repository whose workflows carry no package
-credentials, so the image must be publicly pullable. GHCR creates container
-packages as private, so the publish job runs `ci/telemachy/publish_check.py`:
-it makes the package public, then proves an anonymous GHCR client can resolve
-`:ci` and `:git-<sha>`. A publish that only succeeds with credentials fails.
+The image is a **private** package: organization policy forbids public
+container packages, so no workflow and no operator can make it anonymously
+readable. Access is owned by CI instead. Telemachy stores a classic personal
+access token with `read:packages` as the `GHCR_TOKEN` secret and supplies it to
+every job that pulls the image; this repository stores the same credential as
+`TELEMACHY_GHCR_TOKEN`.
 
-The workflow token cannot read organization package metadata, so changing
-visibility needs the optional `PACKAGES_ADMIN_TOKEN` secret (a classic PAT with
-`write:packages`). Without it, make the package public once in the organization
-package settings; the anonymous probe then keeps it honest on every publish.
+Every publish ends with `ci/telemachy/publish_check.py`, which mints a GHCR
+pull token from the `TELEMACHY_GHCR_TOKEN` credential and resolves `:ci` and
+`:git-<sha>` with it. An image that only the publishing repository can read
+therefore fails the publish instead of failing Telemachy's required checks.
 
 ## Environment variables
 
