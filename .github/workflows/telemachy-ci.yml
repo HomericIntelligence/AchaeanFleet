@@ -90,7 +90,10 @@ jobs:
       # artifact is consumable. GHCR creates container packages as private.
       - name: Assert anonymous pulls of the published image
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The workflow token cannot read organization package metadata, so
+          # visibility changes need an opt-in classic PAT. Without it the
+          # anonymous probe below still enforces the public contract.
+          GH_TOKEN: ${{ secrets.PACKAGES_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
           SHA_TAG: ${{ steps.tags.outputs.sha_tag }}
         run: |
           set -euo pipefail

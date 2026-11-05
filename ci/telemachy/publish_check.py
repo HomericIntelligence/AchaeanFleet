@@ -34,6 +34,10 @@ Fetch = Callable[[urllib.request.Request], bytes]
 class PublicationError(RuntimeError):
     """The published artifact cannot be consumed without credentials."""
 
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
 
 def default_fetch(request: urllib.request.Request) -> bytes:
     with urllib.request.urlopen(request, timeout=30) as response:  # nosec B310  # fixed https endpoints
@@ -46,7 +50,8 @@ def _send(request: urllib.request.Request, fetch: Fetch) -> bytes:
     except urllib.error.HTTPError as error:
         detail = error.read().decode("utf-8", "replace").strip()
         raise PublicationError(
-            f"{request.full_url} returned HTTP {error.code}: {detail}"
+            f"{request.full_url} returned HTTP {error.code}: {detail}",
+            status=error.code,
         ) from error
 
 
@@ -82,8 +87,21 @@ def package_visibility(
 def ensure_public(
     *, owner: str, image: str, token: str, fetch: Fetch = default_fetch
 ) -> str:
-    """Make the package public and return the visibility GitHub then reports."""
-    visibility = package_visibility(owner=owner, image=image, token=token, fetch=fetch)
+    """Make the package public and return the visibility GitHub then reports.
+
+    Returns ``"unknown"`` when the token cannot read organization package
+    metadata at all. That is the normal case for an Actions workflow token, so
+    it must not fail the publish: the anonymous pull probe that follows is the
+    contract that actually matters, and it fails loudly for a private package.
+    """
+    try:
+        visibility = package_visibility(
+            owner=owner, image=image, token=token, fetch=fetch
+        )
+    except PublicationError as error:
+        if error.status in (403, 404):
+            return "unknown"
+        raise
     if visibility == "public":
         return visibility
     url = f"{API}/orgs/{owner}/packages/container/{image}"
@@ -108,7 +126,9 @@ def anonymous_token(
     if not isinstance(token, str) or not token:
         raise PublicationError(
             f"GHCR refuses an anonymous pull token for {namespace}/{image}; "
-            "Telemachy cannot pull a private package from its public workflows"
+            "Telemachy's public workflows cannot pull a private package. Make the "
+            "package public once in the organization package settings, or set a "
+            "PACKAGES_ADMIN_TOKEN secret so this job can do it."
         )
     return token
 
@@ -153,7 +173,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             visibility = ensure_public(
                 owner=arguments.owner, image=arguments.image, token=token
             )
-            print(f"Package visibility: {visibility}")
+            if visibility == "unknown":
+                print(
+                    "Package visibility is unreadable for this token; "
+                    "relying on the anonymous pull probe."
+                )
+            else:
+                print(f"Package visibility: {visibility}")
         for tag in arguments.tags:
             assert_anonymous_manifest(
                 namespace=namespace, image=arguments.image, tag=tag
