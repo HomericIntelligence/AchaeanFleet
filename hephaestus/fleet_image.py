@@ -342,6 +342,8 @@ def main() -> int:
         return 0
     except (ValueError, OSError, KeyError, tarfile.TarError, subprocess.CalledProcessError) as error:
         arguments.exit(1, f"Fleet image: {error}\n")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
