@@ -84,3 +84,18 @@ jobs:
             echo "| \`${tag}\` | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
           done
           echo "::notice title=Telemachy CI image::${REGISTRY}/${IMAGE}:ci -> ${DIGEST}"
+
+      # Telemachy is a public repository and pulls this image without package
+      # credentials, so an authenticated inspect alone does not prove the
+      # artifact is consumable. GHCR creates container packages as private.
+      - name: Assert anonymous pulls of the published image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA_TAG: ${{ steps.tags.outputs.sha_tag }}
+        run: |
+          set -euo pipefail
+          python3 ci/telemachy/publish_check.py \
+            --owner "${GITHUB_REPOSITORY_OWNER}" \
+            --image "${IMAGE}" \
+            --tags ci "${SHA_TAG}" \
+            --ensure-public

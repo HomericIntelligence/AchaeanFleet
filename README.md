@@ -111,6 +111,12 @@ publishes the image from
 on manual dispatch. Telemachy pulls the `:ci` alias and does not build the
 image itself.
 
+Telemachy is a public repository whose workflows carry no package
+credentials, so the image must be publicly pullable. GHCR creates container
+packages as private, so the publish job runs `ci/telemachy/publish_check.py`:
+it makes the package public, then proves an anonymous GHCR client can resolve
+`:ci` and `:git-<sha>`. A publish that only succeeds with credentials fails.
+
 ## Environment variables
 
 | Variable        | Required | Default                          | Purpose                                             |
