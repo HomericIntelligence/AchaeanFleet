@@ -89,10 +89,11 @@ def ensure_public(
 ) -> str:
     """Make the package public and return the visibility GitHub then reports.
 
-    Returns ``"unknown"`` when the token cannot read organization package
-    metadata at all. That is the normal case for an Actions workflow token, so
-    it must not fail the publish: the anonymous pull probe that follows is the
-    contract that actually matters, and it fails loudly for a private package.
+    Returns ``"unknown"`` when the token can neither read nor change the
+    package visibility. That is the normal case for an Actions workflow token,
+    so it must not fail the publish: the anonymous pull probe that follows is
+    the contract that actually matters, and it fails loudly for a private
+    package.
     """
     try:
         visibility = package_visibility(
@@ -105,10 +106,15 @@ def ensure_public(
     if visibility == "public":
         return visibility
     url = f"{API}/orgs/{owner}/packages/container/{image}"
-    _send(
-        _api_request(url, token, method="PATCH", payload={"visibility": "public"}),
-        fetch,
-    )
+    try:
+        _send(
+            _api_request(url, token, method="PATCH", payload={"visibility": "public"}),
+            fetch,
+        )
+    except PublicationError as error:
+        if error.status in (403, 404):
+            return "unknown"
+        raise
     visibility = package_visibility(owner=owner, image=image, token=token, fetch=fetch)
     if visibility != "public":
         raise PublicationError(
@@ -175,8 +181,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             if visibility == "unknown":
                 print(
-                    "Package visibility is unreadable for this token; "
-                    "relying on the anonymous pull probe."
+                    "Package visibility could not be read or changed by this "
+                    "token; relying on the anonymous pull probe."
                 )
             else:
                 print(f"Package visibility: {visibility}")
