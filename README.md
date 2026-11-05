@@ -117,6 +117,11 @@ packages as private, so the publish job runs `ci/telemachy/publish_check.py`:
 it makes the package public, then proves an anonymous GHCR client can resolve
 `:ci` and `:git-<sha>`. A publish that only succeeds with credentials fails.
 
+The workflow token cannot read organization package metadata, so changing
+visibility needs the optional `PACKAGES_ADMIN_TOKEN` secret (a classic PAT with
+`write:packages`). Without it, make the package public once in the organization
+package settings; the anonymous probe then keeps it honest on every publish.
+
 ## Environment variables
 
 | Variable        | Required | Default                          | Purpose                                             |

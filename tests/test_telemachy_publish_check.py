@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
+import urllib.error
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +64,34 @@ def test_public_package_is_left_untouched() -> None:
     assert publish_check.ensure_public(
         owner=OWNER, image=IMAGE, token="publisher", fetch=fake
     ) == "public"
+    assert "PATCH" not in fake.methods()
+
+
+class DeniedPackageApi(FakeGhcr):
+    """Refuse organization package metadata the way an Actions token is refused."""
+
+    def __call__(self, request: Any) -> bytes:
+        if "/packages/container/" in request.full_url:
+            self.requests.append(request)
+            raise urllib.error.HTTPError(
+                request.full_url,
+                404,
+                "Not Found",
+                {},
+                io.BytesIO(b'{"message":"Not Found"}'),
+            )
+        return super().__call__(request)
+
+
+def test_unreadable_metadata_is_not_fatal_for_the_publisher() -> None:
+    fake = DeniedPackageApi(visibility="private")
+
+    assert (
+        publish_check.ensure_public(
+            owner=OWNER, image=IMAGE, token="workflow", fetch=fake
+        )
+        == "unknown"
+    )
     assert "PATCH" not in fake.methods()
 
 
