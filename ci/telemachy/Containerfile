@@ -23,6 +23,8 @@ RUN python /opt/ci-install/install_tools.py --platform "linux/${TARGETARCH}" \
       --artifacts /opt/ci-install/tool-artifacts.json --destination /usr/local/bin \
     && pixi --version && just --version && gitleaks version && nats-server --version
 
+# Telemachy's npm tool closure is pinned separately from this repository's
+# own CI closure so the two images keep independent audit results.
 COPY package.json package-lock.json /opt/ci-tools/
 RUN cd /opt/ci-tools && npm ci --ignore-scripts --omit=dev \
     && ln -s /opt/ci-tools/node_modules/.bin/markdownlint-cli2 /usr/local/bin/markdownlint-cli2 \

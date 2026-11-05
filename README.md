@@ -105,7 +105,8 @@ just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 
 Telemachy's required checks run in
 `ghcr.io/homericintelligence/achaean-telemachy-ci`. This repository owns the
-recipe (`ci/telemachy/Containerfile`) and publishes the image from
+recipe (`ci/telemachy/`), including its own audited npm tool closure, and
+publishes the image from
 `.github/workflows/telemachy-ci.yml` on every change under `ci/telemachy/` and
 on manual dispatch. Telemachy pulls the `:ci` alias and does not build the
 image itself.
