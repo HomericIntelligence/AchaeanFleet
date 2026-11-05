@@ -1,0 +1,4 @@
+# Build context for the Telemachy CI image is this directory only.
+README.md
+*.pyc
+__pycache__

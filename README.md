@@ -101,6 +101,15 @@ just test
 just push   # set REGISTRY=ghcr.io/homericintelligence or override in .env
 ```
 
+### Telemachy CI image
+
+Telemachy's required checks run in
+`ghcr.io/homericintelligence/achaean-telemachy-ci`. This repository owns the
+recipe (`ci/telemachy/Containerfile`) and publishes the image from
+`.github/workflows/telemachy-ci.yml` on every change under `ci/telemachy/` and
+on manual dispatch. Telemachy pulls the `:ci` alias and does not build the
+image itself.
+
 ## Environment variables
 
 | Variable        | Required | Default                          | Purpose                                             |

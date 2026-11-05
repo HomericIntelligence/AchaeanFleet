@@ -1,0 +1,86 @@
+name: Telemachy CI Image
+
+# AchaeanFleet owns the Telemachy CI image so Telemachy's required checks pull
+# a single immutable artifact instead of rebuilding it in every job.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ci/telemachy/**'
+      - '.github/workflows/telemachy-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: telemachy-ci-image
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io/homericintelligence
+  IMAGE: achaean-telemachy-ci
+
+jobs:
+  publish:
+    name: Build and push achaean-telemachy-ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4.1.0
+
+      - name: Compute tags
+        id: tags
+        run: |
+          set -euo pipefail
+          echo "sha_tag=git-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "date_tag=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Telemachy CI image
+        id: build
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
+        with:
+          context: ci/telemachy
+          file: ci/telemachy/Containerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:ci
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tags.outputs.sha_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tags.outputs.date_tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/HomericIntelligence/AchaeanFleet
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Verify published tags
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          SHA_TAG: ${{ steps.tags.outputs.sha_tag }}
+          DATE_TAG: ${{ steps.tags.outputs.date_tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${DIGEST}" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+            echo "ERROR: build-push-action returned invalid digest: ${DIGEST}" >&2
+            exit 1
+          fi
+          echo "## Telemachy CI image" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | Digest |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          for tag in latest ci "${SHA_TAG}" "${DATE_TAG}"; do
+            ref="${REGISTRY}/${IMAGE}:${tag}"
+            docker buildx imagetools inspect "${ref}" >/dev/null
+            echo "| \`${tag}\` | \`${DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo "::notice title=Telemachy CI image::${REGISTRY}/${IMAGE}:ci -> ${DIGEST}"
