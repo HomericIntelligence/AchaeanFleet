@@ -1,8 +1,10 @@
 # AchaeanFleet — Centralized Tool Versions Manifest
 #
 # Single source of truth for all pinned tool versions and checksums across
-# base images and vessel Dockerfiles.  When upgrading a tool, update this
-# file and mirror the change into the relevant Dockerfile(s).
+# base images and vessel Dockerfiles.  Base-image pins are not hand-copied:
+# scripts/render_version_pins.py writes them into the generated ENV block of
+# each base Dockerfile (tests/test_version_pins.py fails when they drift).
+# Vessel Dockerfiles still declare their own ENV <TOOL>_VERSION line.
 #
 # SHA256 checksums are provided where available (i.e. where the Dockerfile
 # already verifies them at build time).  For tools without checksum
@@ -105,8 +107,36 @@ tools:
     source: "https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz"
     used_by:
       - bases/Dockerfile.minimal
-      - bases/Dockerfile.node
+      - bases/Dockerfile.python
     checksums: null  # installed via npm; integrity enforced by npm registry
+
+  pip:
+    version: "26.3"
+    source: "https://pypi.org/project/pip/26.3/"
+    used_by:
+      - bases/Dockerfile.python
+    checksums: null  # installed via pip; integrity enforced by PyPI
+
+  certifi:
+    version: "2026.10.18"
+    source: "https://pypi.org/project/certifi/2026.10.18/"
+    used_by:
+      - bases/Dockerfile.python
+    checksums: null  # pure-python wheel; integrity enforced by PyPI
+
+  msgpack:
+    version: "1.2.3"
+    source: "https://pypi.org/project/msgpack/1.2.3/"
+    used_by:
+      - bases/Dockerfile.python
+    checksums: null  # cp314 manylinux wheels published; integrity enforced by PyPI
+
+  setuptools:
+    version: "83.0.0"
+    source: "https://pypi.org/project/setuptools/83.0.0/"
+    used_by:
+      - bases/Dockerfile.python
+    checksums: null  # installed via pip; integrity enforced by PyPI
 
   aider-chat:
     version: "0.82.3"

@@ -48,23 +48,27 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     chmod +x /usr/local/lib/node_modules/npm/bin/npm-cli.js \
              /usr/local/lib/node_modules/npm/bin/npx-cli.js
 
-# npm IS re-pinned here, to 11.21.2 — a strict upgrade over the 11.19.0 that
-# node:26-slim (digest-pinned above) bundles. The earlier "do not re-pin"
-# decision was made when the bundled npm was strictly newer than the pin; that
-# no longer holds, because npm's bundled dependencies are trivy-gated and the
-# bundled copies are vulnerable:
-#   - picomatch>=4.0.4  (CVE-2026-33671 fix)  -> carried by tar's ^4.0.4 range
-#   - sigstore>=4.1.1   (CVE-2026-48815 fix)  -> 11.19.0 already had 4.1.1
-#   - tar>=7.5.21       (CVE-2026-73566 fix)  -> 11.19.0 pins ^7.5.19 (vulnerable)
-#   - undici>=6.29.1    (CVE-2026-109383 / -109869 / -87018 fix) -> 11.21.2+
-# Pinning DOWN to 11.18.0 remains wrong for the same reason as before — it is
-# also ^7.5.19. 11.21.2 bundles undici 6.29.1, tar 7.5.22, brace-expansion
-# 5.0.12, ip-address 10.7.5 and sigstore 4.1.1, so this is an upgrade on every
-# gate-relevant dependency. Verified from the published npm-11.21.2.tgz.
-RUN npm install -g npm@11.21.2
+# BEGIN GENERATED TOOL PINS (source: versions.yml)
+ENV CERTIFI_VERSION=2026.10.18
+ENV MSGPACK_VERSION=1.2.3
+ENV NPM_VERSION=11.21.2
+ENV PIP_VERSION=26.3
+ENV SETUPTOOLS_VERSION=83.0.0
+ENV YARN_VERSION=1.22.22
+# END GENERATED TOOL PINS
+
+# npm is re-pinned above the copy bundled in the digest-pinned node base,
+# because npm's bundled dependencies are themselves trivy-gated. The version is
+# in the generated block above; the floor is set by these advisories:
+#   picomatch >= 4.0.4   CVE-2026-33671
+#   sigstore >= 4.1.1    CVE-2026-48815
+#   tar >= 7.5.21        CVE-2026-73566
+#   undici >= 6.29.1     CVE-2026-109383 / CVE-2026-109869 / CVE-2026-87018
+# npm 11.19.x ships undici 6.28.0, which fails the base-image trivy gate.
+RUN npm install -g npm@${NPM_VERSION}
 
 # Install Yarn
-RUN npm install -g yarn@1.22.22
+RUN npm install -g yarn@${YARN_VERSION}
 
 # Create non-root user
 ARG USER_ID=1000
@@ -92,21 +96,28 @@ USER root
 COPY bases/scripts/strip-setuid.sh /tmp/strip-setuid.sh
 RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 
-# pip is intentionally NOT re-pinned here. python:3.14-slim (digest-pinned
-# above) already bundles pip 26.2.1, which satisfies the fleet security pin
-# (pip>=26.0 — CVE-2026-1703). Attempting `pip install --upgrade pip==26.0.1`
-# is a DOWNGRADE that hits the documented pip self-replacement race on
-# python 3.14 (OSError: [Errno 39] Directory not empty on
-# site-packages/pip/_internal/commands), which broke the base build and
-# silently wedged pip. See vessels/aider/Dockerfile for the 3.12 handling.
+# pip IS re-pinned, upward. trivy also reads pip's own vendored copies
+# (pip/_vendor/vendor.txt), so the site-packages pins below cannot clear
+# findings that live inside pip: the bundled pip 26.2.1 vendors certifi
+# 2026.6.17 (GHSA-6q48-6c7w-9gw2) and msgpack 1.1.2 (CVE-2026-114613).
+# pip 26.3 vendors certifi 2026.10.23 and msgpack 1.2.4, above both fixed
+# versions. This is an upgrade from the bundled 26.2.1, not a downgrade — the
+# Errno 39 self-replacement race seen here previously came from pinning DOWN
+# to 26.0.1 and does not reproduce on the upgrade (verified against the
+# digest-pinned base image). See vessels/aider/Dockerfile for the 3.12 case.
+RUN python -m pip install --no-cache-dir --upgrade pip==${PIP_VERSION}
 
 # Security bumps for packages preinstalled in the pinned python:3.14-slim
-# digest. The trivy gate flags HIGH CVEs with available fixes:
-#   - msgpack 1.1.2 -> 1.2.1  (GHSA-6v7p-g79w-8964, OOB read on unpacker reuse)
-#   - setuptools 70.3.0 -> 83.0.0 (CVE-2025-47273 path traversal; CVE-2026-59890
-#     runtime fork protection). 83.0.0 also drops the vendored jaraco.context
-#     (CVE-2026-23949) and vendors wheel 0.46.3 (CVE-2026-24049 fixed in 0.46.2).
-RUN pip install --no-cache-dir msgpack==1.2.1 setuptools==83.0.0
+# digest. The version values come from the generated block above; this comment
+# records why each one is above what the base image ships:
+#   - certifi 2026.6.17 -> 2026.10.18  GHSA-6q48-6c7w-9gw2 (CRITICAL: the
+#     bundled CA store contains compromised emSign roots)
+#   - msgpack 1.1.2 -> 1.2.3           GHSA-6v7p-g79w-8964 (OOB read on
+#     unpacker reuse) and CVE-2026-114613 (memory-leak DoS)
+#   - setuptools 70.3.0 -> 83.0.0      CVE-2025-47273 path traversal,
+#     CVE-2026-59890 runtime fork protection; drops vendored jaraco.context
+#     (CVE-2026-23949) and vendors wheel 0.46.3 (CVE-2026-24049 fixed 0.46.2)
+RUN pip install --no-cache-dir certifi==${CERTIFI_VERSION} msgpack==${MSGPACK_VERSION} setuptools==${SETUPTOOLS_VERSION}
 
 COPY bases/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

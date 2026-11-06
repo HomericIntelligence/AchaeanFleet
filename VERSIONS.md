@@ -1,9 +1,12 @@
 # AchaeanFleet — Pinned Tool Versions
 
-All agent tool versions are pinned in their respective Dockerfiles for
-reproducible builds. Update the version here and in the Dockerfile together.
+All agent tool versions are pinned for reproducible builds. Base-image pins
+(`bases/Dockerfile.*`) live in `versions.yml` and are written into each
+Dockerfile's generated `ENV <TOOL>_VERSION` block by
+`scripts/render_version_pins.py`; `tests/test_version_pins.py` fails if the two
+drift. Vessel pins are still declared inline in their Dockerfile.
 
-Versions verified: **2026-04-10**
+Versions verified: **2026-11-06**
 
 ---
 
@@ -54,7 +57,9 @@ curl -sL https://api.github.com/repos/<owner>/<repo>/releases/latest \
 
 ## How to bump a version
 
-1. Update the version in the relevant Dockerfile (`vessels/<name>/Dockerfile` or `bases/Dockerfile.<name>`).
-2. Update the table in this file.
-3. Run `python3 -m pytest tests/ -v` — all tests should still pass.
-4. Open a PR with the bump.
+1. Update `tools.<name>.version` in `versions.yml`.
+2. For a base-image tool, run `pixi run python scripts/render_version_pins.py`
+   to rewrite the generated blocks; for a vessel tool, edit that Dockerfile.
+3. Update the table in this file.
+4. Run `python3 -m pytest tests/ -v` — all tests should still pass.
+5. Open a PR with the bump.

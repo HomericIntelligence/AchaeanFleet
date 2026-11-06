@@ -352,17 +352,9 @@ CVE-2026-34525
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
 CVE-2026-4539
 
-# GHSA-6v7p-g79w-8964
-# Category: python
-# Rationale: msgpack 1.1.2 vendored inside pip 26.2.1 (pip/_vendor/msgpack). pip 26.2.1 is the latest release and cannot be overridden without forking pip; the site-packages msgpack is already bumped to 1.2.1.
-# Exploitability: none — pip's vendored msgpack is internal to the installer and never reachable from vessel runtime code.
-# Expires: 2026-11-16
-# Reviewer: @mvillmow  PR #TBD (fleet security sweep)
-GHSA-6v7p-g79w-8964
-
 # CVE-2025-47273
 # Category: python
-# Rationale: setuptools 70.3.0 vendored inside pip 26.2.1 (pip/_vendor/setuptools). pip 26.2.1 is the latest release and cannot be overridden without forking pip; the site-packages setuptools is already bumped to 83.0.0.
+# Rationale: setuptools 70.3.0 is vendored inside pip (pip/_vendor/setuptools) and pip 26.3 — the pin in versions.yml — still vendors 70.3.0, so it cannot be overridden without forking pip; the site-packages setuptools is already bumped to 83.0.0.
 # Exploitability: none — pip's vendored setuptools is internal to the installer and never reachable from vessel runtime code.
 # Expires: 2026-11-16
 # Reviewer: @mvillmow  PR #TBD (fleet security sweep)
