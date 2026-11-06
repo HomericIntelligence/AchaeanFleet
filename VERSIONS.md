@@ -18,12 +18,17 @@ Versions verified: **2026-11-06**
 | `claude` | `gh` (GitHub CLI) | `v2.89.0` | <https://github.com/cli/cli/releases> |
 | `aider` | `aider-chat` | `0.82.3` | <https://pypi.org/project/aider-chat/> |
 | `ampcode` | `@sourcegraph/amp` | `0.0.1775866026-gd3abf3` | <https://www.npmjs.com/package/@sourcegraph/amp> |
-| `cline` | `cline` | `2.14.0` | <https://www.npmjs.com/package/cline> |
+| `cline` | `cline` | `2.18.0` | <https://www.npmjs.com/package/cline> |
 | `codebuff` | `codebuff` | `1.0.638` | <https://www.npmjs.com/package/codebuff> |
 | `codex` | `@openai/codex` | `0.120.0` | <https://www.npmjs.com/package/@openai/codex> |
 | `goose` | Goose CLI binary | `v1.30.0` | <https://github.com/block/goose/releases> |
 | `opencode` | OpenCode binary | `v1.4.3` | <https://github.com/sst/opencode/releases> |
-| `worker` | `yq` binary | `v4.52.5` | <https://github.com/mikefarah/yq/releases> |
+| `worker` | `yq` binary | `v4.54.2` | <https://github.com/mikefarah/yq/releases> |
+
+Note: `cline` installs into `/opt/cline` instead of globally so that
+`vessels/cline/Dockerfile`'s npm `overrides` block can pin `sharp` above the
+range `ink-picture` declares. See the 2026-11-06 note in `.trivyignore` for the
+advisories that pin clears.
 
 ## Base image tool versions
 

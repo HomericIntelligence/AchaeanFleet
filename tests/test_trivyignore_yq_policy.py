@@ -7,17 +7,18 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# These exact v4.53.6 release artifacts were independently checksum-verified and
-# report go1.27.0 via ``go version -m``. Pinning the artifact bytes keeps suppression
-# removal tied to the inspected binaries rather than to a mutable version label.
+# These exact v4.54.2 release artifacts were independently checksum-verified and
+# embed go1.27.3 in their build info (``strings <binary> | grep -Eo 'go1\.[0-9]+\.[0-9]+'``
+# on both downloaded assets). Pinning the artifact bytes keeps suppression removal
+# tied to the inspected binaries rather than to a mutable version label.
 PATCHED_YQ_ARTIFACTS = {
     "amd64": {
         "asset": "yq_linux_amd64",
-        "sha256": "c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385",
+        "sha256": "44c7759059b4910827a0059a2757b22001e59360cdecdb2ef8dedc4b6c7e9f32",
     },
     "arm64": {
         "asset": "yq_linux_arm64",
-        "sha256": "88a1016bc1d657375a35864e4f44b6f333df8ff97b559f51bba0adcb2169df09",
+        "sha256": "bd44211dcd29a5f0eb701d4b7eb5ccd0cfff3bd3966cb4f7f9bd5b13701d997e",
     },
 }
 FIXED_YQ_CVES = {
@@ -33,7 +34,7 @@ def test_fixed_yq_artifacts_do_not_retain_trivy_suppressions() -> None:
     versions = yaml.safe_load((ROOT / "versions.yml").read_text())
     yq = versions["tools"]["yq"]
 
-    assert yq["version"] == "v4.53.6"
+    assert yq["version"] == "v4.54.2"
     assert yq["checksums"] == PATCHED_YQ_ARTIFACTS
 
     ignored_ids = {

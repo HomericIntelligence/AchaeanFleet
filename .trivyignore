@@ -40,6 +40,18 @@
 # it comes from a package tree a vessel installs, and the replacement entry must
 # name that package instead of npm.
 
+# NOTE (2026-11-06): GHSA-f88m-g3jw-g9cj (sharp), GHSA-rgj7-g3m4-5g8c and
+# GHSA-wq5f-xc86-pv6w were removed rather than renewed. The cline vessel moved
+# from cline 2.14.0 to 2.18.0 and pins sharp through an npm `overrides` block in
+# vessels/cline/Dockerfile. Local Trivy 0.76.2 scans (HIGH,CRITICAL,
+# --ignore-unfixed) of node:26-slim images carrying cline 2.14.0 and cline
+# 2.18.0 both report sharp 0.34.5 plus those three findings; the same image
+# installed from /opt/cline/package.json with "overrides": {"sharp": "0.35.5"}
+# reports no sharp findings, and its sharp round-trip (create -> png ->
+# metadata) succeeds. The cline 3.x line also drops sharp, but it reintroduces
+# fixable simple-git / @simple-git/argv-parser / @fastify/busboy / undici 5.x
+# findings — see the CVE-2026-59723 entry for the scan diff.
+
 # CVE-2026-39822
 # Category: other
 # Rationale: Go stdlib os.Root symlink-following, fixed in Go 1.26.5. Two vendored binaries in achaean-claude are still affected. (1) gitleaks v8.30.1 — the latest published release, pinned in ci/Containerfile — is built with Go 1.24.11; re-verified 2026-10-13 with Trivy 0.74.0 (`trivy rootfs` on the release tarball) and no newer release exists. (2) gh was installed unpinned from GitHub's apt repo; latest gh v2.102.0 (2026-09-30) is built with Go 1.27.1 and carries the fix, so the gh copy should clear on the next achaean-claude rebuild. PR #807 does not rebuild achaean-claude (Build Vessel Images is skipped), so the finding could not be re-scanned here and the entry is renewed rather than removed. yq was repaired independently by the v4.53.6 upgrade and no longer relies on this suppression. Tracking the remaining repair in #720/#779.
@@ -63,14 +75,6 @@ CVE-2026-56864
 # Expires: 2026-11-21
 # Reviewer: @mvillmow  PR #TBD (issue #760 rescan)
 CVE-2026-56865
-
-# GHSA-f88m-g3jw-g9cj
-# Category: npm
-# Rationale: sharp@0.34.5 (transitive dep of cline@2.14.0 in achaean-cline vessel) inherits libvips CVEs CVE-2026-33327 etc.; fixed in sharp 0.35.0 but cline@2.14.0 pins the older range and no newer cline release resolves it yet.
-# Exploitability: low — sharp is used only for local image processing in the vessel runtime; no attacker-controlled image input path reaches it.
-# Expires: 2026-11-06
-# Reviewer: @mvillmow  PR #746
-GHSA-f88m-g3jw-g9cj
 
 # CVE-2026-33818, CVE-2026-39821, CVE-2026-46600, CVE-2026-56853,
 # CVE-2026-56858, CVE-2026-56859, CVE-2026-56860, CVE-2026-56862
@@ -499,34 +503,22 @@ CVE-2026-97031
 
 # CVE-2026-59723
 # Category: npm
-# Rationale: cline 2.14.0 is installed globally in achaean-cline; the fix needs
-# cline 3.0.30 or newer, which is a major-version bump. The advisory covers
-# cross-origin WebSocket hijacking of the Cline Hub dashboard /browser endpoint.
-# The Fleet vessel never runs that dashboard: vessels/cline/Dockerfile sets
+# Rationale: cline 2.18.0 is installed in achaean-cline (bumped from 2.14.0);
+# the fix needs cline 3.0.30 or newer, which is a major-version bump. cline
+# 3.0.74 (latest, 2026-10-26) was scanned on 2026-11-06 with Trivy 0.76.2
+# (HIGH,CRITICAL, --ignore-unfixed) and rejected: it drops sharp but pulls
+# simple-git 3.36.0 (CVE-2026-102826/102827/102828, fixes 4.0.0/4.0.1),
+# @simple-git/argv-parser 1.1.1 (CVE-2026-102829, fix 2.0.1),
+# @fastify/busboy 2.1.1 (CVE-2026-19481, fix 3.2.1) and undici 5.29.0 via
+# dify-ai-provider (CVE-2026-12151/1526/2229/109383/87018) — nine fixable
+# HIGH/CRITICAL findings against this one. The advisory covers cross-origin
+# WebSocket hijacking of the Cline Hub dashboard /browser endpoint. The Fleet
+# vessel never runs that dashboard: vessels/cline/Dockerfile sets
 # AGENT_PROGRAM=cline and the agent runs headless, the Dockerfile declares no
-# EXPOSE, and compose/ maps no port for the vessel. Revisit when the 2.x line is
-# superseded or a backport reaches 2.x.
+# EXPOSE, and compose/ maps no port for the vessel. Revisit when the 3.x line
+# ships without those transitive regressions or a 2.x backport lands.
 # Exploitability: none — no Cline Hub dashboard listener exists in this runtime,
 # so the vulnerable endpoint is never bound.
 # Expires: 2027-01-11
-# Reviewer: @mvillmow  PR #807
+# Reviewer: @mvillmow  PR #823 (cline 2.18.0 bump)
 CVE-2026-59723
-
-# GHSA-rgj7-g3m4-5g8c, GHSA-wq5f-xc86-pv6w
-# Category: npm
-# Rationale: sharp 0.34.5 is a transitive dependency of cline 2.14.0 and
-# carries libheif and librsvg advisories fixed in sharp 0.35.4 and 0.35.5. The
-# cline 3.x line drops the sharp dependency, so the upstream remedy exists, but
-# taking it now is a net regression: scanning the cline 3.0.71 dependency tree
-# on 2026-10-13 with Trivy 0.74.0 shows it pulls simple-git 3.36.0
-# (CVE-2026-102826, CVE-2026-102827, CVE-2026-102828) and @simple-git/argv-parser
-# 1.1.1 (CVE-2026-102829) plus undici 5.29.0 (CVE-2026-12151, CVE-2026-1526,
-# CVE-2026-2229) — seven additional fixable HIGH findings against the two
-# here. Revisit when a cline 3.x release ships without those regressions.
-# Exploitability: low — sharp is used for local image processing; this vessel
-# runs cline headless against a workspace checkout, so no attacker-supplied
-# image reaches libheif or librsvg.
-# Expires: 2027-01-11
-# Reviewer: @mvillmow  PR #807
-GHSA-rgj7-g3m4-5g8c
-GHSA-wq5f-xc86-pv6w
