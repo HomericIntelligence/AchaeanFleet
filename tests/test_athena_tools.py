@@ -438,6 +438,7 @@ def test_image_pins_match_version_manifest():
     args = _dockerfile_args(dockerfile)
     mapping = {
         "GIT_VERSION": "git", "DEBIAN_SNAPSHOT": "debian_snapshot",
+        "PIP_VERSION": "pip",
         "CODEX_VERSION": "codex", "CODEX_ARM64_SHA256": "codex_arm64_sha256",
         "JUST_VERSION": "just", "JUST_ARM64_SHA256": "just_arm64_sha256",
         "UV_VERSION": "uv", "UV_ARM64_SHA256": "uv_arm64_sha256",

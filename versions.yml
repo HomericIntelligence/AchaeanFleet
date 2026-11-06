@@ -13,9 +13,10 @@
 # Standalone tool image. These pins do not change existing agent vessels.
 athena_tools:
   platform: "linux/arm64"
-  python_image: "python:3.14.8-slim-bookworm@sha256:48b13b003dda20b16f9442b8475aa05fe21bf6579a8c881db92ffb4d8fd20f83"
-  debian_snapshot: "20261012T000000Z"
+  python_image: "python:3.14.10-slim-bookworm@sha256:3fe1a0b6c2d6b2ebb572906cdabeca75aeb558c0c17db5ffefbcf8094871c32b"
+  debian_snapshot: "20261105T000000Z"
   git: "1:2.39.5-0+deb12u3"
+  pip: "26.3"
   codex: "0.153.4"
   codex_arm64_sha256: "439c0dd0d6923f607b4e5cd1e3079c12f0b86f6e5007f07e377d6ad25e2d7bb9"
   just: "1.51.0"
@@ -23,10 +24,10 @@ athena_tools:
   uv: "0.12.10"
   uv_arm64_sha256: "9ff6b9d4665edcdd3a88dcc73cd1eb641754deb927f14e8c62ebfde6bf4f5f5e"
   uv_amd64_sha256: "173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b"
-  athena_revision: "eb8ff6c07813019581bb6a747ff7f3265f50b5f3"
-  lock_sha256: "44af437c6c9a05f9a24d2fc062ce6e39996975193fda355d0ad082a343b65c40"
-  project_sha256: "cf9bd202b019ed41223330dfc66cdea05ab7794bcd118764c5fb813d244dd1b8"
-  python_sha256: "5abd4dc1efa09469b88916c8e4e027a8c266a9b6d06f43ac9da3e30cd00b4ab5"
+  athena_revision: "40c0d98df8ea1ff54360f1d1966d67b5e214c0c5"
+  lock_sha256: "27230f4781f617149a03a7f5de39ff8535e3dd7350bf033cfe1fd8ec002c24e7"
+  project_sha256: "ff8b147f1f9719627d4b6b0ce26c5324bbd3cde6748ecb0fdeafbdc883d19195"
+  python_sha256: "4f4c88910b6d485ae689143880e5e81b595a48a51ecb391b2f14feaec106d180"
 
 # ---------------------------------------------------------------------------
 # Base image digests (updated weekly by .github/workflows/digest-bump.yml)
