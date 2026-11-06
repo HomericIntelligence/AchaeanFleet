@@ -31,18 +31,32 @@ athena_tools:
 # ---------------------------------------------------------------------------
 # Base image digests (updated weekly by .github/workflows/digest-bump.yml)
 # ---------------------------------------------------------------------------
+#
+# Each entry records the tag and digest that the `used_by` Dockerfiles actually
+# pin. tests/test_base_image_digests.py fails when a Dockerfile's FROM line and
+# this block disagree, and the monthly digest-bump workflow rewrites both sides
+# in one pass. `base_images` is the only place these digests are recorded: an
+# entry whose `used_by` list omits a consumer cannot be kept in sync.
 base_images:
   node:
-    tag: "25-slim"
-    digest: "sha256:67134eb99e14d566f2882a38a374b8351ea474656487dbb1e0c79e4064cc1725"
+    tag: "26-slim"
+    digest: "sha256:14bf3eac4bf209d906d3c41256597d3ab1f926b2e93a79e9bdfe1efd32454239"
     used_by:
       - bases/Dockerfile.node
       - bases/Dockerfile.minimal
+      - bases/Dockerfile.python
   python:
     tag: "3.14-slim"
-    digest: "sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856"
+    digest: "sha256:656d12e70054d5fda18a045e2494c96701e9792dd1445f95b3d038df954f57e9"
     used_by:
       - bases/Dockerfile.python
+  python312:
+    # Copy-only source stage in the aider vessel: aider-chat requires
+    # >=3.10,<3.13, so that vessel carries its own interpreter.
+    tag: "3.12-slim"
+    digest: "sha256:876416ecde9aca2bcc90e1fb0c7a9500bbf749f5788b70f82d4c5a5c2357f8b4"
+    used_by:
+      - vessels/aider/Dockerfile
   debian:
     tag: "bookworm-slim"
     digest: "sha256:67b30a61dc87758f0caf819646104f29ecbda97d920aaf5edc834128ac8493d3"
