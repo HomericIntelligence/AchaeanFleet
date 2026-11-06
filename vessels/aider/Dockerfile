@@ -68,6 +68,27 @@ RUN /opt/python3.12/bin/python3.12 -m venv --upgrade-deps /opt/aider-venv \
     && ln -sf /opt/aider-venv/bin/aider /usr/local/bin/aider \
     && rm /tmp/requirements.txt /tmp/requirements-security-overrides.txt
 
+# filelock 3.20.3 -> 4.2.1   CVE-2026-112940 (arbitrary file overwrite)
+#
+# Two upstream constraints keep filelock on the 3.x line: aider-chat 0.86.2
+# requires filelock==3.20.3 and litellm 1.108.1 requires filelock<4.0. No
+# released version of either lifts them, so the upgrade pass above can only
+# reach 3.32.7, which is still affected. --no-deps installs 4.2.1 anyway.
+#
+# That is the same tradeoff this image already makes for aider's other exact
+# pins (aiohttp==3.13.3, anyio==4.12.1, certifi==2026.1.4, fsspec==2026.2.0 are
+# all overridden by the file above). It is safe for filelock specifically
+# because nothing in the aider wheel imports it — the equality pin is vestigial
+# metadata — and filelock 4.2.1 still exports the FileLock / SoftFileLock /
+# Timeout API that litellm's proxy-client CLI and huggingface-hub call, which
+# the smoke check below exercises.
+RUN /opt/aider-venv/bin/pip install --no-cache-dir --no-deps --upgrade "filelock==4.2.1" \
+    && /opt/aider-venv/bin/python -c "import filelock, os, tempfile; \
+assert filelock.__version__ == '4.2.1', filelock.__version__; \
+directory = tempfile.mkdtemp(); path = os.path.join(directory, 'cache.lock'); \
+lock = filelock.FileLock(path); lock.acquire(); assert os.path.exists(path); lock.release(); \
+assert hasattr(filelock, 'SoftFileLock') and hasattr(filelock, 'Timeout')"
+
 # Verify installation
 RUN aider --version
 

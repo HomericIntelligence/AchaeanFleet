@@ -16,7 +16,11 @@ pyasn1>=0.6.3         # CVE-2026-30922 (also CVE-2026-23490; fixed in 0.6.2/0.6.
 
 aiohttp>=3.13.4        # CVE-2026-34513..-34525 (19 alerts: critical 3.11.x HTTP smuggling/DoS family)
 Pygments>=2.20.0        # CVE-2026-22701 (ReDoS via crafted input)
-filelock>=3.20.3        # CVE-2026-35029/-35030 (race in file acquisition)
+# filelock is deliberately NOT overridden here. aider-chat 0.86.2 requires
+# filelock==3.20.3 with an equality, so any >= line in this file resolves to the
+# newest 3.x (3.32.7) and never to the fixed 4.x line. The Dockerfile upgrades it
+# to 4.2.1 in a --no-deps pass after this file is applied; that step carries the
+# CVE-2026-112940 note.
 python-dotenv>=1.2.2    # CVE-2026-25645 (injection via crafted .env)
 requests>=2.32.4        # CVE-2026-26960 / -27903 / -27904 (SSRF-family)
 pip>=26.0               # CVE-2026-23950 (wheel extraction path traversal)

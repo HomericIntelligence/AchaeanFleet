@@ -40,6 +40,7 @@ REPO_ROOT = Path(__file__).parent.parent
 
 OVERRIDES_FILE = REPO_ROOT / "vessels" / "aider" / "requirements-security-overrides.txt"
 DAGGER_PACKAGE_JSON = REPO_ROOT / "dagger" / "package.json"
+AIDER_DOCKERFILE = REPO_ROOT / "vessels" / "aider" / "Dockerfile"
 
 # Matches requirement lines like: "urllib3>=2.7.0        # CVE comment"
 _REQ_LINE_RE = re.compile(
@@ -102,7 +103,6 @@ REQUIRED_AIDER_FLOORS: list[tuple[str, str]] = [
     ("Pillow", "12.2.0"),
     ("aiohttp", "3.13.4"),
     ("anyio", "4.14.2"),
-    ("filelock", "3.20.3"),
     ("fsspec", "2026.6.0"),
     ("litellm", "1.83.10"),
     ("pip", "26.0"),
@@ -146,6 +146,21 @@ class TestAiderSecurityOverrides:
             f">={floor} ({OVERRIDES_FILE.name})"
         )
 
+    def test_filelock_is_not_a_floor_here(self) -> None:
+        """filelock must not come back as a `>=` line in the overrides file.
+
+        aider-chat 0.86.2 requires filelock==3.20.3 with an equality, so pip
+        resolves the newest 3.x (3.32.7) no matter what floor this file carries.
+        That resolution still shipped CVE-2026-112940; the Dockerfile now
+        upgrades filelock in a --no-deps pass instead (see the next test).
+        """
+        specs = _load_override_specs()
+        assert "filelock" not in specs, (
+            "filelock is back in requirements-security-overrides.txt; a floor "
+            "there cannot exceed the 3.x line aider pins and the image will "
+            "ship a filelock below 4.2.1 (CVE-2026-112940)"
+        )
+
     def test_protobuf_floor_and_cap(self) -> None:
         """protobuf must stay on the patched 5.x line: >=5.29.6 and <6."""
         specs = _load_override_specs()
@@ -159,6 +174,27 @@ class TestAiderSecurityOverrides:
         assert re.search(r"<\s*6\b", spec) is not None, (
             f"protobuf{spec} lost its '<6' cap that keeps the 5.x line "
             f"litellm's dependency tree resolves against"
+        )
+
+
+class TestAiderFilelockUpgrade:
+    """Guard the --no-deps filelock upgrade that clears CVE-2026-112940."""
+
+    FILELOCK_FLOOR = "4.2.1"
+    _STEP_RE = re.compile(
+        r'pip install[^\n]*--no-deps[^\n]*"filelock==(?P<version>[0-9.]+)"'
+    )
+
+    def test_dockerfile_installs_fixed_filelock_without_deps(self) -> None:
+        text = AIDER_DOCKERFILE.read_text()
+        match = self._STEP_RE.search(text)
+        assert match is not None, (
+            "vessels/aider/Dockerfile must install filelock with --no-deps: "
+            "aider-chat's equality pin makes a resolver pass settle on 3.x"
+        )
+        assert _version_tuple(match.group("version")) >= _version_tuple(self.FILELOCK_FLOOR), (
+            f"Dockerfile installs filelock {match.group('version')}, below "
+            f"{self.FILELOCK_FLOOR} (CVE-2026-112940)"
         )
 
 
