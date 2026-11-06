@@ -123,6 +123,23 @@ pull token from the `TELEMACHY_GHCR_TOKEN` credential and resolves `:ci` and
 `:git-<sha>` with it. An image that only the publishing repository can read
 therefore fails the publish instead of failing Telemachy's required checks.
 
+### Granting repositories access
+
+Every repository that consumes a fleet image needs the credential. Store it
+once at organization scope so new repositories inherit it without setup:
+
+```bash
+export GHCR_TOKEN=<classic PAT with read:packages>
+scripts/set-ghcr-token.sh --dry-run
+scripts/set-ghcr-token.sh
+```
+
+The script mints a real pull token before it writes anything, so a token
+without `read:packages` fails before it reaches a secret. `--per-repo` writes
+repository secrets with the GitHub CLI when organization admin rights are not
+available, `--secret-name` matches a repository that uses a different name, and
+`--verify` names the image the check resolves.
+
 ## Environment variables
 
 | Variable        | Required | Default                          | Purpose                                             |
