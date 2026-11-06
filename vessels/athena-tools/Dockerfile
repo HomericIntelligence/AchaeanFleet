@@ -1,34 +1,40 @@
 # Independent ARM64 tool image; pins are mirrored in versions.yml.
-FROM python:3.14.8-slim-bookworm@sha256:48b13b003dda20b16f9442b8475aa05fe21bf6579a8c881db92ffb4d8fd20f83 AS tools
+FROM python:3.14.10-slim-bookworm@sha256:3fe1a0b6c2d6b2ebb572906cdabeca75aeb558c0c17db5ffefbcf8094871c32b AS tools
 
 ARG GIT_VERSION=1:2.39.5-0+deb12u3
-ARG DEBIAN_SNAPSHOT=20261012T000000Z
+ARG DEBIAN_SNAPSHOT=20261105T000000Z
+ARG PIP_VERSION=26.3
 ARG CODEX_VERSION=0.153.4
 ARG CODEX_ARM64_SHA256=439c0dd0d6923f607b4e5cd1e3079c12f0b86f6e5007f07e377d6ad25e2d7bb9
 ARG JUST_VERSION=1.51.0
 ARG JUST_ARM64_SHA256=ed7ec466b77709198fd4afed253dba0270203ba5eb1c006bee2b0139090284f5
 ARG UV_VERSION=0.12.10
 ARG UV_ARM64_SHA256=9ff6b9d4665edcdd3a88dcc73cd1eb641754deb927f14e8c62ebfde6bf4f5f5e
-# Athena revision 3ba7375 (2026-09-28) locked virtualenv 21.6.1, which fails
-# CVE-2026-102925 / CVE-2026-102930 / CVE-2026-102937 (fixed in 21.7.13).
-# a010a02 (2026-10-09) is the newest upstream uv.lock and resolves virtualenv
-# 21.14.5. Upstream raised requires-python to >=3.14.8,<3.15 at the same time,
-# so the interpreter floor moves with it and the base image moves from 3.13.15
-# to 3.14.8. The old base also carried 7 fixable HIGH findings; the new one has
-# none under the gate's --ignore-unfixed / severity HIGH,CRITICAL settings.
+# Athena revision 40c0d98 (2026-11-04, Athena #389) is the newest upstream
+# uv.lock. Its dependency resolution is what the Trivy gate asked for: filelock
+# 3.30.1 -> 4.2.4 (CVE-2026-112940) and virtualenv 21.14.5 -> 21.14.13
+# (CVE-2026-113718/-113722/-113723/-113725). Upstream raised requires-python to
+# >=3.14.10,<3.15 in the same commit range, so the interpreter floor moves with
+# it and the base image moves from python:3.14.8 to 3.14.10. That base also
+# carries apt 2.6.2 (CVE-2026-109518) and libssl3 3.0.22-1~deb12u2
+# (CVE-2026-84782), both of which the 3.14.8 base predated.
 #
-# eb8ff6c (2026-10-13, Athena #346) adds the validator seam this image's
-# workspace preparation depends on: scripts/validate_skills.py now skips
-# top-level directories the consumer declares through
+# The Debian snapshot advances to 20261105T000000Z for libexpat1 and libbrotli1:
+# they are absent from the new base image and arrive as dependencies of the git
+# install below, so their versions are whatever the snapshot's main +
+# bookworm-security suites offer. The security uploads the gate wants
+# (libexpat1 2.5.0-1+deb12u5, libbrotli1 1.0.9-2+deb12u1) are published; the
+# Trivy scan of the built image is the check that the snapshot carries them.
+#
+# eb8ff6c (2026-10-13, Athena #346) added the validator seam this image's
+# workspace preparation depends on: scripts/validate_skills.py honours
 # ATHENA_VALIDATE_IGNORED_PATHS, which workspace.just sets to .fleet-runtime.
-# Without it the offline uv cache that prepare_workspace.py is required to
-# place inside the workspace is walked by the validator, which then fails on
-# undecodable binaries and vendored library source. That change touched only
-# scripts/ and tests/, so the three upstream checksums below are unchanged.
-ARG ATHENA_REVISION=eb8ff6c07813019581bb6a747ff7f3265f50b5f3
-ARG ATHENA_LOCK_SHA256=44af437c6c9a05f9a24d2fc062ce6e39996975193fda355d0ad082a343b65c40
-ARG ATHENA_PROJECT_SHA256=cf9bd202b019ed41223330dfc66cdea05ab7794bcd118764c5fb813d244dd1b8
-ARG ATHENA_PYTHON_SHA256=5abd4dc1efa09469b88916c8e4e027a8c266a9b6d06f43ac9da3e30cd00b4ab5
+# 40c0d98 still exposes it, and the justfile still offers `validate` and
+# `uv-pins`, which is what the smoke job runs.
+ARG ATHENA_REVISION=40c0d98df8ea1ff54360f1d1966d67b5e214c0c5
+ARG ATHENA_LOCK_SHA256=27230f4781f617149a03a7f5de39ff8535e3dd7350bf033cfe1fd8ec002c24e7
+ARG ATHENA_PROJECT_SHA256=ff8b147f1f9719627d4b6b0ce26c5324bbd3cde6748ecb0fdeafbdc883d19195
+ARG ATHENA_PYTHON_SHA256=4f4c88910b6d485ae689143880e5e81b595a48a51ecb391b2f14feaec106d180
 
 # Install git from the pinned Debian snapshot.
 #
@@ -59,6 +65,12 @@ RUN test "$(dpkg --print-architecture)" = arm64 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /usr/local/bin/python3 /usr/bin/python3 \
     && ln -s /usr/local/bin/python /usr/bin/python
+
+# The base image's pip vendors msgpack 1.1.2 at pip/_vendor/vendor.txt, which
+# trivy reports as CVE-2026-114613 / GHSA-6v7p-g79w-8964 even though the
+# site-packages table is clean. pip 26.3 vendors msgpack 1.2.4, above both fixed
+# versions; it is the same upward re-pin bases/Dockerfile.python uses.
+RUN python -m pip install --no-cache-dir --upgrade "pip==${PIP_VERSION}"
 
 COPY inputs/ /tmp/inputs/
 RUN cd /tmp/inputs \

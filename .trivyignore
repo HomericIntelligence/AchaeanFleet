@@ -465,9 +465,11 @@ CVE-2026-97689
 # for bookworm yet, so no snapshot can carry them. Verified 2026-10-13 against
 # the live archive: deb.debian.org/debian/dists/bookworm/main offers only
 # 10.42-1, and debian-security bookworm-security carries no libpcre2-8-0 entry
-# at all. The same holds at snapshot 20261012T000000Z, which is what this image
-# pins. Per SECURITY.md this is the "fix not available in the base image's OS
-# distribution" case. Revisit when Debian ships deb12u2 to bookworm.
+# at all. Re-checked 2026-11-06: the tracker now lists 10.42-1+deb12u2 as
+# published, and this image pins snapshot 20261105T000000Z, so the rebuilt image
+# should resolve git's pcre2 dependency to the fixed upload. The entry is kept
+# until a scan of that rebuild confirms it, and should be deleted rather than
+# renewed if the gate no longer reports these four IDs.
 # Exploitability: low — pcre2 is reached through git's regex handling on
 # attacker-supplied repository content; the image runs git only against the
 # pinned Athena revision fetch, not against untrusted repositories.
