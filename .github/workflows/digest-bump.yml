@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
 
           # Arrays to store image tags and their digests
-          declare -a IMAGES=("node:25-slim" "python:3.12-slim" "debian:bookworm-slim")
+          declare -a IMAGES=("node:26-slim" "python:3.14-slim" "python:3.12-slim" "debian:bookworm-slim")
 
           # Pull images and extract digests
           for image in "${IMAGES[@]}"; do
@@ -65,35 +65,32 @@ jobs:
             digest_map["${key}"]="${value}"
           done < "$digest_file"
 
-          # Update each Dockerfile with the corresponding digest
-          # Dockerfile.node uses node:25-slim
-          old_digest_node=$(grep "^FROM node:25-slim@" bases/Dockerfile.node | head -1)
-          new_digest_node="FROM ${digest_map['node:25-slim']}"
-          if [ "$old_digest_node" != "$new_digest_node" ]; then
-            sed -i "s|^FROM node:25-slim@.*|$new_digest_node|" bases/Dockerfile.node
-            echo "Updated bases/Dockerfile.node"
-            ((files_changed++))
-          fi
+          # image -> the Dockerfiles that pin it. versions.yml records the same
+          # digest for each of these images (tests/test_base_image_digests.py
+          # enforces the agreement), so both sides move in the same pass.
+          declare -A consumers=(
+            ["node:26-slim"]="bases/Dockerfile.node bases/Dockerfile.minimal bases/Dockerfile.python"
+            ["python:3.14-slim"]="bases/Dockerfile.python"
+            ["python:3.12-slim"]="vessels/aider/Dockerfile"
+            ["debian:bookworm-slim"]="bases/Dockerfile.minimal"
+          )
 
-          # Dockerfile.python uses python:3.12-slim (first FROM line)
-          old_digest_python=$(grep "^FROM python:3.12-slim" bases/Dockerfile.python | head -1)
-          new_digest_python="FROM ${digest_map['python:3.12-slim']}"
-          if [ "$old_digest_python" != "$new_digest_python" ]; then
-            # Use a more specific pattern to avoid matching the node-source stage
-            sed -i "/^FROM python:3.12-slim/s|.*|${new_digest_python}|" bases/Dockerfile.python
-            echo "Updated bases/Dockerfile.python"
-            ((files_changed++))
-          fi
-
-          # Dockerfile.minimal uses debian:bookworm-slim
-          old_digest_minimal=$(grep "^FROM debian:bookworm-slim" bases/Dockerfile.minimal | head -1)
-          new_digest_minimal="FROM ${digest_map['debian:bookworm-slim']}"
-          if [ "$old_digest_minimal" != "$new_digest_minimal" ]; then
-            sed -i "s|^FROM debian:bookworm-slim|${new_digest_minimal}|" bases/Dockerfile.minimal
-            echo "Updated bases/Dockerfile.minimal"
-            ((files_changed++))
-          fi
-
+          for image in "${!consumers[@]}"; do
+            new_digest="${digest_map[$image]#*@}"
+            for file in ${consumers[$image]}; do
+              old_digest=$(sed -n "s|^FROM ${image}@\(sha256:[0-9a-f]*\).*|\1|p" "$file" | head -1)
+              if [ -z "$old_digest" ]; then
+                echo "::error file=${file}::no 'FROM ${image}@sha256:...' line found"
+                exit 1
+              fi
+              if [ "$old_digest" != "$new_digest" ]; then
+                sed -i "s|${image}@${old_digest}|${image}@${new_digest}|" "$file"
+                sed -i "s|${old_digest}|${new_digest}|" versions.yml
+                echo "Updated ${file} (${image})"
+                files_changed=$((files_changed + 1))
+              fi
+            done
+          done
           echo "files_changed=${files_changed}" >> "$GITHUB_OUTPUT"
 
           # Clean up temp file
@@ -102,7 +99,7 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          if git diff --quiet bases/Dockerfile.*; then
+          if git diff --quiet -- bases/Dockerfile.* vessels/aider/Dockerfile versions.yml; then
             echo "no_changes=true" >> "$GITHUB_OUTPUT"
             echo "No changes detected; digests are already current."
           else
@@ -117,7 +114,7 @@ jobs:
           branch_name="auto/digest-bump-$(date +%Y-%m)"
 
           git checkout -b "$branch_name"
-          git add bases/Dockerfile.node bases/Dockerfile.python bases/Dockerfile.minimal
+          git add bases/Dockerfile.* vessels/aider/Dockerfile versions.yml
           git commit -m "chore: monthly base image digest bump"
 
           echo "BRANCH_NAME=${branch_name}" >> $GITHUB_ENV
@@ -139,6 +136,8 @@ jobs:
             "- bases/Dockerfile.node" \
             "- bases/Dockerfile.python" \
             "- bases/Dockerfile.minimal" \
+            "- vessels/aider/Dockerfile" \
+            "- versions.yml" \
             "" \
             "Closes #128" \
             > /tmp/pr-body.txt
