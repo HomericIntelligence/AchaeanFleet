@@ -94,6 +94,35 @@ def test_npm_installs_are_pinned(dockerfile: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# cline install manifest (package.json + overrides)
+# ---------------------------------------------------------------------------
+
+_CLINE_MANIFEST_RE = re.compile(r'\{"name":"cline-vessel"[^\n]*\}')
+
+
+def test_cline_vessel_manifest_pins_exact_versions() -> None:
+    """cline installs from a declared manifest, so exactness is checked here.
+
+    vessels/cline/Dockerfile does not use ``npm install -g`` — it needs a
+    package.json ``overrides`` block to pin sharp above ink-picture's declared
+    range — so ``test_npm_installs_are_pinned`` cannot see its version. The
+    versions are asserted to be exact rather than repeated in this test, so a
+    bump only touches the Dockerfile.
+    """
+    import json
+
+    text = (REPO_ROOT / "vessels/cline/Dockerfile").read_text()
+    match = _CLINE_MANIFEST_RE.search(text)
+    assert match, "vessels/cline/Dockerfile: cline install manifest not found"
+    manifest = json.loads(match.group(0))
+    exact = re.compile(r"^\d+\.\d+\.\d+(-[\w.]+)?$")
+    cline = manifest["dependencies"]["cline"]
+    sharp = manifest["overrides"]["sharp"]
+    assert exact.match(cline), f"cline pin is not exact: {cline}"
+    assert exact.match(sharp), f"sharp override is not exact: {sharp}"
+
+
+# ---------------------------------------------------------------------------
 # pip install version-pin assertions
 # ---------------------------------------------------------------------------
 

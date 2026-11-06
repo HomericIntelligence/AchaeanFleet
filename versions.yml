@@ -81,17 +81,17 @@ tools:
         sha256: "4cbf32f4c31da7dae14712b65aadbce6acfa1a7a85bee986a2ce4eaaed4eb5c8"
 
   yq:
-    version: "v4.53.6"
-    source: "https://github.com/mikefarah/yq/releases/tag/v4.53.6"
+    version: "v4.54.2"
+    source: "https://github.com/mikefarah/yq/releases/tag/v4.54.2"
     used_by:
       - vessels/worker/Dockerfile
     checksums:
       amd64:
         asset: "yq_linux_amd64"
-        sha256: "c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385"
+        sha256: "44c7759059b4910827a0059a2757b22001e59360cdecdb2ef8dedc4b6c7e9f32"
       arm64:
         asset: "yq_linux_arm64"
-        sha256: "88a1016bc1d657375a35864e4f44b6f333df8ff97b559f51bba0adcb2169df09"
+        sha256: "bd44211dcd29a5f0eb701d4b7eb5ccd0cfff3bd3966cb4f7f9bd5b13701d997e"
 
   npm:
     version: "11.21.2"
