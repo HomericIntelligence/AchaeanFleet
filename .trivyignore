@@ -28,6 +28,18 @@
 # scripts/verify-trivyignore-prune.sh (rebuilds + scans without --ignorefile);
 # the CI "Trivy scan vessel image (gate)" jobs are the authoritative gate.
 
+# NOTE (2026-11-06): the npm-bundled dependency entries CVE-2026-14257 and
+# CVE-2026-69152 (brace-expansion) and CVE-2026-69192 (ip-address) were removed
+# after expiring on 2026-11-05, and CVE-2026-73566 (tar) with them. Their
+# rationale cited the npm 11.18.0 pin, which no longer exists: the base images
+# and node-based vessels re-pin npm 11.19.1. Inspected in the published registry
+# tarball (npm-11.19.1.tgz), that build bundles brace-expansion 5.0.9 (fix
+# 5.0.8), ip-address 10.5.0 (fix 10.3.1) and tar 7.5.22 (fix 7.5.21), so the
+# findings are resolved in the image rather than suppressed. The "Trivy scan
+# vessel image (gate)" jobs are the authoritative check; if a finding reappears
+# it comes from a package tree a vessel installs, and the replacement entry must
+# name that package instead of npm.
+
 # CVE-2026-39822
 # Category: other
 # Rationale: Go stdlib os.Root symlink-following, fixed in Go 1.26.5. Two vendored binaries in achaean-claude are still affected. (1) gitleaks v8.30.1 — the latest published release, pinned in ci/Containerfile — is built with Go 1.24.11; re-verified 2026-10-13 with Trivy 0.74.0 (`trivy rootfs` on the release tarball) and no newer release exists. (2) gh was installed unpinned from GitHub's apt repo; latest gh v2.102.0 (2026-09-30) is built with Go 1.27.1 and carries the fix, so the gh copy should clear on the next achaean-claude rebuild. PR #807 does not rebuild achaean-claude (Build Vessel Images is skipped), so the finding could not be re-scanned here and the entry is renewed rather than removed. yq was repaired independently by the v4.53.6 upgrade and no longer relies on this suppression. Tracking the remaining repair in #720/#779.
@@ -51,38 +63,6 @@ CVE-2026-56864
 # Expires: 2026-11-21
 # Reviewer: @mvillmow  PR #TBD (issue #760 rescan)
 CVE-2026-56865
-
-# CVE-2026-14257
-# Category: npm
-# Rationale: brace-expansion DoS — bundled with npm 11.18.0's dependency tree in achaean-base-* images. npm's bundled module tree cannot be overridden without forking npm; the fixed versions (5.0.8+) ship in newer npm releases than the pinned 11.18.0.
-# Exploitability: none — brace-expansion input is npm-internal and hard-coded, never attacker-controlled in the vessel runtime.
-# Expires: 2026-11-05
-# Reviewer: @mvillmow  PR #766
-CVE-2026-14257
-
-# CVE-2026-69152
-# Category: npm
-# Rationale: second brace-expansion DoS — same bundled-npm dependency tree as CVE-2026-14257.
-# Exploitability: none — npm-internal input only.
-# Expires: 2026-11-05
-# Reviewer: @mvillmow  PR #766
-CVE-2026-69152
-
-# CVE-2026-69192
-# Category: npm
-# Rationale: ip-address inconsistent parsing CVE — bundled with npm 11.18.0's dependency tree in achaean-base-* images (fixed in ip-address 10.3.1, ships in newer npm than pinned 11.18.0). npm's bundled module tree cannot be overridden without forking npm.
-# Exploitability: none — ip-address input is npm-internal and hard-coded, never attacker-controlled in the vessel runtime.
-# Expires: 2026-11-05
-# Reviewer: @mvillmow  PR #746
-CVE-2026-69192
-
-# CVE-2026-73566
-# Category: npm
-# Rationale: tar 7.5.19 DoS via crafted long-path archive — bundled with npm 11.18.0's dependency tree in achaean-base-* images (fixed in tar 7.5.21, ships in newer npm releases than the pinned 11.18.0). npm's bundled module tree cannot be overridden without forking npm; the dagger/ lockfile override (tar ^7.5.21) covers only the CI pipeline, not the image.
-# Exploitability: none — bundled tar input is npm-internal, never attacker-controlled in the vessel runtime.
-# Expires: 2026-11-21
-# Reviewer: @mvillmow  PR #TBD (issue #760 rescan)
-CVE-2026-73566
 
 # GHSA-f88m-g3jw-g9cj
 # Category: npm
