@@ -35,7 +35,8 @@ DRY_RUN=0
 REPOS=""
 
 usage() {
-    sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    # Print the leading comment block, stopping at the first non-comment line.
+    awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"
 }
 
 while [ "$#" -gt 0 ]; do
