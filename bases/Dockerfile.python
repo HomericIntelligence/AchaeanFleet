@@ -52,6 +52,7 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
 ENV CERTIFI_VERSION=2026.10.18
 ENV MSGPACK_VERSION=1.2.3
 ENV NPM_VERSION=11.21.2
+ENV PIP_VERSION=26.3
 ENV SETUPTOOLS_VERSION=83.0.0
 ENV YARN_VERSION=1.22.22
 # END GENERATED TOOL PINS
@@ -95,13 +96,16 @@ USER root
 COPY bases/scripts/strip-setuid.sh /tmp/strip-setuid.sh
 RUN bash /tmp/strip-setuid.sh && rm /tmp/strip-setuid.sh
 
-# pip is intentionally NOT re-pinned here. python:3.14-slim (digest-pinned
-# above) already bundles pip 26.2.1, which satisfies the fleet security pin
-# (pip>=26.0 — CVE-2026-1703). Attempting `pip install --upgrade pip==26.0.1`
-# is a DOWNGRADE that hits the documented pip self-replacement race on
-# python 3.14 (OSError: [Errno 39] Directory not empty on
-# site-packages/pip/_internal/commands), which broke the base build and
-# silently wedged pip. See vessels/aider/Dockerfile for the 3.12 handling.
+# pip IS re-pinned, upward. trivy also reads pip's own vendored copies
+# (pip/_vendor/vendor.txt), so the site-packages pins below cannot clear
+# findings that live inside pip: the bundled pip 26.2.1 vendors certifi
+# 2026.6.17 (GHSA-6q48-6c7w-9gw2) and msgpack 1.1.2 (CVE-2026-114613).
+# pip 26.3 vendors certifi 2026.10.23 and msgpack 1.2.4, above both fixed
+# versions. This is an upgrade from the bundled 26.2.1, not a downgrade — the
+# Errno 39 self-replacement race seen here previously came from pinning DOWN
+# to 26.0.1 and does not reproduce on the upgrade (verified against the
+# digest-pinned base image). See vessels/aider/Dockerfile for the 3.12 case.
+RUN python -m pip install --no-cache-dir --upgrade pip==${PIP_VERSION}
 
 # Security bumps for packages preinstalled in the pinned python:3.14-slim
 # digest. The version values come from the generated block above; this comment

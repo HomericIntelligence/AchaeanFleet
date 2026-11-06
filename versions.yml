@@ -110,6 +110,13 @@ tools:
       - bases/Dockerfile.python
     checksums: null  # installed via npm; integrity enforced by npm registry
 
+  pip:
+    version: "26.3"
+    source: "https://pypi.org/project/pip/26.3/"
+    used_by:
+      - bases/Dockerfile.python
+    checksums: null  # installed via pip; integrity enforced by PyPI
+
   certifi:
     version: "2026.10.18"
     source: "https://pypi.org/project/certifi/2026.10.18/"
