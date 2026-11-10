@@ -43,14 +43,14 @@ on:
         type: boolean
         default: false
         description: "Force push-to-registry on non-main branches (for integration testing)"
-  workflow_run:
-    workflows: ["Security Scanning"]
-    types: [completed]
-    branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
-  cancel-in-progress: true
+  # Issue #785: a run must never cancel a same-SHA run from another entry point.
+  # Image publication is owned by the push entry point alone (see the
+  # push-to-registry / push-bases / verify-registry gates); pull-request
+  # validation keeps fast cancellation because it cannot publish.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -1265,8 +1265,7 @@ jobs:
     needs: [build-vessels, test-smoke-vessels]
     if: |
       (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      github.event.inputs.force_push == 'true' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      github.event.inputs.force_push == 'true'
     permissions:
       packages: write
       contents: read
@@ -1466,8 +1465,7 @@ jobs:
     needs: [build-bases]
     if: |
       (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      github.event.inputs.force_push == 'true' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      github.event.inputs.force_push == 'true'
     permissions:
       packages: write
       contents: read
@@ -1552,8 +1550,7 @@ jobs:
     needs: [push-to-registry, push-bases]
     if: |
       (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      github.event.inputs.force_push == 'true' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      github.event.inputs.force_push == 'true'
     timeout-minutes: 10
     permissions:
       packages: read
