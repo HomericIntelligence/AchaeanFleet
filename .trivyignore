@@ -524,3 +524,20 @@ CVE-2026-97031
 # Expires: 2027-01-11
 # Reviewer: @mvillmow  PR #823 (cline 2.18.0 bump)
 CVE-2026-59723
+
+# CVE-2026-78661
+# Category: other
+# Rationale: golang.org/x/net/html denial of service via crafted HTML input,
+# fixed in x/net v0.62.0. The affected binary is /usr/bin/gh, installed unpinned
+# from GitHub's apt repository. The 2026-11-09 build (run 42641850470, job
+# 129246431256) reports `gh version 2.103.3 (2026-10-26)`, which is still the
+# latest published release, and that tag's go.mod pins golang.org/x/net v0.60.0.
+# x/net v0.62.0 is published, but gh ships as a prebuilt Go binary we cannot
+# rebuild, so no released gh carries the fix yet. Same binary and tracking as
+# CVE-2026-39822 / CVE-2026-56864 (issue #720/#779).
+# Exploitability: low — denial of service only, reached through x/net/html
+# parsing. gh in this vessel talks to api.github.com and consumes JSON; no
+# attacker-controlled HTML is parsed in the vessel runtime.
+# Expires: 2027-02-07
+# Reviewer: @mvillmow  PR #TBD (2026-11-09 re-review)
+CVE-2026-78661
