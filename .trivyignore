@@ -176,28 +176,6 @@ CVE-2026-19534
 CVE-2026-97687
 CVE-2026-97689
 
-# Category: OS
-# Rationale: libpcre2-8-0 10.42-1 is pulled in by git in achaean-athena-tools,
-# which installs git from the pinned Debian snapshot. The fixes are Debian point
-# releases (10.42-1+deb12u1 and 10.42-1+deb12u2) that have not been published
-# for bookworm yet, so no snapshot can carry them. Verified 2026-10-13 against
-# the live archive: deb.debian.org/debian/dists/bookworm/main offers only
-# 10.42-1, and debian-security bookworm-security carries no libpcre2-8-0 entry
-# at all. Re-checked 2026-11-06: the tracker now lists 10.42-1+deb12u2 as
-# published, and this image pins snapshot 20261105T000000Z, so the rebuilt image
-# should resolve git's pcre2 dependency to the fixed upload. The entry is kept
-# until a scan of that rebuild confirms it, and should be deleted rather than
-# renewed if the gate no longer reports these four IDs.
-# Exploitability: low — pcre2 is reached through git's regex handling on
-# attacker-supplied repository content; the image runs git only against the
-# pinned Athena revision fetch, not against untrusted repositories.
-# Expires: 2027-01-11
-# Reviewer: @mvillmow  PR #807
-CVE-2026-103111
-CVE-2026-86145
-CVE-2026-89157
-CVE-2026-89161
-
 # CVE-2026-78667, CVE-2026-78669, CVE-2026-97031
 # Category: other
 # Rationale: Go stdlib and golang.org/x/net compiled into /usr/bin/gh in
