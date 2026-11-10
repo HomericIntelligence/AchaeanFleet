@@ -154,8 +154,8 @@ tools:
     checksums: null  # installed via pip; integrity enforced by PyPI
 
   aider-chat:
-    version: "0.82.3"
-    source: "https://pypi.org/project/aider-chat/0.82.3/"
+    version: "0.86.2"
+    source: "https://pypi.org/project/aider-chat/0.86.2/"
     used_by:
       - vessels/aider/Dockerfile
     checksums: null  # installed via pip; integrity enforced by PyPI
