@@ -457,7 +457,6 @@ CVE-2026-19534
 CVE-2026-97687
 CVE-2026-97689
 
-# CVE-2026-103111, CVE-2026-86145, CVE-2026-89157, CVE-2026-89161
 # Category: OS
 # Rationale: libpcre2-8-0 10.42-1 is pulled in by git in achaean-athena-tools,
 # which installs git from the pinned Debian snapshot. The fixes are Debian point
